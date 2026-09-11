@@ -3,7 +3,7 @@ name: バグ修正
 about: バグを修正するためのissueテンプレ
 title: "[fix] "
 labels: bug
-Type: Fix
+Type: Bug
 assignees: ""
 ---
 
