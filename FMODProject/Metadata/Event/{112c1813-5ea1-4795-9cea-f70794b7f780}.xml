@@ -2,7 +2,7 @@
 <objects serializationModel="Studio.02.03.00">
 	<object class="Event" id="{112c1813-5ea1-4795-9cea-f70794b7f780}">
 		<property name="name">
-			<value>test</value>
+			<value>TestSE</value>
 		</property>
 		<property name="outputFormat">
 			<value>0</value>
@@ -46,6 +46,9 @@
 		</relationship>
 	</object>
 	<object class="MixerInput" id="{5fbe1739-12c4-4b91-af12-cb59daeca65e}">
+		<relationship name="masters">
+			<destination>{8ec8e992-a121-4d8b-a28f-4a1d0be06430}</destination>
+		</relationship>
 		<relationship name="effectChain">
 			<destination>{6b36df53-31ec-4176-a3b9-e86ddc1dbeaa}</destination>
 		</relationship>
@@ -53,7 +56,7 @@
 			<destination>{70be8bf1-1257-4d8b-af63-cb3409740df7}</destination>
 		</relationship>
 		<relationship name="output">
-			<destination>{fd8b73b8-cd63-4f86-95b7-f9b9913cb6ca}</destination>
+			<destination>{34e8ddce-4075-463d-8e23-aee299664df0}</destination>
 		</relationship>
 	</object>
 	<object class="EventAutomatableProperties" id="{05ea3948-4ba9-4b32-bde7-23145ef069a7}" />
