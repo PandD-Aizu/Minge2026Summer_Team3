@@ -2,7 +2,7 @@
 <objects serializationModel="Studio.02.03.00">
 	<object class="Event" id="{0842cfbe-df33-42a3-b293-4b59964e8e18}">
 		<property name="name">
-			<value>audiopapkin-walk-in-the-deciduous-forest-308731</value>
+			<value>WalkForest</value>
 		</property>
 		<property name="outputFormat">
 			<value>2</value>
@@ -30,6 +30,9 @@
 		</relationship>
 		<relationship name="timeline">
 			<destination>{29234f8c-72c4-440e-8bd0-89c64ac69750}</destination>
+		</relationship>
+		<relationship name="banks">
+			<destination>{314a9230-95de-4416-8ca4-f7ad03b6ad08}</destination>
 		</relationship>
 	</object>
 	<object class="EventMixer" id="{2efe85de-f87d-42d7-abd4-b5ff12297d79}">
