@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{3a04efd6-700b-4ad6-831e-0b282abed180}">
+		<property name="assetPath">
+			<value>Sea_Beach_Near_01.wav</value>
+		</property>
+		<property name="isStreaming">
+			<value>true</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>66.560000000000002</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{a301d96b-3bfd-4ed5-a9c6-4767f2e925e4}</destination>
+		</relationship>
+	</object>
+</objects>

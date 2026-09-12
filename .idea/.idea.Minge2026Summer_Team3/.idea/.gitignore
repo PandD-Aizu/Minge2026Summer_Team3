@@ -2,10 +2,10 @@
 /shelf/
 /workspace.xml
 # Rider の無視対象ファイル
-/projectSettingsUpdater.xml
 /contentModel.xml
 /.idea.Minge2026Summer_Team3.iml
 /modules.xml
+/projectSettingsUpdater.xml
 # エディターベースの HTTP クライアントリクエスト
 /httpRequests/
 # 無視対象のデフォルトフォルダー (クエリファイルを含む)

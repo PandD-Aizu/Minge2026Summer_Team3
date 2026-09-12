@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{aa5594db-4731-41d4-9a6a-2c76d3cec121}">
+		<property name="assetPath">
+			<value>Ancent Forest.wav</value>
+		</property>
+		<property name="isStreaming">
+			<value>true</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>207.56</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{a301d96b-3bfd-4ed5-a9c6-4767f2e925e4}</destination>
+		</relationship>
+	</object>
+</objects>

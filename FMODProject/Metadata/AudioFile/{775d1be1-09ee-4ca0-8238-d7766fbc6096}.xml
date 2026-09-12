@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{775d1be1-09ee-4ca0-8238-d7766fbc6096}">
+		<property name="assetPath">
+			<value>The Cry Of A Seagull. Seagull Sound Only..wav</value>
+		</property>
+		<property name="isStreaming">
+			<value>true</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>13.48</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{a301d96b-3bfd-4ed5-a9c6-4767f2e925e4}</destination>
+		</relationship>
+	</object>
+</objects>
