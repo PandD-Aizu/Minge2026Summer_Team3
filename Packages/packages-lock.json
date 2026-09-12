@@ -1,7 +1,16 @@
 {
   "dependencies": {
+    "com.cysharp.r3": {
+      "version": "https://github.com/Cysharp/R3.git?path=src/R3.Unity/Assets/R3.Unity",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.modules.imgui": "1.0.0"
+      },
+      "hash": "fdfb36e3d5af90ec06403714492ee85b2d8bf7cd"
+    },
     "com.cysharp.unitask": {
-      "version": "https://github.com/Cysharp/UniTask.git?path=src%2FUniTask%2FAssets%2FPlugins%2FUniTask&utm_source=chatgpt.com",
+      "version": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
       "depth": 0,
       "source": "git",
       "dependencies": {},
@@ -14,37 +23,14 @@
       "dependencies": {},
       "hash": "acc1c7bc9ea34c33b830e40316fca52553878d29"
     },
-    "com.unity.burst": {
-      "version": "2.0.0",
-      "depth": 2,
-      "source": "builtin",
-      "dependencies": {}
-    },
-    "com.unity.collections": {
-      "version": "6.6.0",
-      "depth": 2,
-      "source": "builtin",
-      "dependencies": {
-        "com.unity.burst": "1.8.25",
-        "com.unity.nuget.mono-cecil": "1.11.6",
-        "com.unity.test-framework": "1.4.6",
-        "com.unity.test-framework.performance": "3.2.0"
-      }
-    },
     "com.unity.ext.nunit": {
       "version": "2.1.0",
       "depth": 1,
       "source": "builtin",
       "dependencies": {}
     },
-    "com.unity.graph-authoring": {
-      "version": "1.0.0",
-      "depth": 2,
-      "source": "builtin",
-      "dependencies": {}
-    },
     "com.unity.ide.rider": {
-      "version": "3.0.38",
+      "version": "3.0.40",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -53,7 +39,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
-      "version": "2.0.26",
+      "version": "2.0.28",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -61,65 +47,14 @@
       },
       "url": "https://packages.unity.com"
     },
-    "com.unity.nuget.mono-cecil": {
-      "version": "1.11.6",
-      "depth": 3,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.unity.com"
-    },
-    "com.unity.profiling.core": {
-      "version": "1.0.3",
-      "depth": 2,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.unity.com"
-    },
-    "com.unity.render-pipelines.core": {
-      "version": "17.6.0",
-      "depth": 1,
-      "source": "builtin",
-      "dependencies": {
-        "com.unity.burst": "1.8.14",
-        "com.unity.collections": "2.4.3",
-        "com.unity.modules.jsonserialize": "1.0.0",
-        "com.unity.profiling.core": "1.0.3"
-      }
-    },
-    "com.unity.render-pipelines.universal": {
-      "version": "17.6.0",
+    "com.unity.inputsystem": {
+      "version": "1.20.0",
       "depth": 0,
-      "source": "builtin",
-      "dependencies": {
-        "com.unity.render-pipelines.core": "17.6.0",
-        "com.unity.shadergraph": "17.6.0",
-        "com.unity.render-pipelines.universal-config": "17.6.0"
-      }
-    },
-    "com.unity.render-pipelines.universal-config": {
-      "version": "17.6.0",
-      "depth": 1,
-      "source": "builtin",
-      "dependencies": {
-        "com.unity.render-pipelines.core": "17.6.0"
-      }
-    },
-    "com.unity.searcher": {
-      "version": "4.9.5",
-      "depth": 2,
       "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.unity.com"
-    },
-    "com.unity.shadergraph": {
-      "version": "17.6.0",
-      "depth": 1,
-      "source": "builtin",
       "dependencies": {
-        "com.unity.render-pipelines.core": "17.6.0",
-        "com.unity.searcher": "4.9.3",
-        "com.unity.graph-authoring": "1.0.0"
-      }
+        "com.unity.modules.uielements": "1.0.0"
+      },
+      "url": "https://packages.unity.com"
     },
     "com.unity.test-framework": {
       "version": "1.8.0",
@@ -128,15 +63,6 @@
       "dependencies": {
         "com.unity.ext.nunit": "2.1.0",
         "com.unity.modules.imgui": "1.0.0",
-        "com.unity.modules.jsonserialize": "1.0.0"
-      }
-    },
-    "com.unity.test-framework.performance": {
-      "version": "6.6.0",
-      "depth": 3,
-      "source": "builtin",
-      "dependencies": {
-        "com.unity.test-framework": "1.1.33",
         "com.unity.modules.jsonserialize": "1.0.0"
       }
     },
@@ -151,13 +77,6 @@
         "com.unity.modules.physics2d": "1.0.0",
         "com.unity.modules.physics": "1.0.0"
       }
-    },
-    "jp.hadashikick.vcontainer": {
-      "version": "https://github.com/hadashiA/VContainer.git?path=VContainer/Assets/VContainer",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "4fc1ed47dff1314e73fbf2a85ab88f53601414f6"
     },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",
