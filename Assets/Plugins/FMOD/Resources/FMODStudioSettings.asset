@@ -522,7 +522,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: FMODUnity::FMODUnity.PlatformMac
   identifier: 52eb9df5db46521439908db3a29a1bbb
   parentIdentifier: default
-  active: 0
+  active: 1
   Properties:
     LiveUpdate:
       Value: 0
@@ -564,8 +564,9 @@ MonoBehaviour:
       Value: 0
       HasValue: 0
     Plugins:
-      Value: []
-      HasValue: 0
+      Value:
+      - FMODThunderStormPlugin
+      HasValue: 1
     StaticPlugins:
       Value: []
       HasValue: 0
