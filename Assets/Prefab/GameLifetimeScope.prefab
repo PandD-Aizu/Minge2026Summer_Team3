@@ -43,7 +43,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 57b49ea20d9d2c24eb09ebc79898cf39, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LifetimeScopes.GameLifetimeScope
+  m_EditorClassIdentifier: Assembly-CSharp::GameLifetimeScope
   parentReference:
     TypeName: 
   autoRun: 1
