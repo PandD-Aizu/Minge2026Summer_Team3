@@ -131,7 +131,7 @@ GameObject:
   - component: {fileID: 6798805}
   - component: {fileID: 6798804}
   m_Layer: 0
-  m_Name: FMODManager
+  m_Name: FMODSettingsLifetimeScope
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -148,7 +148,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: db11d395730e4743b84883634291d359, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FMODSettings.FMODVCAView
+  m_EditorClassIdentifier: Assembly-CSharp::FMODSettings.FMODVCASettingsView
   masterVCA: {fileID: 143316846}
   bgmVCA: {fileID: 1812255744}
   seVCA: {fileID: 53265389}
@@ -162,9 +162,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 6798803}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4db319e1efb1cf840b1ac4cb993e945b, type: 3}
+  m_Script: {fileID: 11500000, guid: d3f296d5aa894a33a6a10868552d5314, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FMODVCAManager
+  m_EditorClassIdentifier: Assembly-CSharp::LifetimeScopes.FMODSettingsLifetimeScope
+  parentReference:
+    TypeName:
+  autoRun: 1
+  autoInjectGameObjects: []
+  _view: {fileID: 6798804}
 --- !u!4 &6798806
 Transform:
   m_ObjectHideFlags: 0

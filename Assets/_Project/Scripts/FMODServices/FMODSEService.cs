@@ -171,8 +171,17 @@ namespace FMODServices
             return playbackState != PLAYBACK_STATE.STOPPED;
         }
 
+        /// <summary>Root破棄時に所有するSEを停止して解放する</summary>
+        /// <example>GameLifetimeScopeの破棄時にVContainerから呼ばれる</example>
         public void Dispose()
         {
+            // FMODが先に終了している場合はネイティブAPIにアクセスしない
+            if (!RuntimeManager.IsInitialized)
+            {
+                _seInstances.Clear();
+                return;
+            }
+
             StopAllSE(false);
         }
     }
