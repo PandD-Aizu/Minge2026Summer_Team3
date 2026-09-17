@@ -11,24 +11,24 @@ namespace _Project.Scripts.Data.Fish
     public class FishDefinition : ScriptableObject
     {
         [SerializeField]
-        private int fishId;
+        private int _fishId;
 
         [SerializeField]
-        private ItemDefinition item;
+        private ItemDefinition _item;
 
         [SerializeField]
-        private MiniGameType gameType;
+        private MiniGameType _gameType;
 
         [SerializeField]
-        private float difficulty;
+        private float _difficulty;
 
         [SerializeField]
-        private FishingGimmickType gimmickType;
+        private FishingGimmickType _gimmickType;
 
-        public int FishId => fishId;
-        public ItemDefinition Item => item;
-        public MiniGameType GameType => gameType;
-        public float Difficulty => difficulty;
-        public FishingGimmickType GimmickType => gimmickType;
+        public int FishId => _fishId;
+        public ItemDefinition Item => _item;
+        public MiniGameType GameType => _gameType;
+        public float Difficulty => _difficulty;
+        public FishingGimmickType GimmickType => _gimmickType;
     }
 }
