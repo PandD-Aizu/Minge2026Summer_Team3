@@ -37,6 +37,9 @@ public class PlayerMovement : MonoBehaviour
         Vector2 input = _inputReader.MoveInput;
         var direction = new Vector3(input.x, 0f, input.y);
 
+        // 斜めの移動スピードを１までに抑える
+        Vector3.ClampMagnitude(direction, 1f);
+
         // 接地中は落下速度をリセットする
         if (_characterController.isGrounded && _verticalVelocity < 0f)
         {
