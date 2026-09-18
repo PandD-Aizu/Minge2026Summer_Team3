@@ -1,6 +1,7 @@
 using FMODServices;
 using FMODSettings;
 using SaveSettings;
+using SceneLoadServices;
 using VContainer;
 using VContainer.Unity;
 
@@ -18,6 +19,9 @@ namespace LifetimeScopes
             builder.Register<FMODSEService>(Lifetime.Singleton);
             builder.Register<FMODVCAService>(Lifetime.Singleton);
             builder.Register<SaveService>(Lifetime.Singleton);
+
+            // シーンのロード関係のサービス
+            builder.Register<SceneLoadService>(Lifetime.Singleton);
 
             // 設定画面がなくても保存済みの音量を適用する
             builder.RegisterEntryPoint<FMODAudioInitializer>().AsSelf();
