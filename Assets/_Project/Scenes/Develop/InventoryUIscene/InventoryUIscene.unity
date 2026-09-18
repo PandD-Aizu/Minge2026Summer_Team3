@@ -611,6 +611,40 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8149419056661991658, guid: a6a2737748d32eb478cdf74ad8a32645, type: 3}
+      propertyPath: m_text
+      value: '    F : Use
+
+        Esc : Close '
+      objectReference: {fileID: 0}
+    - target: {fileID: 8149419056661991658, guid: a6a2737748d32eb478cdf74ad8a32645, type: 3}
+      propertyPath: m_fontSize
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 8149419056661991658, guid: a6a2737748d32eb478cdf74ad8a32645, type: 3}
+      propertyPath: m_margin.z
+      value: -142.16187
+      objectReference: {fileID: 0}
+    - target: {fileID: 8149419056661991658, guid: a6a2737748d32eb478cdf74ad8a32645, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 8253826987435981223, guid: a6a2737748d32eb478cdf74ad8a32645, type: 3}
+      propertyPath: m_Name
+      value: How to
+      objectReference: {fileID: 0}
+    - target: {fileID: 8703478001957169293, guid: a6a2737748d32eb478cdf74ad8a32645, type: 3}
+      propertyPath: m_text
+      value: "Explain\n\n "
+      objectReference: {fileID: 0}
+    - target: {fileID: 9186741639029802922, guid: a6a2737748d32eb478cdf74ad8a32645, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 345
+      objectReference: {fileID: 0}
+    - target: {fileID: 9186741639029802922, guid: a6a2737748d32eb478cdf74ad8a32645, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 436
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
