@@ -27,7 +27,7 @@ namespace Presentation
                 .Subscribe(async _ =>
                 {
                     _titleUIView.SetInteractable(false);
-                    var isLoaded = await _sceneLoadService.LoadSceneAsync("CampStage");
+                    var isLoaded = await _sceneLoadService.LoadSceneAsync("Intro");
                     if (!isLoaded)
                         _titleUIView.SetInteractable(true);
                 })
