@@ -2,17 +2,21 @@
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
-namespace _Project.Scripts.CollectionPoint
+namespace ExchangePoint
 {
     /// <summary>
     /// 無人集荷場のUI
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CanvasGroup))]
-    public class CollectionPointView : MonoBehaviour
+    public class ExchangePointView : MonoBehaviour
     {
-        [SerializeField] private AssetReference _collectionPointUIRef;
-        [SerializeField] private float _fadeDuration;
+        [Header("生成するウィンドウのアドレス")]
+        [SerializeField] private AssetReference _exchangeUIRef;
+        [SerializeField] private AssetReference _exchangePopupUIRef;
+
+        [SerializeField, Tooltip("UIの表示順")] private int _sortingOrder = 11;
+        [SerializeField, Min(0.0f)] private float _fadeDuration = 0.2f;
 
         private CanvasGroup _canvasGroup;
         private Canvas _canvas;
@@ -20,22 +24,21 @@ namespace _Project.Scripts.CollectionPoint
         private bool _isVisible;
         private Tween _fadeTween;
 
+        public bool IsVisible => _isVisible;
+
         private void Awake()
         {
-            _canvasGroup = GetComponent<CanvasGroup>();
-            _canvasGroup.alpha = 0.0f;
-            _canvasGroup.interactable = false;
-            _canvasGroup.blocksRaycasts = false;
-
-            var handle = Addressables.LoadAssetAsync<GameObject>(_collectionPointUIRef);
-
+            var handle = Addressables.LoadAssetAsync<GameObject>(_exchangeUIRef);
             try
             {
                 handle.Completed += (op) =>
                 {
                     if (op.Status == UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationStatus.Succeeded)
                     {
-                        _collectionPointUIInstance = Instantiate(op.Result);
+                        _collectionPointUIInstance = Instantiate(op.Result, transform);
+                        _canvas = _collectionPointUIInstance.GetComponentInChildren<Canvas>();
+                        _canvas.sortingOrder = _sortingOrder;
+                        _canvasGroup = _collectionPointUIInstance.GetComponent<CanvasGroup>();
                         SetVisible(false);
                     }
                     else
@@ -57,7 +60,7 @@ namespace _Project.Scripts.CollectionPoint
         /// UIの表示状態をフェードで切り替える
         /// </summary>
         /// <param name="visible">true: 表示する、false: 非表示する</param>
-        private void SetVisible(bool visible)
+        public void SetVisible(bool visible)
         {
             if (_collectionPointUIInstance == null) return;
 
