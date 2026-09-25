@@ -1,0 +1,276 @@
+﻿root = true
+
+
+# ============================================================
+# Common
+# ============================================================
+
+[*]
+
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+
+# ============================================================
+# C#
+# ============================================================
+
+[*.cs]
+
+indent_style = space
+indent_size = 4
+tab_width = 4
+
+
+# ============================================================
+# Access Modifier
+# ============================================================
+
+# public interface member を除き、アクセス修飾子を省略しない
+#
+# OK:
+# private int _hp;
+# internal class Enemy { }
+#
+# Avoid:
+# int _hp;
+# class Enemy { }
+
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
+
+
+# ============================================================
+# Built-in Types
+# ============================================================
+
+# int / string / bool などを使う
+#
+# OK:
+# int hp;
+# string name;
+#
+# Avoid:
+# Int32 hp;
+# String name;
+
+dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
+dotnet_style_predefined_type_for_member_access = true:suggestion
+
+
+# ============================================================
+# var
+# ============================================================
+
+# 組み込み型には明示型
+#
+# int hp = 100;
+# bool isDead = false;
+
+csharp_style_var_for_built_in_types = false:suggestion
+
+
+# 右辺から型が明白ならvar
+#
+# var enemy = new Enemy();
+# var enemies = new List<Enemy>();
+
+csharp_style_var_when_type_is_apparent = true:suggestion
+
+
+# それ以外は明示型
+#
+# Enemy enemy = GetEnemy();
+# DamageResult result = CalculateDamage();
+
+csharp_style_var_elsewhere = false:suggestion
+
+
+# Riderではジェネリック型引数から型が明白な場合もvar
+#
+# var component = GetComponent<Component>();
+# var obj = FindAnyObjectByType<MyObject>();
+
+csharp_use_roslyn_logic_for_evident_types = false
+csharp_for_simple_types = use_var_when_evident
+csharp_for_other_types = use_var_when_evident
+
+
+# ============================================================
+# Naming Styles
+# ============================================================
+
+# PascalCase
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+# camelCase
+dotnet_naming_style.camel_case.capitalization = camel_case
+
+# _camelCase
+dotnet_naming_style.underscore_camel_case.required_prefix = _
+dotnet_naming_style.underscore_camel_case.capitalization = camel_case
+
+# IPascalCase
+dotnet_naming_style.interface_pascal_case.required_prefix = I
+dotnet_naming_style.interface_pascal_case.capitalization = pascal_case
+
+
+# ============================================================
+# Type
+# ============================================================
+
+# Class / Struct / Enum: PascalCase
+
+dotnet_naming_rule.types_pascal_case.symbols = types
+dotnet_naming_rule.types_pascal_case.style = pascal_case
+dotnet_naming_rule.types_pascal_case.severity = warning
+
+dotnet_naming_symbols.types.applicable_kinds = class, struct, enum
+dotnet_naming_symbols.types.applicable_accessibilities = *
+
+
+# ============================================================
+# Interface
+# ============================================================
+
+# Interface: IPascalCase
+
+dotnet_naming_rule.interfaces_pascal_case.symbols = interfaces
+dotnet_naming_rule.interfaces_pascal_case.style = interface_pascal_case
+dotnet_naming_rule.interfaces_pascal_case.severity = warning
+
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_symbols.interfaces.applicable_accessibilities = *
+
+
+# ============================================================
+# Method / Property / Event
+# ============================================================
+
+# Method / Property / Event: PascalCase
+# privateもPascalCase
+
+dotnet_naming_rule.members_pascal_case.symbols = members
+dotnet_naming_rule.members_pascal_case.style = pascal_case
+dotnet_naming_rule.members_pascal_case.severity = warning
+
+dotnet_naming_symbols.members.applicable_kinds = method, property, event
+dotnet_naming_symbols.members.applicable_accessibilities = *
+
+
+# ============================================================
+# Private Field
+# ============================================================
+
+# Private Field: _camelCase
+#
+# private int _currentHp;
+# private Rigidbody _rigidbody;
+
+dotnet_naming_rule.private_fields_underscore_camel_case.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore_camel_case.style = underscore_camel_case
+dotnet_naming_rule.private_fields_underscore_camel_case.severity = warning
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+
+# ============================================================
+# Non-private Field
+# ============================================================
+
+# Public / Internal / Protected Field: PascalCase
+#
+# フィールド自体は原則private。
+# 例外的に公開する場合の命名だけ定める。
+
+dotnet_naming_rule.non_private_fields_pascal_case.symbols = non_private_fields
+dotnet_naming_rule.non_private_fields_pascal_case.style = pascal_case
+dotnet_naming_rule.non_private_fields_pascal_case.severity = warning
+
+dotnet_naming_symbols.non_private_fields.applicable_kinds = field
+dotnet_naming_symbols.non_private_fields.applicable_accessibilities = public, internal, protected, protected_internal, private_protected
+
+
+# ============================================================
+# Const
+# ============================================================
+
+# Const: PascalCase
+#
+# private const int MaxEnemyCount = 100;
+# const int DefaultHp = 100;
+
+dotnet_naming_rule.constants_pascal_case.symbols = constants
+dotnet_naming_rule.constants_pascal_case.style = pascal_case
+dotnet_naming_rule.constants_pascal_case.severity = warning
+
+dotnet_naming_symbols.constants.applicable_kinds = field, local
+dotnet_naming_symbols.constants.applicable_accessibilities = *
+dotnet_naming_symbols.constants.required_modifiers = const
+
+
+# Private Fieldの _camelCase と競合しないよう、
+# private constを明示的にPascalCaseにする
+
+dotnet_naming_rule.private_constants_pascal_case.symbols = private_constants
+dotnet_naming_rule.private_constants_pascal_case.style = pascal_case
+dotnet_naming_rule.private_constants_pascal_case.severity = warning
+
+dotnet_naming_symbols.private_constants.applicable_kinds = field
+dotnet_naming_symbols.private_constants.applicable_accessibilities = private
+dotnet_naming_symbols.private_constants.required_modifiers = const
+
+
+# ============================================================
+# Parameter
+# ============================================================
+
+# Parameter: camelCase
+#
+# void TakeDamage(int damageAmount)
+
+dotnet_naming_rule.parameters_camel_case.symbols = parameters
+dotnet_naming_rule.parameters_camel_case.style = camel_case
+dotnet_naming_rule.parameters_camel_case.severity = suggestion
+
+dotnet_naming_symbols.parameters.applicable_kinds = parameter
+dotnet_naming_symbols.parameters.applicable_accessibilities = *
+
+
+# ============================================================
+# Local Variable
+# ============================================================
+
+# Local Variable: camelCase
+#
+# int remainingHp;
+
+dotnet_naming_rule.locals_camel_case.symbols = locals
+dotnet_naming_rule.locals_camel_case.style = camel_case
+dotnet_naming_rule.locals_camel_case.severity = suggestion
+
+dotnet_naming_symbols.locals.applicable_kinds = local
+dotnet_naming_symbols.locals.applicable_accessibilities = local
+
+# ============================================================
+# Rider / Unity
+# ============================================================
+
+# [SerializeField] private field: _camelCase
+
+dotnet_naming_rule.unity_serialized_field_rule.import_to_resharper = true
+dotnet_naming_rule.unity_serialized_field_rule.resharper_description = Unity serialized field
+dotnet_naming_rule.unity_serialized_field_rule.resharper_guid = 5f0fdb63-c892-4d2c-9324-15c80b22a7ef
+dotnet_naming_rule.unity_serialized_field_rule.severity = warning
+dotnet_naming_rule.unity_serialized_field_rule.style = underscore_camel_case
+dotnet_naming_rule.unity_serialized_field_rule.symbols = unity_serialized_field_symbols
+
+dotnet_naming_symbols.unity_serialized_field_symbols.applicable_accessibilities = private
+dotnet_naming_symbols.unity_serialized_field_symbols.applicable_kinds = field
+dotnet_naming_symbols.unity_serialized_field_symbols.resharper_applicable_kinds = unity_serialised_field
+dotnet_naming_symbols.unity_serialized_field_symbols.resharper_required_modifiers = instance
+
+# namespaceとフォルダ構成の一致は要求しない
+resharper_check_namespace_highlighting = none
+    
