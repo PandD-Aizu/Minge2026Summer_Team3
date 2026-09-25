@@ -15,7 +15,6 @@ public class DialogueUIView : MonoBehaviour
     private void Start()
     {
         _button.onClick.AddListener(OnTextBoxClicked);
-        Debug.Log("UIVEIWのスタート");
     }
 
     public void SetText(string text)
