@@ -1,1 +1,0 @@
-# Minge2026Summer_Team3
