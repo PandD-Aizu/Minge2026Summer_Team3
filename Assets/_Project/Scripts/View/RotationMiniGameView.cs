@@ -19,8 +19,6 @@ public class RotationMiniGameView : MonoBehaviour
         if (!_isRotating) return;
         float rotate = _settings.RotationSpeed * Time.deltaTime;
         _pin.transform.Rotate(0, 0, rotate, Space.Self);
-
-
     }
 
     /// <summary>
@@ -33,7 +31,7 @@ public class RotationMiniGameView : MonoBehaviour
         _greatZone.fillAmount = _settings.GreatAngle / 360;
         _goodZone.fillAmount = _settings.GoodAngle / 360;
 
-        SetBaseRotation(0);
+        SetBaseRotation(RandomizeBaseRotation());
 
         _canvas.enabled = true;
     }
