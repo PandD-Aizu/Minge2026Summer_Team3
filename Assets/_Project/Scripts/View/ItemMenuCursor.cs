@@ -1,23 +1,25 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace ExchangePoint
+namespace ItemMenus
 {
     /// <summary>商品一覧内の枠を選び、赤い強調表示とスクロールを管理する</summary>
-    public sealed class ExchangeItemCursor
+    public sealed class ItemMenuCursor
     {
         private readonly UnityEngine.UI.ScrollRect _scrollRect;
-        private readonly List<UnityEngine.UI.Button> _items = new();
+        private readonly List<RectTransform> _items = new();
         private readonly List<Vector2> _positions = new();
         private UnityEngine.UI.Graphic _selectedGraphic;
         private Color _originalColor;
         private int _selectedIndex = -1;
         private RectTransform _selectionFrame;
 
+        public RectTransform SelectedItem => _selectedIndex >= 0 ? _items[_selectedIndex] : null;
+
         /// <summary>商品一覧のスクロール領域を保持する</summary>
         /// <param name="scrollRect">商品枠をContent直下に持つScrollRect</param>
         /// <example>交換UIのPrefabを生成した直後に渡す</example>
-        public ExchangeItemCursor(UnityEngine.UI.ScrollRect scrollRect)
+        public ItemMenuCursor(UnityEngine.UI.ScrollRect scrollRect)
         {
             _scrollRect = scrollRect;
         }
@@ -34,8 +36,9 @@ namespace ExchangePoint
             foreach (Transform child in _scrollRect.content)
             {
                 var button = child.GetComponent<UnityEngine.UI.Button>();
-                if (button != null && button.isActiveAndEnabled && button.IsInteractable())
-                    _items.Add(button);
+                if (child.gameObject.activeInHierarchy && child is RectTransform rect &&
+                    (button == null || button.isActiveAndEnabled && button.IsInteractable()))
+                    _items.Add(rect);
             }
 
             Canvas.ForceUpdateCanvases();
@@ -45,15 +48,18 @@ namespace ExchangePoint
         /// <summary>同じ行または列の隣接する商品枠へ移動する</summary>
         /// <param name="direction">上下左右の単位ベクトル</param>
         /// <example>右端で右を押した場合は選択を変更しない</example>
-        public void Move(Vector2Int direction)
+        /// <returns>隣接する枠へ移動できた場合はtrue</returns>
+        public bool Move(Vector2Int direction)
         {
-            if (_selectedIndex < 0 || _scrollRect == null) return;
+            if (_selectedIndex < 0 || _scrollRect == null) return false;
 
             // 画面幅で列数が変わっても、実際の枠の位置から隣を探す
             _positions.Clear();
             foreach (var item in _items)
             {
-                if (item == null || !item.isActiveAndEnabled || !item.IsInteractable())
+                var button = item != null ? item.GetComponent<UnityEngine.UI.Button>() : null;
+                if (item == null || !item.gameObject.activeInHierarchy ||
+                    (button != null && (!button.isActiveAndEnabled || !button.IsInteractable())))
                 {
                     _positions.Add(new Vector2(float.NaN, float.NaN));
                     continue;
@@ -64,7 +70,9 @@ namespace ExchangePoint
             }
 
             int next = FindNextIndex(_positions, _selectedIndex, direction);
-            if (next != _selectedIndex) Select(next);
+            if (next == _selectedIndex) return false;
+            Select(next);
+            return true;
         }
 
         /// <summary>同じ行・列にある、指定方向で最も近い枠の番号を返す</summary>
@@ -109,17 +117,8 @@ namespace ExchangePoint
         /// <example>先頭選択と方向キーによる移動から呼ぶ</example>
         private void Select(int index)
         {
-            ClearSelection();
+            Highlight(_items[index]);
             _selectedIndex = index;
-            _selectedGraphic = _items[index].targetGraphic;
-            if (_selectedGraphic != null)
-            {
-                _originalColor = _selectedGraphic.color;
-                _selectedGraphic.color = Color.red;
-            }
-
-            // 商品画像が背景を覆っていても見えるよう、最前面に赤い枠線を重ねる
-            ShowSelectionFrame((RectTransform)_items[index].transform);
 
             // 選択枠が隠れる分だけスクロールし、慣性移動を止める
             var viewport = _scrollRect.viewport != null ? _scrollRect.viewport : (RectTransform)_scrollRect.transform;
@@ -135,6 +134,31 @@ namespace ExchangePoint
 
             _scrollRect.StopMovement();
             _scrollRect.content.position += viewport.TransformVector(offset);
+        }
+
+        /// <summary>商品枠またはタブを赤い枠で強調する</summary>
+        /// <param name="target">強調するUIのRectTransform</param>
+        /// <example>タブへ移動したときはボタンのRectTransformを渡す</example>
+        public void Highlight(RectTransform target)
+        {
+            ClearSelection();
+            var button = target.GetComponent<UnityEngine.UI.Button>();
+            _selectedGraphic = button != null ? button.targetGraphic : null;
+            if (_selectedGraphic != null)
+            {
+                _originalColor = _selectedGraphic.color;
+                _selectedGraphic.color = Color.red;
+            }
+
+            ShowSelectionFrame(target);
+        }
+
+        /// <summary>生成した枠線を破棄する</summary>
+        /// <example>別のタブのカーソルを生成する前に呼ぶ</example>
+        public void Dispose()
+        {
+            ClearSelection();
+            if (_selectionFrame != null) Object.Destroy(_selectionFrame.gameObject);
         }
 
         /// <summary>選択した商品枠の内側に赤い枠線を重ねる</summary>

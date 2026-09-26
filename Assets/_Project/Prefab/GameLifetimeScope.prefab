@@ -48,3 +48,4 @@ MonoBehaviour:
     TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
+  _inventoryPrefab: {fileID: 7309821344782021262, guid: a6a2737748d32eb478cdf74ad8a32645, type: 3}

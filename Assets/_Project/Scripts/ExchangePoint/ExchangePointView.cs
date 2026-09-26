@@ -3,6 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using R3;
 using DG.Tweening;
+using ItemMenus;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -26,10 +27,9 @@ namespace ExchangePoint
         private CanvasGroup _canvasGroup;
         private GameObject _collectionPointUIInstance;
         private readonly ReactiveProperty<bool> _visibility = new(false);
-        private readonly CancellationTokenSource _lifetimeCancellation = new();
         private Tween _fadeTween;
         private AsyncOperationHandle<GameObject> _uiHandle;
-        private ExchangeItemCursor _itemCursor;
+        private ItemMenuNavigation _itemCursor;
         private GameObject _popupUIInstance;
         private AsyncOperationHandle<GameObject> _popupHandle;
         private bool _isPopupOpen;
@@ -52,8 +52,7 @@ namespace ExchangePoint
                     await LoadPanelAsync(_exchangeUIRef, _sortingOrder, cancellationToken);
 
                 _canvasGroup = _collectionPointUIInstance.GetComponent<CanvasGroup>();
-                _itemCursor = new ExchangeItemCursor(
-                    _collectionPointUIInstance.GetComponentInChildren<UnityEngine.UI.ScrollRect>(true));
+                _itemCursor = _collectionPointUIInstance.GetComponent<ItemMenuNavigation>();
                 HideImmediately();
                 _collectionPointUIInstance.SetActive(true);
             }
@@ -77,7 +76,7 @@ namespace ExchangePoint
             AssetReference reference, int sortingOrder, CancellationToken cancellationToken)
         {
             using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(
-                cancellationToken, _lifetimeCancellation.Token);
+                cancellationToken, this.GetCancellationTokenOnDestroy());
             var token = linkedCancellation.Token;
             token.ThrowIfCancellationRequested();
 
@@ -213,12 +212,21 @@ namespace ExchangePoint
             _visibility.Value = false;
         }
 
-        /// <summary>表示中のショップの商品カーソルを移動する</summary>
-        /// <param name="direction">上下左右の単位ベクトル</param>
-        /// <example>Dキーを押したときはVector2Int.rightを渡す</example>
-        public void MoveSelection(Vector2Int direction)
+        /// <summary>表示中の一覧の選択枠を動かし、詳細表示中は長押しを解除する</summary>
+        /// <param name="input">WASD入力の移動ベクトル</param>
+        /// <example>PresenterのTickからNavigationInputを渡す</example>
+        public void Navigate(Vector2 input)
         {
-            if (IsVisible && !_isPopupOpen) _itemCursor?.Move(direction);
+            if (IsVisible && !_isPopupOpen) _itemCursor?.Navigate(input);
+            else _itemCursor?.ResetRepeat();
+        }
+
+        /// <summary>選択中のタブを切り替えるか、商品の詳細を開く</summary>
+        /// <example>一覧表示中にJが押されたときPresenterから呼ぶ</example>
+        public void ConfirmSelection()
+        {
+            if (IsVisible && !_isPopupOpen && _itemCursor != null && _itemCursor.ConfirmSelection())
+                SetPopupVisible(true);
         }
 
         /// <summary>無効化時に表示と入力を直ちに止める</summary>
@@ -230,14 +238,12 @@ namespace ExchangePoint
         private void OnDestroy()
         {
             HideImmediately();
-            _lifetimeCancellation.Cancel();
 
             // ロード済みのパネルはViewが所有し、ロード途中のものはLoadPanelAsyncが解放する
             if (_collectionPointUIInstance != null) Destroy(_collectionPointUIInstance);
             if (_popupUIInstance != null) Destroy(_popupUIInstance);
             ReleaseHandle(ref _uiHandle);
             ReleaseHandle(ref _popupHandle);
-            _lifetimeCancellation.Dispose();
             _visibility.Dispose();
         }
     }
