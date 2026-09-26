@@ -3,6 +3,7 @@ using FMODSettings;
 using Input;
 using SaveSettings;
 using SceneLoadServices;
+using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
@@ -10,6 +11,7 @@ namespace LifetimeScopes
 {
     public class GameLifetimeScope : LifetimeScope
     {
+
         /// <summary>アプリ全体で共有する音声サービスを登録する</summary>
         /// <param name="builder">Rootコンテナの登録先</param>
         /// <example>VContainerのRoot Prefabから自動実行される</example>
@@ -32,6 +34,8 @@ namespace LifetimeScopes
 
             // 入力の切り替え
             builder.Register<InputModeService>(Lifetime.Singleton);
+
+
         }
     }
 }

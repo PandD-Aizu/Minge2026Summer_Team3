@@ -1,10 +1,12 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using R3;
+using VContainer;
 
 public class PlayerInputReader : MonoBehaviour
 {
     private PlayerInputAction _inputActions;
+    private bool _isSubscribed;
 
     public Vector2 MoveInput { get; private set; }
 
@@ -16,9 +18,12 @@ public class PlayerInputReader : MonoBehaviour
     public Observable<Unit> OnInventoryPressed => _inventoryPressed;
     public Observable<Unit> OnCancelPressed => _cancelPressed;
 
-    private void Awake()
+    [Inject]
+    public void Construct(PlayerInputAction inputActions)
     {
-        _inputActions = new PlayerInputAction();
+        _inputActions = inputActions;
+        if (_isSubscribed) return;
+        _isSubscribed = true;
 
         _inputActions.Player.Move.performed += HandleMove;
         _inputActions.Player.Move.canceled += HandleMove;
@@ -26,15 +31,22 @@ public class PlayerInputReader : MonoBehaviour
         _inputActions.Player.Interact.performed += HandleInteract;
         _inputActions.Player.Inventory.performed += HandleInventory;
         _inputActions.Player.Cancel.performed += HandleCancel;
+
+        if (isActiveAndEnabled)
+        {
+            _inputActions.Player.Enable();
+        }
     }
 
     private void OnEnable()
     {
+        if (_inputActions == null) return;
         _inputActions.Player.Enable();
     }
 
     private void OnDisable()
     {
+        if (_inputActions == null) return;
         _inputActions.Player.Disable();
         MoveInput = Vector2.zero;
     }
@@ -49,8 +61,6 @@ public class PlayerInputReader : MonoBehaviour
             _inputActions.Player.Inventory.performed -= HandleInventory;
             _inputActions.Player.Interact.performed -= HandleInteract;
             _inputActions.Player.Cancel.performed -= HandleCancel;
-
-            _inputActions.Dispose();
         }
 
         _interactPressed.Dispose();

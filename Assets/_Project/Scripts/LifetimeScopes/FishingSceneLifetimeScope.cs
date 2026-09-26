@@ -3,26 +3,33 @@ using VContainer;
 using VContainer.Unity;
 using MiniGame;
 
-public class FishingSceneLifetimeScope : LifetimeScope
+namespace LifetimeScopes
 {
-    [SerializeField]
-    private RotationMiniGameView _rotationMiniGameView;
-
-    [SerializeField]
-    private RotationMiniGameSettings _rotationMiniGameSettings;
-
-    protected override void Configure(IContainerBuilder builder)
+    public class FishingSceneLifetimeScope : LifetimeScope
     {
-        // シーン上のViewを登録
-        builder.RegisterComponent(_rotationMiniGameView);
+        [SerializeField] private PlayerInputReader _playerInputReader;
 
-        // 設定用のScriptableObjectを登録
-        builder.RegisterInstance(_rotationMiniGameSettings);
+        [SerializeField] private RotationMiniGameView _rotationMiniGameView;
 
-        // ミニゲームの進行・入力・判定を担当
-        builder.Register<RotationMiniGameController>(Lifetime.Scoped);
+        [SerializeField] private RotationMiniGameSettings _rotationMiniGameSettings;
 
-        // テスト用
-        builder.RegisterEntryPoint<RotationMiniGameTestEntryPoint>();
+        protected override void Configure(IContainerBuilder builder)
+        {
+            // シーン上のViewを登録
+            builder.RegisterComponent(_rotationMiniGameView);
+
+            // 設定用のScriptableObjectを登録
+            builder.RegisterInstance(_rotationMiniGameSettings);
+
+            // ミニゲームの進行・入力・判定を担当
+            builder.Register<RotationMiniGameController>(Lifetime.Scoped);
+
+            // テスト用
+            //builder.RegisterEntryPoint<RotationMiniGameTestEntryPoint>();
+
+
+            // 入力の受付
+            builder.RegisterComponent(_playerInputReader);
+        }
     }
 }
