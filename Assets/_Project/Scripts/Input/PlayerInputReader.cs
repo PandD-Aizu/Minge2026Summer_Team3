@@ -8,7 +8,19 @@ public class PlayerInputReader : MonoBehaviour
     private PlayerInputAction _inputActions;
     private bool _isSubscribed;
 
-    public Vector2 MoveInput { get; private set; }
+    private int _movementBlockCount;
+
+    public Vector2 NavigationInput { get; private set; }
+    public Vector2 MoveInput => _movementBlockCount > 0 ? Vector2.zero : NavigationInput;
+
+    /// <summary>UI操作中の歩行を止め、解除用の購読オブジェクトを返す</summary>
+    /// <returns>Disposeすると、この呼び出しによる歩行停止を解除する</returns>
+    /// <example>ショップ表示中だけ保持し、閉じるときにDisposeする</example>
+    public System.IDisposable BlockMovement()
+    {
+        _movementBlockCount++;
+        return Disposable.Create(() => _movementBlockCount--);
+    }
 
     private readonly Subject<Unit> _interactPressed = new();
     private readonly Subject<Unit> _inventoryPressed = new();
@@ -48,7 +60,7 @@ public class PlayerInputReader : MonoBehaviour
     {
         if (_inputActions == null) return;
         _inputActions.Player.Disable();
-        MoveInput = Vector2.zero;
+        NavigationInput = Vector2.zero;
     }
 
     private void OnDestroy()
@@ -70,7 +82,7 @@ public class PlayerInputReader : MonoBehaviour
 
     private void HandleMove(InputAction.CallbackContext context)
     {
-        MoveInput = context.ReadValue<Vector2>();
+        NavigationInput = context.ReadValue<Vector2>();
     }
 
     private void HandleInventory(InputAction.CallbackContext context)
