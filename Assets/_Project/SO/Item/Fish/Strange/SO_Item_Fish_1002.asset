@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c85d36ded3d64aa68e757458b8bc6a67, type: 3}
+  m_Name: SO_Item_Fish_1002
+  m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Data.Fish.FishDefinition
+  itemId: 1002
+  itemName: "\u30D0\u30A4\u30AA\u30EC\u30C3\u30C8\u30C0\u30F3\u30AF\u30EB\u30AA\u30B9\u30C6\u30A6\u30B9"
+  description: "\u53E4\u4EE3\u9B5A\u306E\u4E2D\u3067\u306F\u6700\u5927\u30FB\u6700\u5F37\u3068\u8A00\u308F\u308C\u3066\u3044\u308B\u3002"
+  _fishImage: {fileID: 21300000, guid: 811d72743e4169144ad7f3c68697491f, type: 3}
+  _fishId: 0
+  _miniGameSettings:
+  - {fileID: 11400000, guid: 042d6b8879c971b4298a9f27de569cee, type: 2}
+  _difficulty: 1
+  _gimmickType: 0
