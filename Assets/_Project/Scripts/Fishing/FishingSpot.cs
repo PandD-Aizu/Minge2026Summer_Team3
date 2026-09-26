@@ -51,6 +51,11 @@ namespace _Project.Scripts.Fishing
         private float _distanceSinceRipple;
         private bool _isMoving;
 
+        private IInteractableTarget _currentTarget;
+
+        // インタラクトできる魚影が出てるかどうか
+        public bool CanInteractShadow => _currentTarget != null && _currentTarget.CanInteract;
+
         /// <summary>出現範囲内でゆっくり往復し、移動距離に応じて波紋を出す</summary>
         /// <example>魚影のルートを動かすため、接近判定とアイコンも同じ位置へ追従する</example>
         private void UpdateMovement()
@@ -131,6 +136,7 @@ namespace _Project.Scripts.Fishing
             if (_shadow == null)
             {
                 _shadow = Instantiate(_shadowPrefab, transform);
+                _currentTarget = _shadow.GetComponent<IInteractableTarget>();
                 _shadow.gameObject.SetActive(false);
             }
 

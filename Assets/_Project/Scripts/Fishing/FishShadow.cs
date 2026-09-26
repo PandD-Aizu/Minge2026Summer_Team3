@@ -1,6 +1,7 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using _Project.Scripts.InteractableObject;
+using Fishing;
 using UnityEngine;
 
 namespace _Project.Scripts.Fishing
@@ -14,6 +15,8 @@ namespace _Project.Scripts.Fishing
         [SerializeField] private FishRippleEmitter _ripples;
 
         private float _rippleSize;
+
+        public bool IsPlayerNearby => _connector.IsPlayerNearby;
 
         /// <summary>現在位置へ出現時または移動中の波紋を発生させる</summary>
         /// <param name="isAppearance">出現時の大きな波紋ならtrue、移動中の小さな波紋ならfalse</param>
