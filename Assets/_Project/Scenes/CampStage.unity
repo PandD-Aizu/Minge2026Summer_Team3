@@ -279,6 +279,17 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!114 &234540643 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8081095138367460404, guid: 68926b496fbfe2740a58a97c08b54b05, type: 3}
+  m_PrefabInstance: {fileID: 5210391192856314282}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d86250c44eab4b0a9ce9d6604a60445c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.InteractableObject.InteractableConnector
 --- !u!1 &265040275
 GameObject:
   m_ObjectHideFlags: 0
@@ -400,6 +411,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 271699030}
+  - component: {fileID: 271699032}
+  - component: {fileID: 271699033}
+  - component: {fileID: 271699031}
   m_Layer: 0
   m_Name: Shop
   m_TagString: Untagged
@@ -423,6 +437,61 @@ Transform:
   - {fileID: 1924170913}
   m_Father: {fileID: 89680200}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &271699031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 271699029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d64ad13ee312440ca741eacc337c3223, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.CollectionPoint.CollectionPointView
+  _exchangeUIRef:
+    m_AssetGUID: ad344a5e8d1d1894f814aeb98c261115
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_SubObjectGUID: 
+    m_EditorAssetChanged: 0
+  _exchangePopupUIRef:
+    m_AssetGUID: f6e8b9e8435a5b5429d2aa375bd59b44
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_SubObjectGUID: 
+    m_EditorAssetChanged: 0
+  _sortingOrder: 11
+  _fadeDuration: 0.2
+--- !u!225 &271699032
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 271699029}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!114 &271699033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 271699029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a937e0f18ee645839a933af058d16ac7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LifetimeScopes.ExchangeLifetimeScope
+  parentReference:
+    TypeName: LifetimeScopes.GameLifetimeScope
+  autoRun: 1
+  autoInjectGameObjects: []
+  _exchangeInteractableConnector: {fileID: 234540643}
 --- !u!1 &356636546
 GameObject:
   m_ObjectHideFlags: 0
@@ -2180,6 +2249,14 @@ PrefabInstance:
     - target: {fileID: 3990095944992740208, guid: 68926b496fbfe2740a58a97c08b54b05, type: 3}
       propertyPath: m_AdditionalShaderChannelsFlag
       value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 4330986013176445448, guid: 68926b496fbfe2740a58a97c08b54b05, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4280557855
+      objectReference: {fileID: 0}
+    - target: {fileID: 4330986013176445448, guid: 68926b496fbfe2740a58a97c08b54b05, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
       objectReference: {fileID: 0}
     - target: {fileID: 5062271622154469019, guid: 68926b496fbfe2740a58a97c08b54b05, type: 3}
       propertyPath: m_Name
