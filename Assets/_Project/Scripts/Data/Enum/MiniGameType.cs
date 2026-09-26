@@ -5,6 +5,7 @@
         Timing,
         Mashing,
         Gauge,
+        Rotation,
         
     }
 }

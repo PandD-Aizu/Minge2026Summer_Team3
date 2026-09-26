@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b6fcec517b055e4cacc1272c8635d3b, type: 3}
+  m_Name: SO_Gear_2000_Lure
+  m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Data.Gear.GearDefinition
+  itemId: 2000
+  itemName: Lure
+  description: "\u652F\u7D66\u3055\u308C\u305F\u91E3\u308A\u7AFF\u3002"
+  _gearImage: {fileID: 21300000, guid: ca47e00bc96be0440a0cd944201f16ca, type: 3}

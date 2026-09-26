@@ -4,7 +4,8 @@ namespace _Project.Scripts.Data.Item
     public enum ItemType
     {
         Fish,
-        FishingGear,
+        Gear,
+        Tool,
         Material,
     }
 }
