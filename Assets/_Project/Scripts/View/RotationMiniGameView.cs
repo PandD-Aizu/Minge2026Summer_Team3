@@ -49,6 +49,7 @@ public class RotationMiniGameView : MonoBehaviour
         SetBaseRotation(RandomizeBaseRotation());
 
         _canvas.enabled = true;
+        ShowText();
     }
 
     /// <summary>
@@ -66,6 +67,11 @@ public class RotationMiniGameView : MonoBehaviour
     public void HideText()
     {
         _text.enabled = false;
+    }
+
+    private void ShowText()
+    {
+        _text.enabled = true;
     }
 
     /// <summary>
