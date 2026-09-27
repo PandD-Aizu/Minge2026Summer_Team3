@@ -1,5 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Fishing;
 using R3;
 using UnityEngine;
 
@@ -52,6 +53,7 @@ namespace _Project.Scripts.Fishing
         private bool _isMoving;
 
         private IInteractableTarget _currentTarget;
+        private FishingTargetProvider _targetProvider;
 
         // インタラクトできる魚影が出てるかどうか
         public bool CanInteractShadow => _currentTarget != null && _currentTarget.CanInteract;
@@ -80,9 +82,11 @@ namespace _Project.Scripts.Fishing
         /// <example>スポットを再有効化した場合も初回待機から再開する</example>
         private void OnEnable()
         {
-            if (_shadowPrefab == null || _bigSprite == null || _smallSprite == null)
+            _targetProvider = GetComponent<FishingTargetProvider>();
+
+            if (_shadowPrefab == null || _bigSprite == null || _smallSprite == null || _targetProvider == null)
             {
-                Debug.LogError("FishingSpotに魚影Prefabと大小のSpriteを設定してください", this);
+                Debug.LogError("FishingSpotに魚影Prefab、大小のSprite、FishingTargetProviderを設定してください", this);
                 return;
             }
 
@@ -139,6 +143,8 @@ namespace _Project.Scripts.Fishing
                 _currentTarget = _shadow.GetComponent<IInteractableTarget>();
                 _shadow.gameObject.SetActive(false);
             }
+
+            _targetProvider.SelectFish();
 
             bool isBig = Random.value < _bigProbability;
             Vector3 localPoint = new(
