@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RotationMiniGameSettings
   _difficulty: 0
   _rotationSpeed: 360
-  _greatAngle: 200
-  _goodAngle: 300
+  _greatAngle: 50
+  _goodAngle: 100

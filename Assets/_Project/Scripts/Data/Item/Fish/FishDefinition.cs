@@ -34,5 +34,10 @@ namespace _Project.Scripts.Data.Fish
         public MiniGameSettings[] MiniGameSettings => _miniGameSettings;
         public Difficulty Difficulty => _difficulty;
         public FishingGimmickType GimmickType => _gimmickType;
+
+        public MiniGameSettings SelectMiniGameRandom()
+        {
+            return _miniGameSettings[Random.Range(0, _miniGameSettings.Length)];
+        }
     }
 }
