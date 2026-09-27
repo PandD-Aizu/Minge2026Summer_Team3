@@ -1,0 +1,357 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1745859925078950671
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6783353888439763145}
+  - component: {fileID: 3932677731416531945}
+  - component: {fileID: 4129594356258089479}
+  m_Layer: 0
+  m_Name: FishingSpot_01
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6783353888439763145
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1745859925078950671}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -7, y: -1, z: -8.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4994995886354076573}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3932677731416531945
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1745859925078950671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f2c0fb55f081494798d4bb913eb13b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Fishing.FishingSpot
+  _shadowPrefab: {fileID: 6186193009855514333, guid: 02929a70d9d4f3140952c6f916a2526f, type: 3}
+  _bigSprite: {fileID: 21300000, guid: 6dfede2353556524aa212919052716b1, type: 3}
+  _smallSprite: {fileID: 21300000, guid: e3c83280bd378ca4ca3c6bb8e22f59e7, type: 3}
+  _bigProbability: 0.5
+  _bigWidth: 2
+  _smallWidth: 1
+  _aspectCorrection: {x: 1, y: 1.5}
+  _headingRange: {x: -25, y: 25}
+  _areaSize: {x: 3, y: 0.5}
+  _surfaceOffset: 0.03
+  _movementDistance: 0.5
+  _movementPeriod: 6
+  _rippleDistance: 0.12
+  _initialDelay: {x: 0, y: 2}
+  _fadeInDuration: 0.4
+  _visibleDuration: {x: 6, y: 10}
+  _fadeOutDuration: 0.4
+  _respawn: 1
+  _respawnDelay: {x: 3, y: 6}
+--- !u!114 &4129594356258089479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1745859925078950671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0b86ee116dd4d679f4092a12df8b103, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Fishing.FishingSpotLifetimeScope
+  parentReference:
+    TypeName: LifetimeScopes.FishingSceneLifetimeScope
+  autoRun: 1
+  autoInjectGameObjects: []
+--- !u!1 &2891799755673908819
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5536131993168803508}
+  - component: {fileID: 8602004644374570679}
+  - component: {fileID: 9105038148827573085}
+  m_Layer: 0
+  m_Name: FishingSpot_03
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5536131993168803508
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2891799755673908819}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 15, y: -1, z: -8.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4994995886354076573}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8602004644374570679
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2891799755673908819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f2c0fb55f081494798d4bb913eb13b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Fishing.FishingSpot
+  _shadowPrefab: {fileID: 6186193009855514333, guid: 02929a70d9d4f3140952c6f916a2526f, type: 3}
+  _bigSprite: {fileID: 21300000, guid: 6dfede2353556524aa212919052716b1, type: 3}
+  _smallSprite: {fileID: 21300000, guid: e3c83280bd378ca4ca3c6bb8e22f59e7, type: 3}
+  _bigProbability: 0.5
+  _bigWidth: 2
+  _smallWidth: 1
+  _aspectCorrection: {x: 1, y: 1.5}
+  _headingRange: {x: -25, y: 25}
+  _areaSize: {x: 3, y: 0.5}
+  _surfaceOffset: 0.03
+  _movementDistance: 0.5
+  _movementPeriod: 6
+  _rippleDistance: 0.12
+  _initialDelay: {x: 0, y: 2}
+  _fadeInDuration: 0.4
+  _visibleDuration: {x: 6, y: 10}
+  _fadeOutDuration: 0.4
+  _respawn: 1
+  _respawnDelay: {x: 3, y: 6}
+--- !u!114 &9105038148827573085
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2891799755673908819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0b86ee116dd4d679f4092a12df8b103, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Fishing.FishingSpotLifetimeScope
+  parentReference:
+    TypeName: LifetimeScopes.FishingSceneLifetimeScope
+  autoRun: 1
+  autoInjectGameObjects: []
+--- !u!1 &5499479025831818948
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4994995886354076573}
+  m_Layer: 0
+  m_Name: FishingSpots
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4994995886354076573
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5499479025831818948}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6783353888439763145}
+  - {fileID: 3879664890260339334}
+  - {fileID: 5536131993168803508}
+  - {fileID: 5689854498164933509}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6083412819871140469
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3879664890260339334}
+  - component: {fileID: 4549890729482906032}
+  - component: {fileID: 1641164258739048422}
+  m_Layer: 0
+  m_Name: FishingSpot_02
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3879664890260339334
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6083412819871140469}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 4, y: -1, z: -8.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4994995886354076573}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4549890729482906032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6083412819871140469}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f2c0fb55f081494798d4bb913eb13b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Fishing.FishingSpot
+  _shadowPrefab: {fileID: 6186193009855514333, guid: 02929a70d9d4f3140952c6f916a2526f, type: 3}
+  _bigSprite: {fileID: 21300000, guid: 6dfede2353556524aa212919052716b1, type: 3}
+  _smallSprite: {fileID: 21300000, guid: e3c83280bd378ca4ca3c6bb8e22f59e7, type: 3}
+  _bigProbability: 0.5
+  _bigWidth: 2
+  _smallWidth: 1
+  _aspectCorrection: {x: 1, y: 1.5}
+  _headingRange: {x: -25, y: 25}
+  _areaSize: {x: 3, y: 0.5}
+  _surfaceOffset: 0.03
+  _movementDistance: 0.5
+  _movementPeriod: 6
+  _rippleDistance: 0.12
+  _initialDelay: {x: 0, y: 2}
+  _fadeInDuration: 0.4
+  _visibleDuration: {x: 6, y: 10}
+  _fadeOutDuration: 0.4
+  _respawn: 1
+  _respawnDelay: {x: 3, y: 6}
+--- !u!114 &1641164258739048422
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6083412819871140469}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0b86ee116dd4d679f4092a12df8b103, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Fishing.FishingSpotLifetimeScope
+  parentReference:
+    TypeName: LifetimeScopes.FishingSceneLifetimeScope
+  autoRun: 1
+  autoInjectGameObjects: []
+--- !u!1 &6595229568258323136
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5689854498164933509}
+  - component: {fileID: 8511674352747446283}
+  - component: {fileID: 7079470738478086473}
+  m_Layer: 0
+  m_Name: FishingSpot_04
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5689854498164933509
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6595229568258323136}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -26, y: -1, z: -8.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4994995886354076573}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8511674352747446283
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6595229568258323136}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f2c0fb55f081494798d4bb913eb13b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Fishing.FishingSpot
+  _shadowPrefab: {fileID: 6186193009855514333, guid: 02929a70d9d4f3140952c6f916a2526f, type: 3}
+  _bigSprite: {fileID: 21300000, guid: 6dfede2353556524aa212919052716b1, type: 3}
+  _smallSprite: {fileID: 21300000, guid: e3c83280bd378ca4ca3c6bb8e22f59e7, type: 3}
+  _bigProbability: 0.5
+  _bigWidth: 2
+  _smallWidth: 1
+  _aspectCorrection: {x: 1, y: 1.5}
+  _headingRange: {x: -25, y: 25}
+  _areaSize: {x: 3, y: 0.5}
+  _surfaceOffset: 0.03
+  _movementDistance: 0.5
+  _movementPeriod: 6
+  _rippleDistance: 0.12
+  _initialDelay: {x: 0, y: 2}
+  _fadeInDuration: 0.4
+  _visibleDuration: {x: 6, y: 10}
+  _fadeOutDuration: 0.4
+  _respawn: 1
+  _respawnDelay: {x: 3, y: 6}
+--- !u!114 &7079470738478086473
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6595229568258323136}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0b86ee116dd4d679f4092a12df8b103, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Fishing.FishingSpotLifetimeScope
+  parentReference:
+    TypeName: LifetimeScopes.FishingSceneLifetimeScope
+  autoRun: 1
+  autoInjectGameObjects: []

@@ -137,6 +137,56 @@
                     "isPartOfComposite": false
                 }
             ]
+        },
+        {
+            "name": "MiniGame",
+            "id": "221b37e8-c854-45bc-8cba-38b87b839f81",
+            "actions": [
+                {
+                    "name": "Stop",
+                    "type": "Button",
+                    "id": "146f05a8-9cc1-47f7-9890-c6d35cefbd63",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
+                },
+                {
+                    "name": "Cancel",
+                    "type": "Button",
+                    "id": "2934dcbd-fc41-442f-a037-b712db960b6b",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "bd4bf749-fd87-4cda-998f-b8e69f1c9a2a",
+                    "path": "<Keyboard>/j",
+                    "interactions": "Press",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Stop",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e51252e2-b534-498c-9772-8de7b7b53c15",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Cancel",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": []

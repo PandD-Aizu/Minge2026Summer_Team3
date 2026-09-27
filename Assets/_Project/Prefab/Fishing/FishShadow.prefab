@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6632888062916958529}
   - component: {fileID: 6186193009855514333}
   - component: {fileID: 7876547164216281938}
+  - component: {fileID: 589150438070748270}
   m_Layer: 0
   m_Name: FishShadow
   m_TagString: Untagged
@@ -66,6 +67,19 @@ MonoBehaviour:
   _color: {r: 0.65, g: 0.9, b: 1, a: 0.45}
   _duration: 1.2
   _lineWidth: 0.025
+--- !u!114 &589150438070748270
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4836283296643646614}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87e9b901dedc4e409c05ee054dea7967, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fishing.FishingShadowInteractableTarget
+  _connector: {fileID: 4517594938869323902}
 --- !u!1 &8846168079251028727
 GameObject:
   m_ObjectHideFlags: 0
