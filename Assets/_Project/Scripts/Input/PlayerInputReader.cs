@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
+using Input;
 using R3;
 using VContainer;
 
@@ -7,11 +7,13 @@ public class PlayerInputReader : MonoBehaviour
 {
     private PlayerInputAction _inputActions;
     private bool _isSubscribed;
+    private Input.MenuInputService _menuInput;
 
     private int _movementBlockCount;
 
     public Vector2 NavigationInput { get; private set; }
-    public Vector2 MoveInput => _movementBlockCount > 0 ? Vector2.zero : NavigationInput;
+    public bool IsMenuOpen => _menuInput != null && _menuInput.IsOpen;
+    public Vector2 MoveInput => _movementBlockCount > 0 || IsMenuOpen ? Vector2.zero : NavigationInput;
 
     /// <summary>UI操作中の歩行を止め、解除用の購読オブジェクトを返す</summary>
     /// <returns>Disposeすると、この呼び出しによる歩行停止を解除する</returns>
@@ -30,19 +32,30 @@ public class PlayerInputReader : MonoBehaviour
     public Observable<Unit> OnInventoryPressed => _inventoryPressed;
     public Observable<Unit> OnCancelPressed => _cancelPressed;
 
+    /// <summary>共通入力とメニューの状態を受け取り、キー入力を購読する</summary>
+    /// <param name="inputActions">ゲーム全体で共有する入力アクション</param>
+    /// <param name="menuInput">メニュー表示中の歩行を制限するサービス</param>
+    /// <example>シーンのLifetimeScopeがコンポーネントを登録したときに呼ぶ</example>
     [Inject]
-    public void Construct(PlayerInputAction inputActions)
+    public void Construct(PlayerInputAction inputActions, Input.MenuInputService menuInput)
     {
+        _menuInput = menuInput;
         _inputActions = inputActions;
         if (_isSubscribed) return;
         _isSubscribed = true;
 
-        _inputActions.Player.Move.performed += HandleMove;
-        _inputActions.Player.Move.canceled += HandleMove;
+        // 押下と解放を同じストリームで受け取り、破棄時の購読解除はR3へ委ねる
+        _inputActions.Player.Move.OnPerformedAsObservable()
+            .Merge(_inputActions.Player.Move.OnCanceledAsObservable())
+            .Subscribe(context => NavigationInput = context.ReadValue<Vector2>())
+            .AddTo(this);
 
-        _inputActions.Player.Interact.performed += HandleInteract;
-        _inputActions.Player.Inventory.performed += HandleInventory;
-        _inputActions.Player.Cancel.performed += HandleCancel;
+        _inputActions.Player.Interact.OnPerformedAsObservable()
+            .Subscribe(_ => _interactPressed.OnNext(Unit.Default)).AddTo(this);
+        _inputActions.Player.Inventory.OnPerformedAsObservable()
+            .Subscribe(_ => _inventoryPressed.OnNext(Unit.Default)).AddTo(this);
+        _inputActions.Player.Cancel.OnPerformedAsObservable()
+            .Subscribe(_ => _cancelPressed.OnNext(Unit.Default)).AddTo(this);
 
         if (isActiveAndEnabled)
         {
@@ -63,40 +76,13 @@ public class PlayerInputReader : MonoBehaviour
         NavigationInput = Vector2.zero;
     }
 
+    /// <summary>入力通知の発行元を破棄する</summary>
+    /// <example>シーン終了時にUnityが呼び、AddTo(this)の購読も破棄される</example>
     private void OnDestroy()
     {
-        if (_inputActions != null)
-        {
-            _inputActions.Player.Move.performed -= HandleMove;
-            _inputActions.Player.Move.canceled -= HandleMove;
-
-            _inputActions.Player.Inventory.performed -= HandleInventory;
-            _inputActions.Player.Interact.performed -= HandleInteract;
-            _inputActions.Player.Cancel.performed -= HandleCancel;
-        }
-
         _interactPressed.Dispose();
         _inventoryPressed.Dispose();
         _cancelPressed.Dispose();
     }
 
-    private void HandleMove(InputAction.CallbackContext context)
-    {
-        NavigationInput = context.ReadValue<Vector2>();
-    }
-
-    private void HandleInventory(InputAction.CallbackContext context)
-    {
-        _inventoryPressed.OnNext(Unit.Default);
-    }
-
-    private void HandleInteract(InputAction.CallbackContext context)
-    {
-        _interactPressed.OnNext(Unit.Default);
-    }
-
-    private void HandleCancel(InputAction.CallbackContext context)
-    {
-        _cancelPressed.OnNext(Unit.Default);
-    }
 }
