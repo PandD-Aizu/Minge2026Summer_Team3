@@ -4,21 +4,36 @@ using UnityEngine.UI;
 
 public class RotationMiniGameView : MonoBehaviour
 {
-    [SerializeField] private RotationMiniGameSettings _settings;
     [SerializeField] private Image _greatZone;
     [SerializeField] private Image _goodZone;
     [SerializeField] private GameObject _pin;
     [SerializeField] private RectTransform _circles;
     [SerializeField] private Canvas _canvas;
     [SerializeField] private TextMeshProUGUI _text;
+
+    private RotationMiniGameSettings _settings;
     private bool _isRotating;
+
+    void Start()
+    {
+        _canvas.enabled = false;
+    }
 
     // Update is called once per frame
     void Update()
     {
         if (!_isRotating) return;
+        if (!_settings) return;
         float rotate = _settings.RotationSpeed * Time.deltaTime;
         _pin.transform.Rotate(0, 0, rotate, Space.Self);
+    }
+
+    /// <summary>
+    /// RotationMiniGameの設定を渡す
+    /// </summary>
+    public void ApplySettings(RotationMiniGameSettings settings)
+    {
+        _settings = settings;
     }
 
     /// <summary>
@@ -34,6 +49,7 @@ public class RotationMiniGameView : MonoBehaviour
         SetBaseRotation(RandomizeBaseRotation());
 
         _canvas.enabled = true;
+        ShowText();
     }
 
     /// <summary>
@@ -45,9 +61,17 @@ public class RotationMiniGameView : MonoBehaviour
         _canvas.enabled = false;
     }
 
+    /// <summary>
+    /// J:STOP　を非表示にする
+    /// </summary>
     public void HideText()
     {
         _text.enabled = false;
+    }
+
+    private void ShowText()
+    {
+        _text.enabled = true;
     }
 
     /// <summary>
@@ -71,7 +95,7 @@ public class RotationMiniGameView : MonoBehaviour
     // ランダムに回転し、設定した角度を返す
     private float RandomizeBaseRotation()
     {
-        float angle = UnityEngine.Random.Range(0f, 360f);
+        float angle = Random.Range(0f, 360f);
         SetBaseRotation(angle);
 
         return angle;

@@ -107,7 +107,8 @@ public static class DialogueValidation
         var actions = new PlayerInputAction();
         using var service = new DialogueService();
         var input = go.AddComponent<PlayerInputReader>();
-        input.Construct(actions);
+        using var menuInput = new Input.MenuInputService();
+        input.Construct(actions, menuInput);
         using var controller = new GameplayDialogueController(service, input);
         try
         {
