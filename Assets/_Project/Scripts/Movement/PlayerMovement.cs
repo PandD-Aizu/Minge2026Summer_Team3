@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement : MonoBehaviour , IPlayerPosition
 {
     [SerializeField] private float _moveSpeed = 3f;
     [SerializeField] private float _gravity = -9.81f;
@@ -11,6 +11,8 @@ public class PlayerMovement : MonoBehaviour
     private PlayerInputReader _inputReader;
     private float _verticalVelocity;
     private const float GroundedVerticalVelocity = -2f;
+
+    public Transform PlayerPosition => transform;
 
     private void Awake()
     {
