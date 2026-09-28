@@ -15,3 +15,5 @@ MonoBehaviour:
   _lines:
   - _speaker: 0
     _text: "\u307E\u305A\u306F\u3001\u7121\u4EBA\u96C6\u8377\u5834\u306B\u3044\u3063\u3066\u307F\u3088\u3046"
+  _playOncePerSave: 0
+  _saveId: 44423fb64b9ea8d42bc5f888d738272c

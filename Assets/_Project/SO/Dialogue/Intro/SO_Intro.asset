@@ -19,3 +19,5 @@ MonoBehaviour:
     _text: "\u6708\u53CE80\u4E07\uFF5E?!"
   - _speaker: 0
     _text: "\u521D\u3081\u3066\u307F\u3088\u3046\u304B\u306A"
+  _playOncePerSave: 0
+  _saveId: e066b18458cd0ac4393b62e02ae11cc0

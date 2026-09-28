@@ -5,6 +5,8 @@ namespace Dialogue
     {
         Completed,
         Canceled,
-        Rejected
+        Rejected,
+        /// <summary>セーブに表示済みとして記録されているため再生しなかった</summary>
+        Skipped
     }
 }

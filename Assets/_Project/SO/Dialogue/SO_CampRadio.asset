@@ -17,3 +17,5 @@ MonoBehaviour:
     _text: Interact test
   - _speaker: 0
     _text: Element 2 OK.
+  _playOncePerSave: 0
+  _saveId: 5a733334f3b857f4c83e73843aaf2954

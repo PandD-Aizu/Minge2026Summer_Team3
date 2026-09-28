@@ -109,7 +109,9 @@ public static class DialogueValidation
         var input = go.AddComponent<PlayerInputReader>();
         using var menuInput = new Input.MenuInputService();
         input.Construct(actions, menuInput);
-        using var controller = new GameplayDialogueController(service, input);
+        var savePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "dialogue-" + Guid.NewGuid() + ".json");
+        var save = new SaveSettings.SaveService(savePath);
+        using var controller = new GameplayDialogueController(service, input, save);
         try
         {
             Check(input.CanStartGameplayAction, "player ready");
@@ -147,6 +149,8 @@ public static class DialogueValidation
             cancellation.Cancel();
             Check(Result(interrupted) == DialogueResult.Canceled && input.CanStartGameplayAction, "cancel unlock");
 
+            ValidateSaveHistory(data, empty, service, controller, input, save, savePath);
+
             actions.Player.Disable();
             Check(Result(controller.PlayAsync(data)) == DialogueResult.Rejected, "mini-game input mode rejected");
             actions.Player.Enable();
@@ -156,6 +160,7 @@ public static class DialogueValidation
         }
         finally
         {
+            save.DeleteSaveData();
             Object.DestroyImmediate(go);
             InputSystem.RemoveDevice(keyboard);
             // 自動生成されたDisposeはPlay Mode用のDestroyを使うため、Edit Modeでは即時破棄する
@@ -166,6 +171,84 @@ public static class DialogueValidation
             if (originalSettings != null) Object.DestroyImmediate(savedSettings);
             Object.DestroyImmediate(testSettings);
         }
+    }
+
+    /// <summary>表示履歴の永続化、切り替え、旧セーブとの互換性を確認する</summary>
+    /// <param name="data">表示できる会話</param>
+    /// <param name="empty">表示できない空の会話</param>
+    /// <param name="service">会話の進行元</param>
+    /// <param name="controller">検証対象の本編Controller</param>
+    /// <param name="input">検証用の主人公入力</param>
+    /// <param name="save">一時ファイル用のセーブサービス</param>
+    /// <param name="savePath">一時ファイルのパス</param>
+    /// <example>ValidateGameplayから呼び、実際のゲームセーブには触れない</example>
+    private static void ValidateSaveHistory(DialogueData data, DialogueData empty, DialogueService service,
+        GameplayDialogueController controller, PlayerInputReader input, SaveSettings.SaveService save, string savePath)
+    {
+        SetSaveOnce(data, true, "test-dialogue");
+        SetSaveOnce(empty, true, "empty-dialogue");
+        Check(Result(controller.PlayAsync(empty)) == DialogueResult.Rejected, "empty saved dialogue rejected");
+        Check(!save.HasShownDialogue(empty.SaveId), "invalid dialogue not recorded");
+        using (var canceled = new CancellationTokenSource())
+        {
+            canceled.Cancel();
+            Check(Result(controller.PlayAsync(data, canceled.Token)) == DialogueResult.Canceled, "canceled request");
+            Check(!save.HasShownDialogue(data.SaveId), "canceled request not recorded");
+        }
+
+        var first = controller.PlayAsync(data);
+        Check(save.HasShownDialogue(data.SaveId), "recorded on first display");
+        Check(save.LoadSaveData().useDefaultAudioSettings, "history first save preserves FMOD defaults");
+        service.CancelDialogue();
+        Check(Result(first) == DialogueResult.Canceled, "displayed dialogue can be interrupted");
+
+        // インスタンスを作り直し、メモリではなくファイルから履歴を復元する
+        using (var reloadedService = new DialogueService())
+        using (var reloaded = new GameplayDialogueController(reloadedService, input, new SaveSettings.SaveService(savePath)))
+        {
+            Check(Result(reloaded.PlayAsync(data)) == DialogueResult.Skipped, "history survives reload");
+            Check(!reloadedService.IsPlaying && input.CanStartGameplayAction, "skip leaves input untouched");
+        }
+
+        SetSaveOnce(data, false, "test-dialogue");
+        var repeat = controller.PlayAsync(data);
+        Check(service.IsPlaying, "toggle off allows repeat");
+        service.CancelDialogue();
+        Check(Result(repeat) == DialogueResult.Canceled, "repeat cleanup");
+        SetSaveOnce(data, true, "test-dialogue");
+        Check(Result(controller.PlayAsync(data)) == DialogueResult.Skipped, "toggle on retains history");
+
+        // 履歴がない旧形式のセーブも読み、音量を残して履歴だけを追加する
+        System.IO.File.WriteAllText(savePath, "{\"audioSettings\":{\"masterVolume\":0.4}}");
+        Check(!save.HasShownDialogue(data.SaveId), "old save has no history");
+        var oldSave = controller.PlayAsync(data);
+        Check(Mathf.Approximately(save.LoadSaveData().audioSettings.masterVolume, 0.4f), "audio preserved");
+        Check(!save.LoadSaveData().useDefaultAudioSettings, "old saved audio remains enabled");
+        service.CancelDialogue();
+        Check(Result(oldSave) == DialogueResult.Canceled, "old save playback cleanup");
+        save.MarkDialogueShown(data.SaveId);
+        Check(save.LoadSaveData().shownDialogueIds.Count == 1, "history IDs remain unique");
+
+        save.DeleteSaveData();
+        var reset = controller.PlayAsync(data);
+        Check(service.IsPlaying, "deleted save allows replay");
+        service.CancelDialogue();
+        Check(Result(reset) == DialogueResult.Canceled, "reset cleanup");
+        SetSaveOnce(data, false, "test-dialogue");
+        SetSaveOnce(empty, false, "empty-dialogue");
+    }
+
+    /// <summary>検証用会話の保存設定を変更する</summary>
+    /// <param name="data">一時会話データ</param>
+    /// <param name="enabled">セーブ単位で一度だけ表示する場合はtrue</param>
+    /// <param name="id">検証用の固定ID</param>
+    /// <example>SetSaveOnce(data, true, "test-dialogue")</example>
+    private static void SetSaveOnce(DialogueData data, bool enabled, string id)
+    {
+        var serialized = new SerializedObject(data);
+        serialized.FindProperty("_playOncePerSave").boolValue = enabled;
+        serialized.FindProperty("_saveId").stringValue = id;
+        serialized.ApplyModifiedPropertiesWithoutUndo();
     }
 
     /// <summary>Prefabの表示、クリック進行、外部非表示時の中断を確認する</summary>
