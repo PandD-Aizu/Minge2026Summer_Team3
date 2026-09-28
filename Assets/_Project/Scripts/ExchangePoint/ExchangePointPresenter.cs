@@ -50,7 +50,8 @@ namespace ExchangePoint
                 .AddTo(_disposables);
 
             _inputReader.OnInteractPressed
-                .Where(_ => _connector.IsPlayerNearby)
+                .Where(_ => _connector.IsPlayerNearby && !_inputReader.IsGameplayInputBlocked
+                    && (_view.IsVisible || _inputReader.CanStartGameplayAction))
                 .Subscribe(_ =>
                 {
                     // 一覧を開いた次のJ入力で詳細パネルを開く

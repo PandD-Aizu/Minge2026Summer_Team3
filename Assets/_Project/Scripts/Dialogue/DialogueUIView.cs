@@ -12,8 +12,10 @@ namespace Dialogue
         [SerializeField, Tooltip("ダイアローグの名前")] private TextMeshProUGUI _name;
 
         private readonly Subject<Unit> _textBoxClicked = new Subject<Unit>();
+        private readonly Subject<Unit> _disabled = new();
 
         public Observable<Unit> TextBoxClicked => _textBoxClicked;
+        public Observable<Unit> Disabled => _disabled;
 
         /// <summary>ボタンのクリックを会話入力へ接続する</summary>
         /// <example>Viewの初回有効化時にUnityが呼ぶ</example>
@@ -75,6 +77,11 @@ namespace Dialogue
         {
             if (_button != null) _button.onClick.RemoveListener(OnTextBoxClicked);
             _textBoxClicked.Dispose();
+            _disabled.Dispose();
         }
+
+        /// <summary>外部からUIを無効化した場合にも会話を中断できるよう通知する</summary>
+        /// <example>Canvasの親を非表示にしたときにUnityが呼ぶ</example>
+        private void OnDisable() => _disabled.OnNext(Unit.Default);
     }
 }

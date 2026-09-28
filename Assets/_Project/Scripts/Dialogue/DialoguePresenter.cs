@@ -25,6 +25,7 @@ namespace Dialogue
         public void Initialize()
         {
             _view.TextBoxClicked.Subscribe(_ => _service.Advance()).AddTo(_disposables);
+            _view.Disabled.Subscribe(_ => _service.CancelDialogue()).AddTo(_disposables);
 
             // 初回通知で、初期化より前に開始された会話も表示へ反映する
             _service.CurrentLine.Subscribe(ShowLine).AddTo(_disposables);
@@ -37,6 +38,12 @@ namespace Dialogue
         /// <example>CurrentLineの変更通知から呼ぶ</example>
         private void ShowLine(DialogueLine line)
         {
+            if (_view == null)
+            {
+                _service.CancelDialogue();
+                return;
+            }
+
             if (line == null)
             {
                 _view.Hide();
@@ -46,6 +53,9 @@ namespace Dialogue
             _view.SetName(GetSpeakerName(line.Speaker));
             _view.SetText(line.Text);
             _view.Show();
+
+            // 親Canvasなどが無効で表示できない場合、操作停止だけを残さない
+            if (!_view.isActiveAndEnabled) _service.CancelDialogue();
         }
 
         /// <summary>
