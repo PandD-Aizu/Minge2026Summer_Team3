@@ -110,6 +110,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LifetimeScopes.SceneTransitionLifetimeScope
   parentReference:
-    TypeName: 
+    TypeName: LifetimeScopes.GameLifetimeScope
   autoRun: 1
   autoInjectGameObjects: []

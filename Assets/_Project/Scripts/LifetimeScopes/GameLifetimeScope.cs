@@ -1,5 +1,6 @@
 using FMODServices;
 using FMODSettings;
+using _Project.Scripts.Data.Item;
 using Input;
 using SaveSettings;
 using SceneLoadServices;
@@ -12,6 +13,7 @@ namespace LifetimeScopes
     public class GameLifetimeScope : LifetimeScope
     {
         [SerializeField] private InventoryView _inventoryPrefab;
+        [SerializeField] private ItemCatalog _itemCatalog;
 
         /// <summary>音声・入力・インベントリなどアプリ全体で共有する依存関係を登録する</summary>
         /// <param name="builder">Rootコンテナの登録先</param>
@@ -41,6 +43,8 @@ namespace LifetimeScopes
             builder.RegisterComponentInNewPrefab(_inventoryPrefab, Lifetime.Singleton).UnderTransform(transform);
             builder.RegisterFactory<InventoryView>(resolver => () => resolver.Resolve<InventoryView>(), Lifetime.Singleton);
             builder.RegisterEntryPoint<_Project.Scripts.Inventory.InventoryPresenter>();
+            builder.Register<InventoryData.Inventory>(Lifetime.Singleton);
+            builder.RegisterInstance(_itemCatalog);
         }
     }
 }
