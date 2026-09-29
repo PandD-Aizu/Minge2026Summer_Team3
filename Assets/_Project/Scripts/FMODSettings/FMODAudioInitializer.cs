@@ -56,7 +56,8 @@ namespace FMODSettings
 
                 // VCA取得に失敗した場合は未初期化のままUIを操作させない
                 _vcaService.LinkVCAs();
-                var audioSettings = _saveService.LoadSaveData()?.audioSettings;
+                var savedData = _saveService.LoadSaveData();
+                var audioSettings = savedData?.useDefaultAudioSettings == true ? null : savedData?.audioSettings;
                 if (audioSettings != null)
                 {
                     _vcaService.InitVCAs(audioSettings.masterVolume, audioSettings.bgmVolume,
