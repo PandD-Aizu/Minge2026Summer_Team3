@@ -10,9 +10,14 @@ public class PlayerInputReader : MonoBehaviour
     private Input.MenuInputService _menuInput;
 
     private int _movementBlockCount;
+    private int _gameplayBlockCount;
+    private Vector2 _navigationInput;
 
-    public Vector2 NavigationInput { get; private set; }
+    public bool IsGameplayInputBlocked => _gameplayBlockCount > 0;
     public bool IsMenuOpen => _menuInput != null && _menuInput.IsOpen;
+    public bool CanStartGameplayAction => isActiveAndEnabled && _inputActions != null
+        && _inputActions.Player.enabled && !IsGameplayInputBlocked && !IsMenuOpen && _movementBlockCount == 0;
+    public Vector2 NavigationInput => IsGameplayInputBlocked ? Vector2.zero : _navigationInput;
     public Vector2 MoveInput => _movementBlockCount > 0 || IsMenuOpen ? Vector2.zero : NavigationInput;
 
     /// <summary>UI操作中の歩行を止め、解除用の購読オブジェクトを返す</summary>
@@ -22,6 +27,20 @@ public class PlayerInputReader : MonoBehaviour
     {
         _movementBlockCount++;
         return Disposable.Create(() => _movementBlockCount--);
+    }
+
+    /// <summary>会話中の歩行とゲーム操作を止め、解除用のオブジェクトを返す</summary>
+    /// <returns>Disposeすると、この呼び出しが所有する制限だけを解除する</returns>
+    /// <example>会話開始時に保持し、正常終了・中断・破棄時にDisposeする</example>
+    public System.IDisposable BlockGameplayInput()
+    {
+        var movement = BlockMovement();
+        _gameplayBlockCount++;
+        return Disposable.Create(() =>
+        {
+            _gameplayBlockCount--;
+            movement.Dispose();
+        });
     }
 
     private readonly Subject<Unit> _interactPressed = new();
@@ -47,14 +66,17 @@ public class PlayerInputReader : MonoBehaviour
         // 押下と解放を同じストリームで受け取り、破棄時の購読解除はR3へ委ねる
         _inputActions.Player.Move.OnPerformedAsObservable()
             .Merge(_inputActions.Player.Move.OnCanceledAsObservable())
-            .Subscribe(context => NavigationInput = context.ReadValue<Vector2>())
+            .Subscribe(context => _navigationInput = context.ReadValue<Vector2>())
             .AddTo(this);
 
         _inputActions.Player.Interact.OnPerformedAsObservable()
+            .Where(_ => !IsGameplayInputBlocked)
             .Subscribe(_ => _interactPressed.OnNext(Unit.Default)).AddTo(this);
         _inputActions.Player.Inventory.OnPerformedAsObservable()
+            .Where(_ => !IsGameplayInputBlocked)
             .Subscribe(_ => _inventoryPressed.OnNext(Unit.Default)).AddTo(this);
         _inputActions.Player.Cancel.OnPerformedAsObservable()
+            .Where(_ => !IsGameplayInputBlocked)
             .Subscribe(_ => _cancelPressed.OnNext(Unit.Default)).AddTo(this);
 
         if (isActiveAndEnabled)
@@ -73,7 +95,7 @@ public class PlayerInputReader : MonoBehaviour
     {
         if (_inputActions == null) return;
         _inputActions.Player.Disable();
-        NavigationInput = Vector2.zero;
+        _navigationInput = Vector2.zero;
     }
 
     /// <summary>入力通知の発行元を破棄する</summary>

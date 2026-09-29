@@ -29,7 +29,7 @@ public class FishingInteractPresenter : IDisposable, IInitializable
     public void Initialize()
     {
         _inputReader.OnInteractPressed
-            .Where(_ => _fishingSpot.CanInteractShadow)
+            .Where(_ => _inputReader.CanStartGameplayAction && _fishingSpot.CanInteractShadow)
             .Where(_ => _targetProvider.FishDefinition != null)
             .Subscribe(_ => _miniGameFlowPresenter.StartMiniGame(_targetProvider.FishDefinition))
             .AddTo(_disposables);

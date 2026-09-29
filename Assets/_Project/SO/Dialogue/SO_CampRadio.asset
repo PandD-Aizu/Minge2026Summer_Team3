@@ -10,14 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 69f1088660344b09a282e35d86447062, type: 3}
-  m_Name: SO_Intro
+  m_Name: SO_CampRadio
   m_EditorClassIdentifier: Assembly-CSharp::Dialogue.DialogueData
   _lines:
+  - _speaker: 1
+    _text: Interact test
   - _speaker: 0
-    _text: "\u4F4F\u307F\u8FBC\u307F\u30D0\u30A4\u30C8..."
-  - _speaker: 0
-    _text: "\u6708\u53CE80\u4E07\uFF5E?!"
-  - _speaker: 0
-    _text: "\u521D\u3081\u3066\u307F\u3088\u3046\u304B\u306A"
+    _text: Element 2 OK.
   _playOncePerSave: 0
-  _saveId: e066b18458cd0ac4393b62e02ae11cc0
+  _saveId: 5a733334f3b857f4c83e73843aaf2954

@@ -83,6 +83,7 @@ namespace FMODSettings
         {
             // ほかの保存項目を維持し、初回保存ではデータを新規作成する
             var data = _saveService.LoadSaveData() ?? new GameData();
+            data.useDefaultAudioSettings = false;
             data.audioSettings = new AudioSettingsData
             {
                 masterVolume = _vcaService.GetMasterVolume(),
