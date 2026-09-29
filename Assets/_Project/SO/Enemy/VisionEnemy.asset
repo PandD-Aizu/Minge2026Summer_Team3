@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 58cba33ddfd14c3189be391beb9d534f, type: 3}
-  m_Name: chaceEnemy
+  m_Name: VisionEnemy
   m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Data.Enemy.EnemyDefinition
   enemyId: 0
-  enemyName: enemy1
+  enemyName: VisionEnemy
   enemyType: 0
   moveSpeed: 1
