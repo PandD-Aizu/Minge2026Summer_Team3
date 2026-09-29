@@ -6,7 +6,6 @@ namespace _Project.Scripts.Data.Item
     {
         [SerializeField] private int itemId;
         [SerializeField] private string itemName;
-
         [TextArea] [SerializeField] private string description;
 
         public int ItemId => itemId;

@@ -89,7 +89,7 @@ namespace MiniGame
 
         private async UniTask RunResultFlowAsync(MiniGameResult result)
         {
-            await _resultPresenter.PlayResultAsync(result);
+            await _resultPresenter.PlayResultAsync(result, _currentFishDefinition);
 
             _currentController?.EndGame();
             ClearCurrentMiniGame();

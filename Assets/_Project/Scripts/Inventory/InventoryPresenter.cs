@@ -1,4 +1,5 @@
 using System;
+using _Project.Scripts.Data.Item;
 using Input;
 using R3;
 using UnityEngine;
@@ -16,17 +17,22 @@ namespace _Project.Scripts.Inventory
         private readonly Func<InventoryView> _viewFactory;
         private readonly CompositeDisposable _subscriptions = new();
         private InventoryView _view;
+        private readonly InventoryData.Inventory _inventory;
+        private readonly ItemCatalog _itemCatalog;
 
         /// <summary>共通入力とインベントリ用Prefabを受け取る</summary>
         /// <param name="input">ゲーム全体の入力アクション</param>
         /// <param name="menuInput">メニュー同士の入力の競合を防ぐサービス</param>
         /// <param name="viewFactory">VContainerに登録したインベントリを初回だけ生成するFactory</param>
         /// <example>GameLifetimeScopeのEntryPointとして登録する</example>
-        public InventoryPresenter(PlayerInputAction input, MenuInputService menuInput, Func<InventoryView> viewFactory)
+        public InventoryPresenter(PlayerInputAction input, MenuInputService menuInput, Func<InventoryView> viewFactory,
+            InventoryData.Inventory inventory, ItemCatalog itemCatalog)
         {
             _input = input;
             _menuInput = menuInput;
             _viewFactory = viewFactory;
+            _inventory = inventory;
+            _itemCatalog = itemCatalog;
         }
 
         /// <summary>開閉・決定キーとシーン終了の通知を購読する</summary>
@@ -70,15 +76,35 @@ namespace _Project.Scripts.Inventory
                 {
                     _view = _viewFactory();
                     _view.OnCloseClicked.Subscribe(_ => Close()).AddTo(_subscriptions);
-                    _view.OnUseClicked.Subscribe(_ => UseSelectedItem()).AddTo(_subscriptions);
                 }
 
+                RefreshItem();
                 _view.Show();
             }
             catch
             {
                 Close();
                 throw;
+            }
+        }
+
+        private void RefreshItem()
+        {
+            _view.ClearItems();
+
+            foreach (var item in _inventory.Items)
+            {
+                int itemId = item.Key;
+                int count = item.Value;
+
+                ItemDefinition definition = _itemCatalog.FindById(itemId);
+                if (definition == null)
+                {
+                    Debug.LogWarning($"ItemId {itemId} がItemCatalogに登録されていません");
+                    continue;
+                }
+
+                _view.AddItem(definition, count);
             }
         }
 
