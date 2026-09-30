@@ -1,4 +1,5 @@
 using Dialogue;
+using Controller;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -22,6 +23,7 @@ namespace LifetimeScopes
             builder.RegisterDialogue(_dialogueView);
             builder.RegisterComponent(_playerInputReader);
             builder.Register<GameplayDialogueController>(Lifetime.Scoped);
+            builder.RegisterEntryPoint<TutorialCollectionReturnEntryPoint>();
 
             // 自動再生は呼び出し側に置き、会話単体のサービスから分離する
             if (_startupDialogue != null)

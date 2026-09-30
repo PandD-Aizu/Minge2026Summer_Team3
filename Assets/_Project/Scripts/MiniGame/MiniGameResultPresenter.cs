@@ -1,5 +1,6 @@
 using _Project.Scripts.Data.Fish;
 using _Project.Scripts.View;
+using Controller;
 using Cysharp.Threading.Tasks;
 using InventoryData;
 using MiniGame;
@@ -9,12 +10,15 @@ public class MiniGameResultPresenter
 {
     private readonly MiniGameResultView _view;
     private readonly Inventory _inventory;
+    private readonly TutorialController _tutorialController;
     private FishDefinition _currentFishDefinition;
 
-    public MiniGameResultPresenter(MiniGameResultView view, Inventory inventory)
+    public MiniGameResultPresenter(MiniGameResultView view, Inventory inventory,
+        TutorialController tutorialController)
     {
         _view = view;
         _inventory = inventory;
+        _tutorialController = tutorialController;
     }
 
     public UniTask PlayResultAsync(MiniGameResult result, FishDefinition fishDefinition)
@@ -71,5 +75,6 @@ public class MiniGameResultPresenter
         }
 
         _inventory.Add(_currentFishDefinition.ItemId);
+        _tutorialController.NotifyFishCaught();
     }
 }

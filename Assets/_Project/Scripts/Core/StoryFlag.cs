@@ -2,6 +2,7 @@
 {
     public enum StoryFlag
     {
+        None = -1,
         FirstFishingCompleted,
         FirstExchangeCompleted,
         FirstNightFishingCompleted,

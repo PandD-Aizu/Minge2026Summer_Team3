@@ -397,7 +397,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 20
   m_TargetDisplay: 0
 --- !u!114 &3392064201252114820
 MonoBehaviour:
@@ -519,7 +519,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u91E3\u91E3\u91E3\u91E3\u4EBA"
+  m_text: "\u6E1A"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f7c988fee95ce12488505a7e3c56ff47, type: 2}
   m_sharedMaterial: {fileID: 3082908727078937104, guid: f7c988fee95ce12488505a7e3c56ff47, type: 2}
