@@ -1475,14 +1475,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: RadioDialogue
       objectReference: {fileID: 0}
-    - target: {fileID: 7684771340877288111, guid: 68926b496fbfe2740a58a97c08b54b05, type: 3}
-      propertyPath: _eventDialogues.Array.data[1]._useRequiredStoryFlag
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7684771340877288111, guid: 68926b496fbfe2740a58a97c08b54b05, type: 3}
-      propertyPath: _eventDialogues.Array.data[0]._advanceTutorialOnComplete
-      value: 1
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

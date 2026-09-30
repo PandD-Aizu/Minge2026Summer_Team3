@@ -374,7 +374,7 @@ MonoBehaviour:
   - _requiredTutorialStep: 0
     _requiredStoryFlag: -1
     _dialogue: {fileID: 11400000, guid: f5bd28c2e18146642958d9c374fb506f, type: 2}
-    _advanceTutorialOnComplete: 0
+    _advanceTutorialOnComplete: 1
     _storyFlagOnComplete: -1
   - _requiredTutorialStep: 4
     _requiredStoryFlag: -1
@@ -385,6 +385,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d86dfdb8174de3d4bb9659a3e457d560, type: 2}
   - {fileID: 11400000, guid: 85f7f74c68dbdd2468842c33421f8b15, type: 2}
   _connector: {fileID: 8081095138367460404}
+  _dialogue: {fileID: 0}
+  _playOnce: 0
 --- !u!1 &5219397406097788292
 GameObject:
   m_ObjectHideFlags: 0
