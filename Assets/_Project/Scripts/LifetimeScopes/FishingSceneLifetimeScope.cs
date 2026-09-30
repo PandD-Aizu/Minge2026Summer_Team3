@@ -1,4 +1,5 @@
 using _Project.Scripts.View;
+using Controller;
 using MiniGame;
 using UnityEngine;
 using VContainer;
@@ -36,6 +37,9 @@ namespace LifetimeScopes
 
             // 入力の受付
             builder.RegisterComponent(_playerInputReader);
+
+            // 釣り場への到着をチュートリアルへ通知する
+            builder.RegisterEntryPoint<TutorialFishingStageEntryPoint>();
         }
     }
 }

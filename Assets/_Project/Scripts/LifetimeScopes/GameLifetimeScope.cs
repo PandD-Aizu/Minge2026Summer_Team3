@@ -1,6 +1,8 @@
 using FMODServices;
 using FMODSettings;
+using _Project.Scripts.Core;
 using _Project.Scripts.Data.Item;
+using Controller;
 using Input;
 using SaveSettings;
 using SceneLoadServices;
@@ -28,6 +30,10 @@ namespace LifetimeScopes
 
             // シーンのロード関係のサービス
             builder.Register<SceneLoadService>(Lifetime.Singleton);
+
+            // チュートリアル進行
+            builder.Register<GameProgress>(Lifetime.Singleton);
+            builder.Register<TutorialController>(Lifetime.Singleton);
 
             // 設定画面がなくても保存済みの音量を適用する
             builder.RegisterEntryPoint<FMODAudioInitializer>().AsSelf();
