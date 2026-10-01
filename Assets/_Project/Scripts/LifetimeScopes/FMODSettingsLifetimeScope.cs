@@ -13,7 +13,7 @@ namespace LifetimeScopes
 
         /// <summary>Inspectorで指定された画面と、その購読処理を登録する</summary>
         /// <param name="builder">設定画面のコンテナ登録先</param>
-        /// <example>FMODSettingsシーンでViewを割り当てて使用する</example>
+        /// <example>OptionシーンでViewを割り当てて使用する</example>
         protected override void Configure(IContainerBuilder builder)
         {
             if (_view == null)
@@ -22,6 +22,7 @@ namespace LifetimeScopes
             // 音声サービスはRootから解決し、このScopeでは再登録しない
             builder.RegisterComponent(_view);
             builder.RegisterEntryPoint<FMODSettingsPresenter>(Lifetime.Scoped);
+            builder.RegisterEntryPoint<Presentation.OptionUIPresenter>(Lifetime.Scoped);
         }
     }
 }

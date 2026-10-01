@@ -16,7 +16,7 @@ MonoBehaviour:
   m_GUID: 0a6cda3964eb421488d49c63e58fe303
   m_SerializeEntries:
   - m_GUID: 03f9e859a95673047bbdc07176a8dda5
-    m_Address: FMODSettings
+    m_Address: Option
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

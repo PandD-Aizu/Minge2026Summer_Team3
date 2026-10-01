@@ -10,11 +10,12 @@ namespace View
 
         public bool CanUpdate => isActiveAndEnabled && _arrowTransform != null;
 
-        /// <summary>プレイヤーの周囲にCubeを配置し、目的地方向へ向ける</summary>
+        /// <summary>プレイヤーと目的地の間に矢印を配置し、ローカルZ軸の先端を目的地へ向ける</summary>
         /// <param name="playerPosition">表示の中心となるプレイヤーのワールド座標</param>
         /// <param name="direction">XZ平面上の単位ベクトル、ゼロなら非表示</param>
-        /// <example>PresenterからShowDirection(playerPosition, direction)を呼ぶ</example>
-        public void ShowDirection(Vector3 playerPosition, Vector3 direction)
+        /// <param name="distanceToTarget">目的地までの水平距離、省略時は通常の表示半径を使う</param>
+        /// <example>PresenterからShowDirection(playerPosition, direction, distance)を呼ぶ</example>
+        public void ShowDirection(Vector3 playerPosition, Vector3 direction, float distanceToTarget = float.PositiveInfinity)
         {
             // 水平位置が一致するときは方向を表示しない
             bool visible = direction.sqrMagnitude > 0f;
@@ -22,11 +23,13 @@ namespace View
             if (!visible) return;
 
             // プレイヤーの回転とは独立したワールド座標で配置する
-            Vector3 position = playerPosition + direction * _radius + Vector3.up * _heightOffset;
+            // 目的地へ近づいても矢印の中心が目的地を追い越さないようにする
+            float radius = Mathf.Min(_radius, Mathf.Max(0f, distanceToTarget) * 0.5f);
+            Vector3 position = playerPosition + direction * radius + Vector3.up * _heightOffset;
             _arrowTransform.SetPositionAndRotation(position, Quaternion.LookRotation(direction));
         }
 
-        /// <summary>Viewを無効にしたときにCubeも非表示にする</summary>
+        /// <summary>Viewを無効にしたときに矢印も非表示にする</summary>
         /// <example>コンポーネントのチェックを外したときにUnityが呼ぶ</example>
         private void OnDisable()
         {
