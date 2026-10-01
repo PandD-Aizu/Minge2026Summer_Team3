@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 69f1088660344b09a282e35d86447062, type: 3}
-  m_Name: SO_Radio_Ramdom_2
+  m_Name: SO_Tutorial_BeforeFirstExchange
   m_EditorClassIdentifier: Assembly-CSharp::Dialogue.DialogueData
   _lines:
   - _speaker: 1
-    _text: "\u541B\u306B\u306F\u671F\u5F85\u3057\u3066\u3044\u308B\u304B\u3089\u30CD\u3001"
+    _text: "\u304A\u304B\u3048\u308A\u3001\u9B5A\u304C\u91E3\u308C\u305F\u3093\u3060\u30CD\u3002"
   - _speaker: 1
-    _text: "\u6E1A\u30AF\u30F3\u3002"
+    _text: "\u96A3\u306E\u7121\u4EBA\u96C6\u8377\u6240\u3067\u3001\u305D\u306E\u9B5A\u3092\u4EA4\u63DB\u3057\u3066\u30CD\u3002"
   _playOncePerSave: 0
-  _saveId: 85f7f74c68dbdd2468842c33421f8b15
+  _saveId: 36f5a420e9454cf6ac1dc7c8fd3b913b

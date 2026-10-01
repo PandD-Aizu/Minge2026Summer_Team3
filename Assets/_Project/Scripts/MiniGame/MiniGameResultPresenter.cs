@@ -1,6 +1,5 @@
 using _Project.Scripts.Data.Fish;
 using _Project.Scripts.View;
-using Controller;
 using Cysharp.Threading.Tasks;
 using InventoryData;
 using MiniGame;
@@ -10,43 +9,52 @@ public class MiniGameResultPresenter
 {
     private readonly MiniGameResultView _view;
     private readonly Inventory _inventory;
-    private readonly TutorialController _tutorialController;
     private FishDefinition _currentFishDefinition;
 
-    public MiniGameResultPresenter(MiniGameResultView view, Inventory inventory,
-        TutorialController tutorialController)
+    public MiniGameResultPresenter(MiniGameResultView view, Inventory inventory)
     {
         _view = view;
         _inventory = inventory;
-        _tutorialController = tutorialController;
     }
 
-    public UniTask PlayResultAsync(MiniGameResult result, FishDefinition fishDefinition)
+    /// <summary>釣果をInventoryへ追加して結果UIを閉じ、追加できたかを返す</summary>
+    /// <param name="result">ミニゲームの成績</param>
+    /// <param name="fishDefinition">追加する魚</param>
+    /// <returns>魚をInventoryへ追加した場合はtrue</returns>
+    /// <example>MiniGameFlowPresenterが結果表示の終了後に進行を通知する</example>
+    public async UniTask<bool> PlayResultAsync(MiniGameResult result, FishDefinition fishDefinition)
     {
         _currentFishDefinition = fishDefinition;
-        return result switch
+        switch (result)
         {
-            MiniGameResult.Great => PlayGreatAsync(),
-            MiniGameResult.Good => PlayGoodAsync(),
-            MiniGameResult.Miss => PlayMissAsync(),
-            _ => UniTask.CompletedTask
-        };
+            case MiniGameResult.Great:
+                return await PlayGreatAsync();
+            case MiniGameResult.Good:
+                return await PlayGoodAsync();
+            case MiniGameResult.Miss:
+                await PlayMissAsync();
+                return false;
+            default:
+                return false;
+        }
     }
 
-    private async UniTask PlayGreatAsync()
+    private async UniTask<bool> PlayGreatAsync()
     {
         _view.GreatResult();
-        AddCurrentFish();
+        var fishAdded = AddCurrentFish();
         await UniTask.Delay(500);
         HideResults();
+        return fishAdded;
     }
 
-    private async UniTask PlayGoodAsync()
+    private async UniTask<bool> PlayGoodAsync()
     {
         _view.GoodResult();
-        AddCurrentFish();
+        var fishAdded = AddCurrentFish();
         await UniTask.Delay(1000);
         HideResults();
+        return fishAdded;
     }
 
     private async UniTask PlayMissAsync()
@@ -66,15 +74,15 @@ public class MiniGameResultPresenter
         _view.HideResult();
     }
 
-    private void AddCurrentFish()
+    private bool AddCurrentFish()
     {
         if (_currentFishDefinition == null)
         {
             Debug.LogError("釣った魚のFishDefinitionがないのでInventoryに追加できません");
-            return;
+            return false;
         }
 
         _inventory.Add(_currentFishDefinition.ItemId);
-        _tutorialController.NotifyFishCaught();
+        return true;
     }
 }
