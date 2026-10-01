@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Dialogue.DialogueData
   _lines:
   - _speaker: 0
-    _text: "\u307E\u305A\u306F\u3001\u7121\u4EBA\u96C6\u8377\u5834\u306B\u3044\u3063\u3066\u307F\u3088\u3046\u304B\u306A..."
-  _playOncePerSave: 0
+    _text: "\u5CF6\u306B\u7740\u3044\u305F\u3089\u30E9\u30B8\u30AA\u306E\u6307\u793A\u3092\u805E\u3051\u3068\u8A00\u308F\u308C\u305F\u306A..."
+  _playOncePerSave: 1
   _saveId: 44423fb64b9ea8d42bc5f888d738272c

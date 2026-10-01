@@ -1,5 +1,6 @@
 ﻿using System;
 using _Project.Scripts.InteractableObject;
+using Controller;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using R3;
@@ -13,6 +14,8 @@ namespace ExchangePoint
         private readonly InteractableConnector _connector;
         private readonly PlayerInputReader _inputReader;
         private readonly Input.MenuInputService _menuInput;
+        private readonly TutorialController _tutorialController;
+        private readonly bool _connectorInitiallyEnabled;
 
         private readonly CompositeDisposable _disposables = new();
         private readonly SerialDisposable _movementBlock = new();
@@ -22,20 +25,32 @@ namespace ExchangePoint
         /// <param name="connector">集荷場への接近判定</param>
         /// <param name="inputReader">プレイヤーの入力元</param>
         /// <param name="menuInput">メニュー同士の入力を排他制御するサービス</param>
+        /// <param name="tutorialController">交換画面を開ける進行段階か判断するController</param>
         /// <example>VContainerのEntryPoint登録から生成する</example>
         public ExchangePointPresenter(ExchangePointView view, InteractableConnector connector, PlayerInputReader inputReader,
-            Input.MenuInputService menuInput)
+            Input.MenuInputService menuInput, TutorialController tutorialController)
         {
             _view = view;
             _connector = connector;
             _inputReader = inputReader;
             _menuInput = menuInput;
+            _tutorialController = tutorialController;
+            _connectorInitiallyEnabled = connector.enabled;
         }
 
         /// <summary>開閉キーと表示状態の変更を購読する</summary>
         /// <example>VContainerの初期化時に呼ばれる</example>
         public void Initialize()
         {
+            // 交換前のラジオ案内中は接近マークと交換入力をまとめて無効にする
+            if (_connectorInitiallyEnabled)
+            {
+                UpdateAvailability();
+                _tutorialController.OnStepChanged
+                    .Subscribe(_ => UpdateAvailability())
+                    .AddTo(_disposables);
+            }
+
             // ReactivePropertyの初回通知で現在の表示状態も同期する
             _movementBlock.AddTo(_disposables);
             _view.OnVisibilityChanged
@@ -55,7 +70,7 @@ namespace ExchangePoint
                 {
                     // 一覧を開いた次のJ入力で詳細パネルを開く
                     if (_view.IsVisible) _view.ConfirmSelection();
-                    else if (_menuInput.TryAcquire(this))
+                    else if (_tutorialController.CanOpenExchangePoint() && _menuInput.TryAcquire(this))
                     {
                         _view.SetVisible(true);
                         // 非同期ロードが終わる前の入力では所有権を残さない
@@ -78,6 +93,13 @@ namespace ExchangePoint
                     }
                 })
                 .AddTo(_disposables);
+        }
+
+        /// <summary>チュートリアル段階に応じて集荷所の接近判定を切り替える</summary>
+        /// <example>初期化時とラジオ案内完了後に呼ぶ</example>
+        private void UpdateAvailability()
+        {
+            _connector.enabled = _tutorialController.CanOpenExchangePoint();
         }
 
         /// <summary>Scopeの寿命に合わせて一覧を非同期で初期化する</summary>
