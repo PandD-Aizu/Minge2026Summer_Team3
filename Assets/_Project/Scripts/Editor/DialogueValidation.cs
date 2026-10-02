@@ -251,7 +251,7 @@ public static class DialogueValidation
         serialized.ApplyModifiedPropertiesWithoutUndo();
     }
 
-    /// <summary>Prefabの表示、クリック進行、外部非表示時の中断を確認する</summary>
+    /// <summary>Prefabの表示、クリックとJキーの進行、外部非表示時の中断を確認する</summary>
     /// <param name="data">二行のテスト会話</param>
     /// <example>Runから呼ぶ</example>
     private static void ValidateView(DialogueData data)
@@ -261,6 +261,8 @@ public static class DialogueValidation
         var view = instance.GetComponent<DialogueUIView>();
         using var service = new DialogueService();
         using var presenter = new DialoguePresenter(view, service);
+        var previousKeyboard = Keyboard.current;
+        var keyboard = InputSystem.AddDevice<Keyboard>();
         try
         {
             // Edit Modeでは通常のMonoBehaviour.Awakeが自動実行されない
@@ -274,6 +276,53 @@ public static class DialogueValidation
             Check(service.CurrentLine.CurrentValue == data.GetLine(1), "button advances");
             button.onClick.Invoke();
             Check(Result(play) == DialogueResult.Completed && !view.gameObject.activeSelf, "button completes and hides");
+
+            // 会話開始時に押されていたJキーでは先頭を飛ばさない
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.J));
+            InputSystem.Update();
+            var keyboardPlay = service.PlayAsync(data);
+            InvokeLifecycle(view, "OnEnable");
+            InvokeLifecycle(view, "Update");
+            Check(service.CurrentLine.CurrentValue == data.GetLine(0), "opening key does not advance");
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InvokeLifecycle(view, "Update");
+
+            // 他のキーと操作不可のボタンでは進めず、再押下で一行進める
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.K));
+            InputSystem.Update();
+            InvokeLifecycle(view, "Update");
+            Check(service.CurrentLine.CurrentValue == data.GetLine(0), "other key does not advance");
+            button.interactable = false;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.J));
+            InputSystem.Update();
+            InvokeLifecycle(view, "Update");
+            Check(service.CurrentLine.CurrentValue == data.GetLine(0), "disabled button blocks keyboard");
+            button.interactable = true;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InvokeLifecycle(view, "Update");
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.J));
+            InputSystem.Update();
+            InvokeLifecycle(view, "Update");
+            Check(service.CurrentLine.CurrentValue == data.GetLine(1), "J advances");
+
+            // 長押しで連続進行せず、次の押下で会話を終了する
+            InputSystem.Update();
+            InvokeLifecycle(view, "Update");
+            Check(service.CurrentLine.CurrentValue == data.GetLine(1), "held J does not repeat");
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InvokeLifecycle(view, "Update");
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.J));
+            InputSystem.Update();
+            InvokeLifecycle(view, "Update");
+            Check(Result(keyboardPlay) == DialogueResult.Completed && !view.gameObject.activeSelf, "J completes and hides");
+
+            var hiddenInputs = 0;
+            using var inputSubscription = view.TextBoxClicked.Subscribe(_ => hiddenInputs++);
+            InvokeLifecycle(view, "Update");
+            Check(hiddenInputs == 0, "hidden UI ignores keyboard");
 
             var interrupted = service.PlayAsync(data);
             view.Hide();
@@ -291,12 +340,14 @@ public static class DialogueValidation
         {
             presenter.Dispose();
             Object.DestroyImmediate(instance);
+            InputSystem.RemoveDevice(keyboard);
+            previousKeyboard?.MakeCurrent();
         }
     }
 
     /// <summary>Edit Modeでは自動実行されないViewのライフサイクルを検証用に呼ぶ</summary>
     /// <param name="view">一時生成した会話View</param>
-    /// <param name="method">AwakeまたはOnDisable</param>
+    /// <param name="method">Awake、OnEnable、Update、OnDisableのいずれか</param>
     /// <example>InvokeLifecycle(view, "Awake")</example>
     private static void InvokeLifecycle(DialogueUIView view, string method)
     {
