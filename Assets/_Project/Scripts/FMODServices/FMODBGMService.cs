@@ -12,6 +12,10 @@ namespace FMODServices
     {
         private readonly Dictionary<string, EventInstance> _bgmInstances = new Dictionary<string, EventInstance>();
 
+        /// <summary>未再生のBGMを開始し、同じキーで再生中なら再生位置を維持する</summary>
+        /// <param name="eventReference">再生するFMODイベント</param>
+        /// <param name="key">管理キー、省略時はイベントのGUID</param>
+        /// <example>シーン到着時にPlayBGM(eventReference)を呼んで同じ曲を継続する</example>
         public void PlayBGM(EventReference eventReference, string key = null)
         {
             if (eventReference.IsNull)
@@ -36,7 +40,7 @@ namespace FMODServices
                 }
                 else
                 {
-                    UnityEngine.Debug.LogWarning($"[FMOD] PlayBGM: BGM with key '{key}' is already playing.");
+                    // シーン遷移後の同じ曲の要求ではstartを呼ばず、既存の再生を続ける
                     return;
                 }
             }
