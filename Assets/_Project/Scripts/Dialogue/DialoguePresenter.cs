@@ -68,8 +68,8 @@ namespace Dialogue
         {
             return speaker switch
             {
-                Speaker.Player => "主人公",
-                Speaker.Radio => "無線機からの声",
+                Speaker.Player => "渚",
+                Speaker.Radio => "無線機",
                 _ => ""
             };
         }

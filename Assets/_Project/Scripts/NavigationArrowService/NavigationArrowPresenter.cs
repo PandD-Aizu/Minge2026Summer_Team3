@@ -19,7 +19,7 @@ namespace Presentation
             _service = service;
         }
 
-        /// <summary>プレイヤーの移動後にCubeの位置と向きを更新する</summary>
+        /// <summary>プレイヤーの移動後に矢印の位置と向きを更新する</summary>
         /// <example>VContainerがLateUpdateで呼ぶ</example>
         public void LateTick()
         {
@@ -28,7 +28,9 @@ namespace Presentation
             // Serviceから現在の座標と目的地方向を取得して描画へ渡す
             var playerPosition = _service.PlayerPosition;
             var direction = _service.CalculateArrowDirection(playerPosition);
-            _view.ShowDirection(playerPosition, direction);
+            var offset = _service.TargetPosition - playerPosition;
+            offset.y = 0f;
+            _view.ShowDirection(playerPosition, direction, offset.magnitude);
         }
     }
 }

@@ -26,7 +26,8 @@ namespace Controller
         /// <example>ラジオ用のTriggerが会話完了後に呼ぶ</example>
         public bool NotifyRadioInteracted()
         {
-            if (TryAdvance(TutorialStep.TalkToRadioFirst, TutorialStep.GoDayFishing)) return true;
+            if (TryAdvance(TutorialStep.TalkToRadioFirst, TutorialStep.CatchDayFish)) return true;
+            if (TryAdvance(TutorialStep.TalkToRadioBeforeFirstExchange, TutorialStep.ExchangeFirstFish)) return true;
             if (TryAdvance(TutorialStep.TalkToRadioAfterFirstExchange, TutorialStep.GoNightFishing)) return true;
             return TryAdvance(TutorialStep.TalkToRadioAfterNightFishing, TutorialStep.Completed);
         }
@@ -42,6 +43,14 @@ namespace Controller
             if (requiredFlag.HasValue && !_gameProgress.HasStoryFlag(requiredFlag.Value)) return false;
 
             return true;
+        }
+
+        /// <summary>初回交換前のラジオ案内が終わるまで交換画面を開かせない</summary>
+        /// <returns>交換画面を開いてよい段階ならtrue</returns>
+        /// <example>ExchangePointPresenterが集荷所への入力時に確認する</example>
+        public bool CanOpenExchangePoint()
+        {
+            return CurrentStep != TutorialStep.TalkToRadioBeforeFirstExchange;
         }
 
         /// <summary>ラジオ会話の終了を受け取り、設定された事実フラグと進行を反映する</summary>
@@ -64,12 +73,11 @@ namespace Controller
             return changed;
         }
 
-        /// <summary>釣り場に到着したことを通知し、昼釣りまたは夜釣りの段階へ進める</summary>
+        /// <summary>釣り場に到着したことを通知し、夜釣りなら上位存在との遭遇段階へ進める</summary>
         /// <returns>チュートリアルが進んだ場合はtrue</returns>
         /// <example>FishingStage開始時のPresenterやSensorから呼ぶ</example>
         public bool NotifyEnteredFishingStage()
         {
-            if (TryAdvance(TutorialStep.GoDayFishing, TutorialStep.CatchDayFish)) return true;
             return TryAdvance(TutorialStep.GoNightFishing, TutorialStep.SeeUpperBeing);
         }
 
@@ -103,7 +111,7 @@ namespace Controller
             if (CurrentStep == TutorialStep.ReturnToCollectionAtNight)
             {
                 _gameProgress.StartNight();
-                SetStep(TutorialStep.ExchangeFirstFish);
+                SetStep(TutorialStep.TalkToRadioBeforeFirstExchange);
                 return true;
             }
 

@@ -1,5 +1,6 @@
 using _Project.Scripts.View;
 using Controller;
+using Dialogue;
 using MiniGame;
 using UnityEngine;
 using VContainer;
@@ -13,12 +14,18 @@ namespace LifetimeScopes
         [SerializeField] private RotationMiniGameView _rotationMiniGameView;
         [SerializeField] private MiniGameResultView _miniGameResultView;
         [SerializeField] private RotationMiniGameSettings _rotationMiniGameSettings;
+        [SerializeField] private DialogueUIView _dialogueView;
+        [SerializeField] private FishingMonologuePresenter _fishingMonologuePresenter;
+        [SerializeField] private TimeOfDayView _timeOfDayView;
 
         protected override void Configure(IContainerBuilder builder)
         {
             // シーン上のViewを登録
             builder.RegisterComponent(_rotationMiniGameView);
             builder.RegisterComponent(_miniGameResultView);
+            builder.RegisterComponent(_timeOfDayView);
+            builder.RegisterDialogue(_dialogueView);
+            builder.Register<GameplayDialogueController>(Lifetime.Scoped);
 
             // 設定用のScriptableObjectを登録
             builder.RegisterInstance(_rotationMiniGameSettings);
@@ -40,6 +47,10 @@ namespace LifetimeScopes
 
             // 釣り場への到着をチュートリアルへ通知する
             builder.RegisterEntryPoint<TutorialFishingStageEntryPoint>();
+            builder.RegisterEntryPoint<TimeOfDayPresenter>();
+
+            // シーンに置いた独り言Presenterへ会話と進行を注入する
+            builder.RegisterBuildCallback(container => container.Inject(_fishingMonologuePresenter));
         }
     }
 }
