@@ -19,11 +19,13 @@ namespace _Project.Scripts.Fishing
         public bool IsPlayerNearby => _connector.IsPlayerNearby;
 
         /// <summary>現在位置へ出現時または移動中の波紋を発生させる</summary>
-        /// <param name="isAppearance">出現時の大きな波紋ならtrue、移動中の小さな波紋ならfalse</param>
+        /// <param name="isAppearance">出現波ならtrue、移動による航跡ならfalse</param>
+        /// <param name="velocity">海面のX・Z方向の移動速度、単位はメートル毎秒、出現時は省略できる</param>
+        /// <returns>海面へ波紋を登録できた場合はtrue</returns>
         /// <example>魚影を有効化した直後にEmitRipple(true)を呼ぶ</example>
-        public void EmitRipple(bool isAppearance)
+        public bool EmitRipple(bool isAppearance, Vector2 velocity = default)
         {
-            if (_ripples != null) _ripples.Emit(transform.position, _rippleSize * (isAppearance ? 1f : 0.6f));
+            return _ripples != null && _ripples.Emit(transform.position, _rippleSize, velocity, isAppearance);
         }
 
         /// <summary>現在の透明度から指定した透明度へ変化させる</summary>
