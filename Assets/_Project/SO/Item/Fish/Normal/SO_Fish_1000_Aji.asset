@@ -16,8 +16,10 @@ MonoBehaviour:
   itemName: "\u30A2\u30B8"
   description: "\u666E\u901A\u306E\u30A2\u30B8\u3002\u5473\u3082\u666E\u901A\u3002"
   _fishImage: {fileID: 21300000, guid: 600e74befeb09934194219c4df83417a, type: 3}
-  _fishId: 1
   _miniGameSettings:
   - {fileID: 11400000, guid: 4e889da42eb92484abd5453731d96544, type: 2}
+  - {fileID: 11400000, guid: 042d6b8879c971b4298a9f27de569cee, type: 2}
+  - {fileID: 11400000, guid: 54b0f753b61930347a825a577c4900f8, type: 2}
+  - {fileID: 11400000, guid: c75eef024325c104995fae59f76c1323, type: 2}
   _difficulty: 0
   _gimmickType: 0
