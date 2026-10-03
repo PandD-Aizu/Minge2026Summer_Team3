@@ -30,7 +30,7 @@ Material:
     - _CausticsScale: 2.6
     - _CausticsStrength: 0.14
     - _CrestFoamStrength: 0.08
-    - _DepthDistance: 5
+    - _DepthDistance: 4.5
     - _EnvironmentBlend: 0.3
     - _FishRippleFoamStrength: 0.22
     - _FishRippleStrength: 2.2
@@ -52,9 +52,9 @@ Material:
     - _WaveSpeed: 0.55
     m_Colors:
     - _Absorption: {r: 0.7, g: 0.18, b: 0.12, a: 0}
-    - _DeepColor: {r: 0.025, g: 0.2, b: 0.31, a: 1}
+    - _DeepColor: {r: 0.27589887, g: 0.5096722, b: 0.5660378, a: 1}
     - _FoamColor: {r: 0.79, g: 0.94, b: 0.88, a: 1}
-    - _ShallowColor: {r: 0.09, g: 0.49, b: 0.48, a: 1}
+    - _ShallowColor: {r: 0.43955928, g: 0.7987421, b: 0.7880733, a: 1}
     - _SkyHorizonColor: {r: 0.48, g: 0.7, b: 0.75, a: 1}
     - _SkyZenithColor: {r: 0.15, g: 0.36, b: 0.56, a: 1}
   m_BuildTextureStacks: []
