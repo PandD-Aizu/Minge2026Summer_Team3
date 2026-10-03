@@ -45,6 +45,13 @@ namespace LifetimeScopes
             // 入力の受付
             builder.RegisterComponent(_playerInputReader);
 
+            // 敵の判断は通常のC#クラスで行い、シーン上のViewとプレイヤー位置だけを渡す
+            builder.RegisterComponentInHierarchy<PlayerMovement>().As<IPlayerPosition>();
+            builder.RegisterComponentInHierarchy<VisionEnemyView>();
+            builder.RegisterComponentInHierarchy<GameOverView>();
+            builder.RegisterComponentInHierarchy<CameraShaker>();
+            builder.RegisterEntryPoint<VisionEnemyController>();
+
             // 釣り場への到着をチュートリアルへ通知する
             builder.RegisterEntryPoint<TutorialFishingStageEntryPoint>();
             builder.RegisterEntryPoint<TimeOfDayPresenter>();

@@ -133,6 +133,8 @@ GameObject:
   m_Component:
   - component: {fileID: 3139803569119779997}
   - component: {fileID: 3261285382190418424}
+  - component: {fileID: 7080000000000000011}
+  - component: {fileID: 7080000000000000012}
   m_Layer: 0
   m_Name: VisionEnemy
   m_TagString: Untagged
@@ -166,9 +168,60 @@ MonoBehaviour:
   m_GameObject: {fileID: 4218991256191620306}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9772f6ba3cc362e4e99cbc9857666362, type: 3}
+  m_Script: {fileID: 11500000, guid: a9070d6cb9254aa2bf134157779e88e2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::VisionEnemyController
-  _playerPosition: {fileID: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::VisionEnemyView
   _enemyDefinition: {fileID: 11400000, guid: 98ee23f382dbc974c8b550b3aaf53a85, type: 2}
-  stopDistance: 1
+  _spriteRenderer: {fileID: 3084971557794032098}
+  _contactCollider: {fileID: 7080000000000000011}
+  _stopDistance: 1
+  _respawnDistance: 6
+  _gameOverSeconds: 3
+--- !u!135 &7080000000000000011
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4218991256191620306}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.8
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!54 &7080000000000000012
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4218991256191620306}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
