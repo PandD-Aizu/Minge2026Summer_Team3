@@ -63,10 +63,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65fcaa86e42627f4e91a4346efc4ebfd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Fishing.FishRippleEmitter
-  _material: {fileID: 2100000, guid: 25bceaf4ad01ef745aeba790b8a4f74b, type: 2}
-  _color: {r: 0.65, g: 0.9, b: 1, a: 0.45}
-  _duration: 1.2
-  _lineWidth: 0.025
+  _material: {fileID: 2100000, guid: a87ab61106c413849859f14d958e8eca, type: 2}
+  _duration: 3.2
+  _strength: 0.028
+  _minimumInterval: 0.18
 --- !u!114 &589150438070748270
 MonoBehaviour:
   m_ObjectHideFlags: 0

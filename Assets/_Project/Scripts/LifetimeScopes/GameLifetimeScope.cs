@@ -23,7 +23,7 @@ namespace LifetimeScopes
         protected override void Configure(IContainerBuilder builder)
         {
             // 音声インスタンスの所有権とセーブアクセスをRootに集約する
-            builder.Register<FMODBGMService>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<FMODBGMService>().AsSelf();
             builder.Register<FMODSEService>(Lifetime.Singleton);
             builder.Register<FMODVCAService>(Lifetime.Singleton);
             builder.Register<SaveService>(Lifetime.Singleton);
