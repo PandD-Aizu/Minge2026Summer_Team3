@@ -2,16 +2,21 @@ using System;
 using System.Collections.Generic;
 using FMOD.Studio;
 using FMODUnity;
+using VContainer.Unity;
 
 namespace FMODServices
 {
     /// <summary>
     /// FMODのBGM（バックグラウンドミュージック）を管理するサービスクラス
     /// </summary>
-    public class FMODBGMService : IDisposable
+    public class FMODBGMService : IDisposable, ILateTickable
     {
         private readonly Dictionary<string, EventInstance> _bgmInstances = new Dictionary<string, EventInstance>();
 
+        /// <summary>未再生のBGMを開始し、同じキーで再生中なら再生位置を維持する</summary>
+        /// <param name="eventReference">再生するFMODイベント</param>
+        /// <param name="key">管理キー、省略時はイベントのGUID</param>
+        /// <example>シーン到着時にPlayBGM(eventReference)を呼んで同じ曲を継続する</example>
         public void PlayBGM(EventReference eventReference, string key = null)
         {
             if (eventReference.IsNull)
@@ -36,7 +41,7 @@ namespace FMODServices
                 }
                 else
                 {
-                    UnityEngine.Debug.LogWarning($"[FMOD] PlayBGM: BGM with key '{key}' is already playing.");
+                    // シーン遷移後の同じ曲の要求ではstartを呼ばず、既存の再生を続ける
                     return;
                 }
             }
@@ -44,6 +49,22 @@ namespace FMODServices
             try
             {
                 var instance = RuntimeManager.CreateInstance(eventReference);
+                // シーンを跨ぐBGMは現在のリスナー位置で鳴らし、3Dイベントも開始前に初期化する
+                if (!TryGetBGMAttributes(out var attributes))
+                {
+                    instance.release();
+                    UnityEngine.Debug.LogError("[FMOD] PlayBGM: Failed to get listener attributes");
+                    return;
+                }
+
+                var spatialResult = instance.set3DAttributes(attributes);
+                if (spatialResult != FMOD.RESULT.OK)
+                {
+                    instance.release();
+                    UnityEngine.Debug.LogError($"[FMOD] PlayBGM: Failed to initialize BGM attributes: {spatialResult}");
+                    return;
+                }
+
                 instance.start();
                 _bgmInstances[key] = instance;
             }
@@ -51,6 +72,36 @@ namespace FMODServices
             {
                 UnityEngine.Debug.LogError($"[FMOD] PlayBGM: Failed to play BGM '{eventReference}': {ex.Message}");
             }
+        }
+
+        /// <summary>継続中のBGMを現在のリスナーへ追従させ、移動やシーン切り替えによる距離減衰を防ぐ</summary>
+        /// <example>RootのVContainerから毎フレーム呼ばれる</example>
+        public void LateTick()
+        {
+            if (_bgmInstances.Count == 0 || !RuntimeManager.IsInitialized ||
+                !TryGetBGMAttributes(out var attributes))
+            {
+                return;
+            }
+
+            // シーンのTransformを保持せず、FMODが管理する最新のリスナー位置を使う
+            foreach (var instance in _bgmInstances.Values)
+            {
+                if (instance.isValid())
+                {
+                    instance.set3DAttributes(attributes);
+                }
+            }
+        }
+
+        /// <summary>主リスナーの距離減衰位置と向きからBGMの3D属性を取得する</summary>
+        /// <param name="attributes">BGMに設定する位置、速度、向き</param>
+        /// <returns>リスナーの属性を取得できた場合はtrue</returns>
+        private static bool TryGetBGMAttributes(out FMOD.ATTRIBUTES_3D attributes)
+        {
+            var result = RuntimeManager.StudioSystem.getListenerAttributes(0, out attributes, out var attenuationPosition);
+            attributes.position = attenuationPosition;
+            return result == FMOD.RESULT.OK;
         }
 
         public void StopBGM(string key, bool allowFadeOut = true)

@@ -2,6 +2,7 @@ using UnityEngine;
 using R3;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
 namespace Dialogue
 {
@@ -13,6 +14,7 @@ namespace Dialogue
 
         private readonly Subject<Unit> _textBoxClicked = new Subject<Unit>();
         private readonly Subject<Unit> _disabled = new();
+        private bool _waitForAdvanceKeyRelease;
 
         public Observable<Unit> TextBoxClicked => _textBoxClicked;
         public Observable<Unit> Disabled => _disabled;
@@ -22,6 +24,34 @@ namespace Dialogue
         private void Awake()
         {
             _button.onClick.AddListener(OnTextBoxClicked);
+        }
+
+        /// <summary>会話を開いたときのJキー入力を読み進めに使わないようにする</summary>
+        /// <example>会話UIを表示したときにUnityが呼ぶ</example>
+        private void OnEnable()
+        {
+            _waitForAdvanceKeyRelease = Keyboard.current?.jKey.isPressed ?? false;
+        }
+
+        /// <summary>表示中の会話をJキーの押下ごとに一度だけ読み進める</summary>
+        /// <example>会話UIの有効化中にUnityが毎フレーム呼ぶ</example>
+        private void Update()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard == null || !isActiveAndEnabled) return;
+
+            // 会話開始に使ったキーを離すまで、先頭のセリフを表示し続ける
+            if (_waitForAdvanceKeyRelease)
+            {
+                if (!keyboard.jKey.isPressed) _waitForAdvanceKeyRelease = false;
+                return;
+            }
+
+            // クリックと同じ操作可否を守り、長押しでは連続して進めない
+            if (keyboard.jKey.wasPressedThisFrame && _button.isActiveAndEnabled && _button.IsInteractable())
+            {
+                OnTextBoxClicked();
+            }
         }
 
         /// <summary>
@@ -63,9 +93,9 @@ namespace Dialogue
         }
 
         /// <summary>
-        /// ダイアローグUIのボタンがクリックされたときに通知する
+        /// ダイアローグUIのクリックまたはJキーの進行入力を通知する
         /// </summary>
-        /// <example>ButtonのonClickから呼ばれる</example>
+        /// <example>ButtonのonClickまたはUpdateから呼ばれる</example>
         private void OnTextBoxClicked()
         {
             _textBoxClicked.OnNext(Unit.Default);
