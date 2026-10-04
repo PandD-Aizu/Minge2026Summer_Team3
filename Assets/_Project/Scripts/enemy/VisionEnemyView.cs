@@ -2,28 +2,24 @@ using System;
 using _Project.Scripts.Data.Enemy;
 using UnityEngine;
 
-/// <summary>敵の表示、位置変更、プレイヤーとの接触をControllerへ伝える</summary>
+/// <summary>敵の表示と移動を行い、プレイヤーとの接触を通知する</summary>
 public sealed class VisionEnemyView : MonoBehaviour
 {
     [SerializeField] private EnemyDefinition _enemyDefinition;
-    [SerializeField] private SpriteRenderer _spriteRenderer;
+    [SerializeField] private Renderer _visualRenderer;
     [SerializeField] private SphereCollider _contactCollider;
     [SerializeField, Min(0f)] private float _stopDistance = 1f;
-    [SerializeField, Min(2f)] private float _respawnDistance = 6f;
-    [SerializeField, Min(0.1f)] private float _gameOverSeconds = 3f;
 
     public event Action<IPlayerPosition> PlayerTouched;
     public Vector3 Position => transform.position;
     public float MoveSpeed => _enemyDefinition != null ? _enemyDefinition.MoveSpeed : 0f;
     public float StopDistance => _stopDistance;
-    public float RespawnDistance => _respawnDistance;
-    public float GameOverSeconds => _gameOverSeconds;
 
     /// <summary>Prefabと開発用Sceneの既存部品を取得する</summary>
     /// <example>Unityがコンポーネント生成時に呼ぶ</example>
     private void Awake()
     {
-        if (_spriteRenderer == null) _spriteRenderer = GetComponentInChildren<SpriteRenderer>(true);
+        if (_visualRenderer == null) _visualRenderer = GetComponentInChildren<Renderer>(true);
         if (_contactCollider == null) _contactCollider = GetComponent<SphereCollider>();
     }
 
@@ -32,7 +28,7 @@ public sealed class VisionEnemyView : MonoBehaviour
     /// <example>昼はSetVisible(false)で姿とTriggerを消す</example>
     public void SetVisible(bool visible)
     {
-        if (_spriteRenderer != null) _spriteRenderer.enabled = visible;
+        if (_visualRenderer != null) _visualRenderer.enabled = visible;
         if (_contactCollider != null) _contactCollider.enabled = visible;
     }
 
@@ -41,12 +37,7 @@ public sealed class VisionEnemyView : MonoBehaviour
     /// <example>Controller.Tickから水平移動を適用する</example>
     public void Move(Vector3 movement) => transform.position += movement;
 
-    /// <summary>復帰位置に敵を配置する</summary>
-    /// <param name="position">安全な地面上のワールド位置</param>
-    /// <example>GameOver表示後にControllerが呼ぶ</example>
-    public void Respawn(Vector3 position) => transform.position = position;
-
-    /// <summary>接触したプレイヤーをControllerへ通知する</summary>
+    /// <summary>接触したプレイヤーを通知する</summary>
     /// <param name="other">敵のTriggerへ入ったCollider</param>
     /// <example>敵に近づいたときにUnityが呼ぶ</example>
     private void OnTriggerEnter(Collider other) => NotifyPlayerTouch(other);

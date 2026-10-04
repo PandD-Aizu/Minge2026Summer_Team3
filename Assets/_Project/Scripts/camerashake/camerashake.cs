@@ -18,7 +18,7 @@ public class CameraShaker : MonoBehaviour
     }
 
     /// <summary>設定されたImpulseSourceから一度だけ揺れを発生させる</summary>
-    /// <example>敵との接触時にVisionEnemyControllerから呼ぶ</example>
+    /// <example>カメラ演出を再生したいときに呼ぶ</example>
     public void TriggerShake()
     {
         if (impulseSource != null)
