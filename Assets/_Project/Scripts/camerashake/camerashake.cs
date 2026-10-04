@@ -1,31 +1,29 @@
 using UnityEngine;
 using Unity.Cinemachine;
-using UnityEngine.InputSystem; // 新しいInput Systemを使用する場合
+using UnityEngine.InputSystem;
 
+/// <summary>CinemachineのImpulseを使ってカメラを一度揺らす</summary>
 public class CameraShaker : MonoBehaviour
 {
     [SerializeField] private CinemachineImpulseSource impulseSource;
+    [SerializeField] private bool _enableTestInput = true;
 
-    void Update()
+    /// <summary>開発用SceneではLキーかゲームパッド南ボタンで揺れを試す</summary>
+    /// <example>FishingStageでは_enableTestInputをfalseにして自動入力を止める</example>
+    private void Update()
     {
-        // キーボードのAキー、またはゲームパッドのAボタン（南側ボタン）が押された時
-        if (Keyboard.current.lKey.wasPressedThisFrame ||
-            (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame))
-        {
-            TriggerShake();
-        }
+        if (!_enableTestInput) return;
+        if ((Keyboard.current?.lKey.wasPressedThisFrame ?? false) ||
+            (Gamepad.current?.buttonSouth.wasPressedThisFrame ?? false)) TriggerShake();
     }
 
+    /// <summary>設定されたImpulseSourceから一度だけ揺れを発生させる</summary>
+    /// <example>カメラ演出を再生したいときに呼ぶ</example>
     public void TriggerShake()
     {
         if (impulseSource != null)
         {
-            // Y軸（縦方向）に「-1」の力で揺らします
             impulseSource.GenerateImpulse(new Vector3(0, -1, 0));
         }
     }
 }
-
-
-
-

@@ -1908,12 +1908,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 956746093}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9772f6ba3cc362e4e99cbc9857666362, type: 3}
+  m_Script: {fileID: 11500000, guid: a9070d6cb9254aa2bf134157779e88e2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::VisionEnemyController
-  _playerPosition: {fileID: 1479272002}
+  m_EditorClassIdentifier: Assembly-CSharp::VisionEnemyView
   _enemyDefinition: {fileID: 11400000, guid: 98ee23f382dbc974c8b550b3aaf53a85, type: 2}
-  stopDistance: 0
+  _visualRenderer: {fileID: 0}
+  _stopDistance: 0
 --- !u!1 &1087579358
 GameObject:
   m_ObjectHideFlags: 0

@@ -15,4 +15,4 @@ MonoBehaviour:
   enemyId: 0
   enemyName: VisionEnemy
   enemyType: 0
-  moveSpeed: 1
+  moveSpeed: 2
