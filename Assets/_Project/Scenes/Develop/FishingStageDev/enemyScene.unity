@@ -1913,7 +1913,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::VisionEnemyView
   _enemyDefinition: {fileID: 11400000, guid: 98ee23f382dbc974c8b550b3aaf53a85, type: 2}
   _visualRenderer: {fileID: 0}
-  _contactCollider: {fileID: 0}
   _stopDistance: 0
 --- !u!1 &1087579358
 GameObject:

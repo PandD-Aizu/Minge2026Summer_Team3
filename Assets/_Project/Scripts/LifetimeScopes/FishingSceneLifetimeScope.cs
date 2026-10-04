@@ -1,3 +1,4 @@
+using _Project.Scripts.Enemy;
 using _Project.Scripts.View;
 using Controller;
 using Dialogue;
@@ -45,10 +46,13 @@ namespace LifetimeScopes
             // 入力の受付
             builder.RegisterComponent(_playerInputReader);
 
-            // 敵の判断は通常のC#クラスで行い、シーン上のViewとプレイヤー位置だけを渡す
+            // 敵の判断は通常のC#クラスで行い、Scene上の表示、移動、判定を渡す
             builder.RegisterComponentInHierarchy<PlayerMovement>().As<IPlayerPosition>();
             builder.RegisterComponentInHierarchy<VisionEnemyView>();
+            builder.RegisterComponentInHierarchy<VisionEnemyDetectSensor>();
+            builder.RegisterComponentInHierarchy<VisionEnemyDeathSensor>();
             builder.RegisterEntryPoint<VisionEnemyController>();
+            builder.RegisterComponentInHierarchy<VisionEnemyNavigator>();
 
             // 釣り場への到着をチュートリアルへ通知する
             builder.RegisterEntryPoint<TutorialFishingStageEntryPoint>();
