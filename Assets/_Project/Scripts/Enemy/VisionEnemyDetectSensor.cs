@@ -1,7 +1,7 @@
 ﻿using R3;
 using UnityEngine;
 
-namespace _Project.Scripts.Enemy
+namespace Enemy
 {
 
     /// <summary>発見範囲へのプレイヤーの出入りを通知する</summary>

@@ -3,6 +3,7 @@ using FMODSettings;
 using _Project.Scripts.Core;
 using _Project.Scripts.Data.Item;
 using Controller;
+using GameOver;
 using Input;
 using SaveSettings;
 using SceneLoadServices;
@@ -16,6 +17,7 @@ namespace LifetimeScopes
     {
         [SerializeField] private InventoryView _inventoryPrefab;
         [SerializeField] private ItemCatalog _itemCatalog;
+        [SerializeField] private GameOverView _gameOverPrefab;
 
         /// <summary>音声・入力・インベントリなどアプリ全体で共有する依存関係を登録する</summary>
         /// <param name="builder">Rootコンテナの登録先</param>
@@ -51,6 +53,7 @@ namespace LifetimeScopes
             builder.RegisterEntryPoint<_Project.Scripts.Inventory.InventoryPresenter>();
             builder.Register<InventoryData.Inventory>(Lifetime.Singleton);
             builder.RegisterInstance(_itemCatalog);
+            builder.RegisterComponentInNewPrefab(_gameOverPrefab, Lifetime.Singleton).UnderTransform(transform);
         }
     }
 }

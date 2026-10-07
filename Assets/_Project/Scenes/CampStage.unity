@@ -2120,7 +2120,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LifetimeScopes.FMODBGMLifetimeScope
   parentReference:
-    TypeName:
+    TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
   _bgm:
@@ -3837,7 +3837,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7684771340877288111, guid: 68926b496fbfe2740a58a97c08b54b05, type: 3}
   m_PrefabInstance: {fileID: 548867107}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 548867110}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2f0ac18065ee1ed4b8230b3accfd1a17, type: 3}
@@ -4183,6 +4183,7 @@ MonoBehaviour:
   _dialogueView: {fileID: 1300419347}
   _playerInputReader: {fileID: 2576805471629690918}
   _startupDialogue: {fileID: 11400000, guid: 44423fb64b9ea8d42bc5f888d738272c, type: 2}
+  _captureReturnDialogue: {fileID: 11400000, guid: b454f49e420585344856fe35fc5e4533, type: 2}
   _triggers:
   - {fileID: 1586639471}
   - {fileID: 548867111}

@@ -5,7 +5,8 @@ using UnityEngine.InputSystem;
 /// <summary>CinemachineのImpulseを使ってカメラを一度揺らす</summary>
 public class CameraShaker : MonoBehaviour
 {
-    [SerializeField] private CinemachineImpulseSource impulseSource;
+    [SerializeField] private CinemachineImpulseSource _impulseSource;
+    [SerializeField] private float _size = -3;
     [SerializeField] private bool _enableTestInput = true;
 
     /// <summary>開発用SceneではLキーかゲームパッド南ボタンで揺れを試す</summary>
@@ -21,9 +22,17 @@ public class CameraShaker : MonoBehaviour
     /// <example>カメラ演出を再生したいときに呼ぶ</example>
     public void TriggerShake()
     {
-        if (impulseSource != null)
+        if (_impulseSource != null)
         {
-            impulseSource.GenerateImpulse(new Vector3(0, -1, 0));
+            _impulseSource.GenerateImpulse(new Vector3(1, _size, 0));
         }
+    }
+
+    /// <summary>
+    /// GameOver時のカメラの揺れ
+    /// </summary>
+    public void TriggerBigShake()
+    {
+        if (_impulseSource != null) _impulseSource.GenerateImpulse(new Vector3(0, -5, 0));
     }
 }

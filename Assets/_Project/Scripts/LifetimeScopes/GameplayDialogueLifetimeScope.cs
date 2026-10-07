@@ -12,6 +12,8 @@ namespace LifetimeScopes
         [SerializeField] private PlayerInputReader _playerInputReader;
         [SerializeField, Tooltip("設定した場合、シーン開始時に自動再生する会話")]
         private DialogueData _startupDialogue;
+        [SerializeField, Tooltip("敵に捕まってCampStageへ戻ったときの独り言")]
+        private DialogueData _captureReturnDialogue;
         [SerializeField] private DialogueTrigger[] _triggers = System.Array.Empty<DialogueTrigger>();
 
         /// <summary>会話単体と本編用Controllerを同じScopeへ登録する</summary>
@@ -27,6 +29,7 @@ namespace LifetimeScopes
             if (_startupDialogue != null)
             {
                 builder.RegisterInstance(_startupDialogue);
+                builder.RegisterInstance(new CaptureReturnDialogue(_captureReturnDialogue));
                 builder.RegisterEntryPoint<GameplayDialogueStartup>();
             }
 

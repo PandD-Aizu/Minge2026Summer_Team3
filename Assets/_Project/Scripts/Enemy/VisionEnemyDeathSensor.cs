@@ -1,14 +1,15 @@
-﻿using UnityEngine;
+﻿using _Project.Scripts.Data.Enum;
+using UnityEngine;
 using R3;
 
-namespace _Project.Scripts.Enemy
+namespace Enemy
 {
     /// <summary>プレイヤーが捕獲範囲に入ったことを通知する</summary>
     [RequireComponent(typeof(MeshCollider))]
     public sealed class VisionEnemyDeathSensor : MonoBehaviour
     {
-        private readonly Subject<Unit> _deathCollisionEnter = new();
-        public Observable<Unit> DeathCollisionEnter => _deathCollisionEnter;
+        private readonly Subject<EnemyType> _deathCollisionEnter = new();
+        public Observable<EnemyType> DeathCollisionEnter => _deathCollisionEnter;
         private MeshCollider _trigger;
 
         /// <summary>同じGameObjectにある捕獲用Triggerを取得する</summary>
@@ -28,7 +29,7 @@ namespace _Project.Scripts.Enemy
         {
             if (other.gameObject.CompareTag("Player"))
             {
-                _deathCollisionEnter.OnNext(Unit.Default);
+                _deathCollisionEnter.OnNext(EnemyType.Vision);
             }
         }
 

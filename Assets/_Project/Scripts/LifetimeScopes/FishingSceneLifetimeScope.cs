@@ -2,6 +2,7 @@ using _Project.Scripts.Enemy;
 using _Project.Scripts.View;
 using Controller;
 using Dialogue;
+using Enemy;
 using MiniGame;
 using UnityEngine;
 using VContainer;
@@ -51,8 +52,14 @@ namespace LifetimeScopes
             builder.RegisterComponentInHierarchy<VisionEnemyView>();
             builder.RegisterComponentInHierarchy<VisionEnemyDetectSensor>();
             builder.RegisterComponentInHierarchy<VisionEnemyDeathSensor>();
-            builder.RegisterEntryPoint<VisionEnemyController>();
+            builder.RegisterEntryPoint<VisionEnemyController>().AsSelf();
             builder.RegisterComponentInHierarchy<VisionEnemyNavigator>();
+
+            // GameOverの演出関連
+            builder.RegisterComponentInHierarchy<CameraShaker>();
+            builder.RegisterComponentInHierarchy<GameOverCameraView>();
+            builder.RegisterEntryPoint<GameOverPresenter>();
+
 
             // 釣り場への到着をチュートリアルへ通知する
             builder.RegisterEntryPoint<TutorialFishingStageEntryPoint>();

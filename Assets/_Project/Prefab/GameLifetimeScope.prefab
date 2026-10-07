@@ -50,3 +50,4 @@ MonoBehaviour:
   autoInjectGameObjects: []
   _inventoryPrefab: {fileID: 7309821344782021262, guid: a6a2737748d32eb478cdf74ad8a32645, type: 3}
   _itemCatalog: {fileID: 11400000, guid: 8bfa6e0811b02884dbf1d61962132414, type: 2}
+  _gameOverPrefab: {fileID: 7285779972421077943, guid: ece1f331ceae3ce4ebd5c111757d53b4, type: 3}
