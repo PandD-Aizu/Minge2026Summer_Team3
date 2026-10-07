@@ -4,6 +4,8 @@ using Controller;
 using Dialogue;
 using Enemy;
 using MiniGame;
+using PauseMenu;
+using Presentation;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -19,6 +21,7 @@ namespace LifetimeScopes
         [SerializeField] private DialogueUIView _dialogueView;
         [SerializeField] private FishingMonologuePresenter _fishingMonologuePresenter;
         [SerializeField] private TimeOfDayView _timeOfDayView;
+        [SerializeField] private PauseMenuView _pauseMenuView;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -64,6 +67,12 @@ namespace LifetimeScopes
             // 釣り場への到着をチュートリアルへ通知する
             builder.RegisterEntryPoint<TutorialFishingStageEntryPoint>();
             builder.RegisterEntryPoint<TimeOfDayPresenter>();
+
+            if (_pauseMenuView != null)
+            {
+                builder.RegisterComponent(_pauseMenuView);
+                builder.RegisterEntryPoint<PauseMenuPresenter>();
+            }
 
             // シーンに置いた独り言Presenterへ会話と進行を注入する
             builder.RegisterBuildCallback(container => container.Inject(_fishingMonologuePresenter));

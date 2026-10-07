@@ -5,7 +5,9 @@ namespace Input
     {
         private object _owner;
         private UnityEngine.GameObject _eventSystem;
+        private int _lastReleaseFrame = -1;
         public bool IsOpen => _owner != null;
+        public bool WasReleasedThisFrame => _lastReleaseFrame == UnityEngine.Time.frameCount;
 
         /// <summary>ほかのメニューが閉じていれば入力の所有権を得る</summary>
         /// <param name="owner">開こうとしているPresenter</param>
@@ -31,6 +33,7 @@ namespace Input
         public void Release(object owner)
         {
             if (!ReferenceEquals(_owner, owner)) return;
+            _lastReleaseFrame = UnityEngine.Time.frameCount;
             Dispose();
         }
 
