@@ -286,7 +286,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7774472220965701755, guid: fef702533dd9aeb4e8d4ac7c982554be, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -34.4
       objectReference: {fileID: 0}
     - target: {fileID: 7774472220965701755, guid: fef702533dd9aeb4e8d4ac7c982554be, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2228,7 +2228,7 @@ Transform:
   m_GameObject: {fileID: 682533559}
   serializedVersion: 2
   m_LocalRotation: {x: 0.2588191, y: -0, z: -0, w: 0.9659258}
-  m_LocalPosition: {x: -37.1, y: 7.500002, z: 18.00962}
+  m_LocalPosition: {x: -37.1, y: 7.500003, z: -16.39038}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4350,6 +4350,7 @@ GameObject:
   - component: {fileID: 1539812598}
   - component: {fileID: 1539812597}
   - component: {fileID: 1539812599}
+  - component: {fileID: 1539812600}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -4425,7 +4426,7 @@ Transform:
   m_GameObject: {fileID: 1539812593}
   serializedVersion: 2
   m_LocalRotation: {x: 0.2588191, y: -0, z: -0, w: 0.9659258}
-  m_LocalPosition: {x: -37.1, y: 7.500002, z: 18.00962}
+  m_LocalPosition: {x: -37.1, y: 7.500003, z: -16.39038}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4446,7 +4447,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineBrain
   ShowDebugText: 0
-  ShowCameraFrustum: 1
+  ShowCameraFrustum: 0
   IgnoreTimeScale: 0
   WorldUpOverride: {fileID: 0}
   ChannelMask: -1
@@ -4488,7 +4489,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -4523,6 +4524,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: FMODUnity::FMODUnity.StudioListener
   nonRigidbodyVelocity: 0
   attenuationObject: {fileID: 1479271999}
+--- !u!114 &1539812600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1539812593}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
+  m_IsGlobal: 1
+  priority: 0
+  blendDistance: 0
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: 6ffef38747a771945a4f580f57f6d2db, type: 2}
 --- !u!1 &1596483216
 GameObject:
   m_ObjectHideFlags: 0
@@ -5047,8 +5065,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1845136421}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.027992724, y: 0.71202993, z: 0.028432587, w: 0.7010145}
-  m_LocalPosition: {x: -37.1, y: 1.816, z: 30.777}
+  m_LocalRotation: {x: -0.012379227, y: 0.15876736, z: 0.0019908273, w: 0.98723644}
+  m_LocalPosition: {x: -37.1, y: 1.816, z: -3.623001}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
