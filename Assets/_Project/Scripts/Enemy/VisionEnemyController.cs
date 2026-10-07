@@ -1,6 +1,7 @@
 using System;
-using _Project.Scripts.Enemy;
+using Enemy;
 using _Project.Scripts.Core;
+using _Project.Scripts.Enemy;
 using R3;
 using UnityEngine;
 using VContainer.Unity;
@@ -19,6 +20,7 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
     private IDisposable _lostSubscription;
     private bool _isNight;
     private bool _hasDetectedPlayer;
+    private bool _isCapturing;
 
     /// <summary>シーンの敵、プレイヤー、進行状態を受け取る</summary>
     /// <param name="view">敵の見た目</param>
@@ -57,7 +59,7 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
     /// <example>VContainerが毎フレーム呼ぶ</example>
     public void Tick()
     {
-        if (!_isNight || !_hasDetectedPlayer || _player.PlayerPosition == null) return;
+        if (!_isNight || _isCapturing || !_hasDetectedPlayer || _player.PlayerPosition == null) return;
 
         _navigator.SetDestination(_player.PlayerPosition);
     }
@@ -70,9 +72,30 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
         _isNight = timeOfDay == TimeOfDay.Night;
         _hasDetectedPlayer = false;
         _view.SetVisible(_isNight);
-        _detectSensor.SetSensing(_isNight);
-        _deathSensor.SetSensing(_isNight);
-        _navigator.SetActive(_isNight);
+        _detectSensor.SetSensing(_isNight && !_isCapturing);
+        _deathSensor.SetSensing(_isNight && !_isCapturing);
+        _navigator.SetActive(_isNight && !_isCapturing);
+    }
+
+    /// <summary>捕獲演出中の再接触と通常の追跡を止める</summary>
+    /// <example>GameOverPresenterが最初の接触通知で呼ぶ</example>
+    public void BeginCapture()
+    {
+        if (_isCapturing) return;
+        _isCapturing = true;
+        _hasDetectedPlayer = false;
+        _detectSensor.SetSensing(false);
+        _deathSensor.SetSensing(false);
+        _navigator.SetActive(false);
+    }
+
+    /// <summary>演出を途中で終了した場合に昼夜の状態へ戻す</summary>
+    /// <example>CampStageの読み込みに失敗した場合に呼ぶ</example>
+    public void EndCapture()
+    {
+        if (!_isCapturing) return;
+        _isCapturing = false;
+        ApplyTimeOfDay(_progress.CurrentTimeOfDay);
     }
 
     /// <summary>昼夜と発見通知の購読を終了する</summary>
