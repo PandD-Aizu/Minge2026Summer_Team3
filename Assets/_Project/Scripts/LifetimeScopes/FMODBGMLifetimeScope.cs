@@ -1,4 +1,5 @@
 using FMODServices;
+using FMODSettings;
 using FMODUnity;
 using _Project.Scripts.Core;
 using R3;
@@ -13,7 +14,7 @@ namespace LifetimeScopes
     {
         [SerializeField] private EventReference _bgm;
 
-        /// <summary>昼はBGMを継続再生し、夜はフェードアウトするよう昼夜の変更を購読する</summary>
+        /// <summary>昼と夕方のBGMを切り替え、夜に停止するため時間帯の変更を購読する</summary>
         /// <param name="builder">Rootを親とするシーンのコンテナ登録先</param>
         /// <example>CampStageとFishingStageに同じBGMを設定して配置する</example>
         protected override void Configure(IContainerBuilder builder)
@@ -32,21 +33,25 @@ namespace LifetimeScopes
             });
         }
 
-        /// <summary>現在の昼夜に合わせてこのシーンのBGMを再生または停止する</summary>
+        /// <summary>昼はシーンのBGM、夕方はMidnight Deepを再生し、夜は両方を停止する</summary>
         /// <param name="bgmService">Rootが所有するBGMサービス</param>
         /// <param name="time">反映する昼夜</param>
-        /// <example>夜の開始通知で昼BGMをフェードアウトする</example>
+        /// <example>夕方の開始通知でMidnight Deepを開始し、夜の開始通知で停止する</example>
         private void ApplyTimeOfDay(FMODBGMService bgmService, TimeOfDay time)
         {
-            if (_bgm.IsNull) return;
-
+            var eveningBgm = FMODEventPath.BGM_MIDNIGHT_DEEP.Reference;
             if (time == TimeOfDay.Day)
             {
-                bgmService.PlayBGM(_bgm);
+                bgmService.FadeOutBGM(eveningBgm.Guid.ToString());
+                if (!_bgm.IsNull) bgmService.PlayBGM(_bgm);
             }
             else
             {
-                bgmService.FadeOutBGM(_bgm.Guid.ToString());
+                if (!_bgm.IsNull) bgmService.FadeOutBGM(_bgm.Guid.ToString());
+
+                // 環境音には触れず、夕方以外では夕方用BGMを終了する
+                if (time == TimeOfDay.Evening) bgmService.PlayBGM(eveningBgm);
+                else bgmService.FadeOutBGM(eveningBgm.Guid.ToString());
             }
         }
     }

@@ -12,18 +12,28 @@ public class MiniGameResultPresenter
     private readonly MiniGameResultView _view;
     private readonly Inventory _inventory;
     private readonly FMODSEService _se;
+    private readonly RotationMiniGameView _miniGameView;
+    private readonly IPlayerPosition _player;
+    private readonly PlayerInputReader _input;
     private FishDefinition _currentFishDefinition;
 
     /// <summary>釣果の表示、所持品への追加、結果音の再生に必要な依存関係を受け取る</summary>
     /// <param name="view">釣り結果の表示先</param>
     /// <param name="inventory">釣った魚の追加先</param>
     /// <param name="se">結果の効果音を再生するサービス</param>
+    /// <param name="miniGameView">釣果表示前に隠すミニゲーム画面</param>
+    /// <param name="player">頭上表示の基準位置</param>
+    /// <param name="input">演出中の歩行を止める入力元</param>
     /// <example>FishingSceneLifetimeScopeの登録から生成する</example>
-    public MiniGameResultPresenter(MiniGameResultView view, Inventory inventory, FMODSEService se)
+    public MiniGameResultPresenter(MiniGameResultView view, Inventory inventory, FMODSEService se,
+        RotationMiniGameView miniGameView, IPlayerPosition player, PlayerInputReader input)
     {
         _view = view;
         _inventory = inventory;
         _se = se;
+        _miniGameView = miniGameView;
+        _player = player;
+        _input = input;
     }
 
     /// <summary>釣果をInventoryへ追加して結果UIを閉じ、追加できたかを返す</summary>
@@ -33,6 +43,7 @@ public class MiniGameResultPresenter
     /// <example>MiniGameFlowPresenterが結果表示の終了後に進行を通知する</example>
     public async UniTask<bool> PlayResultAsync(MiniGameResult result, FishDefinition fishDefinition)
     {
+        using var movementBlock = _input.BlockMovement();
         _currentFishDefinition = fishDefinition;
         switch (result)
         {
@@ -56,8 +67,9 @@ public class MiniGameResultPresenter
         _view.GreatResult();
         _se.PlayOneShot(FMODEventPath.SE_FISSHING_GREAT.Reference);
         var fishAdded = AddCurrentFish();
-        await UniTask.Delay(500);
+        await UniTask.Delay(500, cancellationToken: _view.GetCancellationTokenOnDestroy());
         HideResults();
+        if (fishAdded) await ShowCaughtFishAsync();
         return fishAdded;
     }
 
@@ -69,8 +81,9 @@ public class MiniGameResultPresenter
         _view.GoodResult();
         _se.PlayOneShot(FMODEventPath.SE_FISSHING_OK.Reference);
         var fishAdded = AddCurrentFish();
-        await UniTask.Delay(1000);
+        await UniTask.Delay(1000, cancellationToken: _view.GetCancellationTokenOnDestroy());
         HideResults();
+        if (fishAdded) await ShowCaughtFishAsync();
         return fishAdded;
     }
 
@@ -81,13 +94,20 @@ public class MiniGameResultPresenter
     {
         _view.MissResult();
         _se.PlayOneShot(FMODEventPath.SE_FISSHING_MISS.Reference);
-        await UniTask.Delay(3000);
+        await UniTask.Delay(3000, cancellationToken: _view.GetCancellationTokenOnDestroy());
         HideResults();
     }
 
-    private void Error()
+    /// <summary>ミニゲーム画面を隠し、操作停止を維持したまま釣った魚を表示する</summary>
+    /// <returns>釣果演出の終了までの待機</returns>
+    /// <example>GreatまたはGoodで魚を追加できたときに呼ぶ</example>
+    private async UniTask ShowCaughtFishAsync()
     {
-        Debug.Log("Error");
+        // 捕獲演出などが操作を占有している場合は、その演出を優先する
+        if (_input.IsGameplayInputBlocked) return;
+        _miniGameView.HideMiniGameCanvas();
+        await _view.ShowFishAsync(_currentFishDefinition, _player.PlayerPosition,
+            _view.GetCancellationTokenOnDestroy());
     }
 
     private void HideResults()

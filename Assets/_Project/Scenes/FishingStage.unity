@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 0.6
   m_AmbientMode: 1
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 28eb421e1c73aff4d8285dde49cbfd21, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -60064,7 +60064,6 @@ MonoBehaviour:
   _dayLightColor: {r: 1, g: 0.92, b: 0.73, a: 1}
   _nightLightColor: {r: 0.09803922, g: 0.09803922, b: 0.4392157, a: 1}
   _sunlightRenderer: {fileID: 529660710}
-  _transitionDuration: 2
 --- !u!4 &601314517
 Transform:
   m_ObjectHideFlags: 0
@@ -73576,7 +73575,7 @@ Transform:
   m_GameObject: {fileID: 748747996}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -2, z: -12}
+  m_LocalPosition: {x: -8, y: 0.3, z: -12}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -73611,8 +73610,8 @@ MonoBehaviour:
   NonRigidbodyVelocity: 0
   Params: []
   OverrideAttenuation: 1
-  OverrideMinDistance: 15
-  OverrideMaxDistance: 120
+  OverrideMinDistance: 26
+  OverrideMaxDistance: 70
 --- !u!1001 &748955095
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -189431,7 +189430,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1828896377}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
   m_Name: 
@@ -191202,9 +191201,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   _camera: {fileID: 1845136426}
   _playerVisual: {fileID: 246789420}
+  _waterSurface: {fileID: 971315794}
+  _creatureShader: {fileID: 4800000, guid: c4b63ba37ec7e944eb769727b5f78bbf, type: 3}
+  _underSurfaceShader: {fileID: 4800000, guid: 0dd0f204be5c47644942dd9dd109c62c, type: 3}
+  _rippleMaterial: {fileID: 2100000, guid: a87ab61106c413849859f14d958e8eca, type: 2}
+  _waterSound: {fileID: 4900000, guid: a486a4e1d8dddc649b59a0c3e36f4bc2, type: 3}
+  _scareFace: {fileID: 2800000, guid: cd2e81b44fe78204eb0a9a7bec075c5d, type: 3}
+  _waterParticleShader: {fileID: 4800000, guid: 001560400af75ff43bc5f8b2a0ea2a1c, type: 3}
   _inactivePriority: 0
   _activePriority: 20
   _blendWaitSeconds: 2.1
+  _surfaceLookDuration: 0.8
+  _emergeDuration: 0.18
+  _reachDuration: 0.22
+  _pullDuration: 0.2
+  _faceHoldDuration: 0.32
+  _faceDistance: 0.9
+  _fallDuration: 0.5
+  _submergedDuration: 2.4
+  _octopusSize: 2.8
 --- !u!114 &1845136430
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -193550,7 +193565,7 @@ Transform:
   m_GameObject: {fileID: 1868371961}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -18, y: 12, z: -24}
+  m_LocalPosition: {x: 8, y: 12, z: -28}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -193585,8 +193600,8 @@ MonoBehaviour:
   NonRigidbodyVelocity: 0
   Params: []
   OverrideAttenuation: 1
-  OverrideMinDistance: 8
-  OverrideMaxDistance: 100
+  OverrideMinDistance: 16
+  OverrideMaxDistance: 80
 --- !u!65 &1868524014
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -212013,6 +212028,14 @@ MonoBehaviour:
   _dialogueView: {fileID: 7812345678901234568}
   _fishingMonologuePresenter: {fileID: 2064955659}
   _timeOfDayView: {fileID: 601314516}
+  _timeOfDayLighting:
+    EveningLightColor: {r: 1, g: 0.32, b: 0.2, a: 1}
+    EveningSkyTint: {r: 1.8, g: 0.45, b: 0.3, a: 1}
+    EveningSunlightVisibility: 0.4
+    DawnLightColor: {r: 1, g: 0.48, b: 0.42, a: 1}
+    DawnSkyTint: {r: 1.5, g: 0.65, b: 0.6, a: 1}
+    DawnSunlightVisibility: 0.6
+    TransitionDuration: 2
   _pauseMenuView: {fileID: 1702632030}
 --- !u!4 &2064955658
 Transform:
@@ -220572,7 +220595,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3261285382190418424, guid: 5f174dae81ced454d8da5efd1dfafb67, type: 3}
       propertyPath: _captureApproachDuration
-      value: 0.5
+      value: 1.2
       objectReference: {fileID: 0}
     - target: {fileID: 4218991256191620306, guid: 5f174dae81ced454d8da5efd1dfafb67, type: 3}
       propertyPath: m_Name

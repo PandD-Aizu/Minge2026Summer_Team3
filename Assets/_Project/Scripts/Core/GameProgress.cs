@@ -37,10 +37,26 @@ namespace _Project.Scripts.Core
             _timeOfDayChanged.OnNext(TimeOfDay.Day);
         }
 
+        /// <summary>夕方へ切り替え、BGMと照明へ通知する</summary>
+        /// <example>最初の昼釣りが完了したときにStartEvening()を呼ぶ</example>
+        public void StartEvening()
+        {
+            CurrentTimeOfDay = TimeOfDay.Evening;
+            _timeOfDayChanged.OnNext(TimeOfDay.Evening);
+        }
+
         public void StartNight()
         {
             CurrentTimeOfDay = TimeOfDay.Night;
             _timeOfDayChanged.OnNext(TimeOfDay.Night);
+        }
+
+        /// <summary>明け方へ切り替え、時間帯を購読する照明や敵へ通知する</summary>
+        /// <example>夜釣りから帰還したときにStartDawn()を呼ぶ</example>
+        public void StartDawn()
+        {
+            CurrentTimeOfDay = TimeOfDay.Dawn;
+            _timeOfDayChanged.OnNext(TimeOfDay.Dawn);
         }
 
         public void AdvanceDay()

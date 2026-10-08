@@ -10,10 +10,22 @@ public sealed class VisionEnemyView : MonoBehaviour
 {
     [SerializeField] private EnemyDefinition _enemyDefinition;
     [SerializeField] private EventReference _biteSound;
-    [Header("敵の接近音")]
-    [SerializeField, Min(0f)] private float _closeEnemyStartDistance = 5f;
-    [SerializeField, Min(0f)] private float _closeEnemyStopDistance = 7f;
+    [Header("発見中の砂嵐")]
+    [SerializeField, Min(0f)] private float _staticNearDistance = 1f;
+    [SerializeField, Min(0.01f)] private float _staticFarDistance = 15f;
+    [SerializeField, Range(0f, 1f)] private float _staticMinIntensity = 0.08f;
+    [SerializeField, Range(0f, 1f)] private float _staticMaxIntensity = 0.55f;
+    [SerializeField, Min(0f)] private float _staticFadeOutDuration = 1.5f;
+    [SerializeField, Range(0f, 1f)] private float _glitchStrength = 0.6f;
+    [Header("逃げ切りと再発見")]
+    [SerializeField, Min(0.1f)] private float _chaseDuration = 5f;
+    [SerializeField, Min(0.1f)] private float _rediscoveryDelay = 4f;
+    [Header("ステルス迷彩")]
+    [SerializeField] private Shader _cloakShader;
+    [SerializeField, Min(0.1f)] private float _cloakFadeDuration = 1.5f;
     [Header("発見中の心音")]
+    [SerializeField, Range(0f, 0.05f)] private float _heartbeatRippleStrength = 0.025f;
+    [SerializeField, Min(0.001f)] private float _heartbeatRippleThreshold = 0.025f;
     [SerializeField, Min(0f)] private float _heartbeatNearDistance = 1f;
     [SerializeField, Min(0.01f)] private float _heartbeatFarDistance = 15f;
     [SerializeField] private Vector2 _heartbeatPitchRange = new(0.8f, 1.6f);
@@ -26,21 +38,35 @@ public sealed class VisionEnemyView : MonoBehaviour
     private Transform[] _visualTransforms;
     private Vector3[] _originalPositions;
     private Vector3 _captureDirection;
+    private Material[][] _originalMaterials;
+    private Material[][] _cloakMaterials;
+    private UnityEngine.Rendering.ShadowCastingMode[] _originalShadows;
+    private bool _usingCloak;
+    private static readonly int OpacityId = Shader.PropertyToID("_Opacity");
 
     public Vector3 Position => transform.position;
+    public float ChaseDuration => Mathf.Max(0.1f, _chaseDuration);
+    public float RediscoveryDelay => Mathf.Max(0.1f, _rediscoveryDelay);
+    public float CaptureLungeDuration => Mathf.Max(0f, _captureLungeDuration);
+    public float CloakFadeDuration => Mathf.Max(0.1f, _cloakFadeDuration);
     public float MoveSpeed => _enemyDefinition != null ? _enemyDefinition.MoveSpeed : 0f;
     public EventReference BiteSound => _biteSound;
+    public float StaticFadeOutDuration => Mathf.Max(0f, _staticFadeOutDuration);
+    public float GlitchStrength => Mathf.Clamp01(_glitchStrength);
+    public float HeartbeatRippleStrength => _heartbeatRippleStrength;
+    public float HeartbeatRippleThreshold => _heartbeatRippleThreshold;
 
-    /// <summary>接近音の再生状態と距離から、再生を続けるか判定する</summary>
+    /// <summary>敵に近づくほど強くなる砂嵐の濃さを求める</summary>
     /// <param name="distance">敵とプレイヤーの距離</param>
-    /// <param name="isPlaying">接近音を再生中ならtrue</param>
-    /// <returns>接近音を再生する範囲ならtrue</returns>
-    /// <example>ShouldPlayCloseEnemy(distance, isPlaying)で境界付近の連続開閉を防ぐ</example>
-    public bool ShouldPlayCloseEnemy(float distance, bool isPlaying)
+    /// <returns>0から1の濃さ</returns>
+    /// <example>発見中にGetStaticIntensity(distance)を画面演出へ渡す</example>
+    public float GetStaticIntensity(float distance)
     {
-        var start = Mathf.Max(0f, _closeEnemyStartDistance);
-        var stop = Mathf.Max(start + 0.01f, _closeEnemyStopDistance);
-        return isPlaying ? distance < stop : distance <= start;
+        var near = Mathf.Max(0f, _staticNearDistance);
+        var far = Mathf.Max(near + 0.01f, _staticFarDistance);
+        var minimum = Mathf.Clamp01(_staticMinIntensity);
+        var maximum = Mathf.Clamp(_staticMaxIntensity, minimum, 1f);
+        return Mathf.Lerp(maximum, minimum, Mathf.InverseLerp(near, far, distance));
     }
 
     /// <summary>敵との距離から心音の速度兼ピッチと音量を求める</summary>
@@ -74,6 +100,90 @@ public sealed class VisionEnemyView : MonoBehaviour
     {
         EnsureRenderers();
         foreach (var renderer in _renderers) renderer.enabled = visible;
+    }
+
+    /// <summary>迷彩用マテリアルで輪郭を揺らし、不透明度を反映する</summary>
+    /// <param name="opacity">0で透明、1で通常の濃さ</param>
+    /// <example>消失中にSetCloakOpacity(1f - progress)を呼ぶ</example>
+    public void SetCloakOpacity(float opacity)
+    {
+        EnsureRenderers();
+        if (_cloakShader == null) return;
+        if (_cloakMaterials == null) CreateCloakMaterials();
+        for (var i = 0; i < _renderers.Length; i++)
+        {
+            if (!_usingCloak)
+            {
+                _renderers[i].sharedMaterials = _cloakMaterials[i];
+                _renderers[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+
+            foreach (var material in _cloakMaterials[i])
+                if (material != null) material.SetFloat(OpacityId, Mathf.Clamp01(opacity));
+        }
+
+        _usingCloak = true;
+    }
+
+    /// <summary>再出現完了または昼夜変更で元のマテリアルと影を戻す</summary>
+    /// <example>迷彩演出を中断した場合にも呼ぶ</example>
+    public void RestoreCloakMaterials()
+    {
+        if (!_usingCloak) return;
+        for (var i = 0; i < _renderers.Length; i++)
+        {
+            if (_renderers[i] == null) continue;
+            _renderers[i].sharedMaterials = _originalMaterials[i];
+            _renderers[i].shadowCastingMode = _originalShadows[i];
+        }
+
+        _usingCloak = false;
+    }
+
+    /// <summary>共有アセットを変更せず、敵専用の迷彩マテリアルを一度だけ作る</summary>
+    /// <example>初回の透明化時に呼ぶ</example>
+    private void CreateCloakMaterials()
+    {
+        _originalMaterials = new Material[_renderers.Length][];
+        _cloakMaterials = new Material[_renderers.Length][];
+        _originalShadows = new UnityEngine.Rendering.ShadowCastingMode[_renderers.Length];
+        for (var i = 0; i < _renderers.Length; i++)
+        {
+            _originalMaterials[i] = _renderers[i].sharedMaterials;
+            _originalShadows[i] = _renderers[i].shadowCastingMode;
+            _cloakMaterials[i] = new Material[_originalMaterials[i].Length];
+            for (var j = 0; j < _originalMaterials[i].Length; j++)
+            {
+                var source = _originalMaterials[i][j];
+                if (source == null) continue;
+                var material = new Material(_cloakShader) { name = source.name + " (Cloak)" };
+                var textureProperty = source.HasProperty("_BaseMap") ? "_BaseMap" : "_MainTex";
+                if (source.HasProperty(textureProperty))
+                {
+                    material.SetTexture("_BaseMap", source.GetTexture(textureProperty));
+                    material.SetTextureScale("_BaseMap", source.GetTextureScale(textureProperty));
+                    material.SetTextureOffset("_BaseMap", source.GetTextureOffset(textureProperty));
+                }
+
+                var color = source.HasProperty("_BaseColor") ? source.GetColor("_BaseColor")
+                    : source.HasProperty("_Color") ? source.GetColor("_Color") : Color.white;
+                material.SetColor("_BaseColor", color);
+                material.SetFloat("_Cutoff", source.HasProperty("_AlphaClip") && source.GetFloat("_AlphaClip") > 0f
+                    && source.HasProperty("_Cutoff") ? source.GetFloat("_Cutoff") : 0.001f);
+                _cloakMaterials[i][j] = material;
+            }
+        }
+    }
+
+    /// <summary>シーン破棄時に生成した迷彩マテリアルを解放する</summary>
+    /// <example>Unityが敵オブジェクトの破棄時に呼ぶ</example>
+    private void OnDestroy()
+    {
+        RestoreCloakMaterials();
+        if (_cloakMaterials == null) return;
+        foreach (var materials in _cloakMaterials)
+            foreach (var material in materials)
+                if (material != null) Destroy(material);
     }
 
     /// <summary>描画物だけを後方へ置き、NavMeshAgentと接触判定は動かさない</summary>

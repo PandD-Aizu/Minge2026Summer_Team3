@@ -20,7 +20,7 @@ namespace MiniGame
         private IMiniGameController _currentController;
         private IDisposable _currentCompletedSubscription;
         private IDisposable _cancelSubscription;
-        private FishDefinition _currentFishDefinition; // 今後使う
+        private FishDefinition _currentFishDefinition;
 
         /// <summary>釣りの開始、結果、進行通知と効果音の依存関係を受け取る</summary>
         /// <param name="rotationMiniGameController">回転ミニゲームの実行元</param>
@@ -111,10 +111,21 @@ namespace MiniGame
         /// <example>ミニゲーム成功通知を受けたときに呼ぶ</example>
         private async UniTask RunResultFlowAsync(MiniGameResult result)
         {
-            var fishAdded = await _resultPresenter.PlayResultAsync(result, _currentFishDefinition);
-
-            _currentController?.EndGame();
-            ClearCurrentMiniGame();
+            bool fishAdded;
+            try
+            {
+                fishAdded = await _resultPresenter.PlayResultAsync(result, _currentFishDefinition);
+            }
+            catch (OperationCanceledException)
+            {
+                // シーン終了時にはチュートリアルを進めず、演出だけを片付ける
+                return;
+            }
+            finally
+            {
+                _currentController?.EndGame();
+                ClearCurrentMiniGame();
+            }
 
             // 結果UIとミニゲームを片付けてから進行変更を通知する
             if (fishAdded) _tutorialController.NotifyFishCaught();

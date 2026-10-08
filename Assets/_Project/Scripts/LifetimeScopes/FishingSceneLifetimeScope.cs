@@ -21,11 +21,13 @@ namespace LifetimeScopes
         [SerializeField] private DialogueUIView _dialogueView;
         [SerializeField] private FishingMonologuePresenter _fishingMonologuePresenter;
         [SerializeField] private TimeOfDayView _timeOfDayView;
+        [SerializeField] private TimeOfDayLightingSettings _timeOfDayLighting = new();
         [SerializeField] private PauseMenuView _pauseMenuView;
 
         protected override void Configure(IContainerBuilder builder)
         {
             // シーン上のViewを登録
+            _timeOfDayView.ConfigureLighting(_timeOfDayLighting);
             builder.RegisterComponent(_rotationMiniGameView);
             builder.RegisterComponent(_miniGameResultView);
             builder.RegisterComponent(_timeOfDayView);

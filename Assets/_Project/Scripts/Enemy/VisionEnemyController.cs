@@ -23,11 +23,18 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
     private IDisposable _lostSubscription;
     private bool _isNight;
     private bool _hasDetectedPlayer;
+    private float _chaseElapsed;
+    private float _rediscoveryRemaining;
     private bool _isCapturing;
+    private enum EscapePhase { None, FadingOut, Hidden, FadingIn }
+    private EscapePhase _escapePhase;
+    private float _escapeElapsed;
     private EventInstance _heartbeat;
     private bool _heartbeatFailed;
     private EventInstance _closeEnemy;
     private bool _closeEnemyFailed;
+    private EnemyStaticOverlay _staticOverlay;
+    private HeartbeatRippleView _heartbeatRipple;
 
     /// <summary>シーンの敵、プレイヤー、進行状態を受け取る</summary>
     /// <param name="view">敵の見た目</param>
@@ -53,10 +60,14 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
     /// <example>VContainerがシーン構築時に呼ぶ</example>
     public void Initialize()
     {
+        _staticOverlay = new EnemyStaticOverlay(_view.gameObject.scene);
         _view.SetVisible(false);
         _detectSensor.SetSensing(false);
         _deathSensor.SetSensing(false);
-        _detectedSubscription = _detectSensor.DetectCollisionEnter.Subscribe(_ => _hasDetectedPlayer = true);
+        _detectedSubscription = _detectSensor.DetectCollisionEnter.Subscribe(_ =>
+        {
+            if (_escapePhase == EscapePhase.None && _rediscoveryRemaining <= 0f) _hasDetectedPlayer = true;
+        });
         _lostSubscription = _detectSensor.DetectCollisionExit.Subscribe(_ => _hasDetectedPlayer = false);
         ApplyTimeOfDay(_progress.CurrentTimeOfDay);
         _timeSubscription = _progress.TimeOfDayChanged.Subscribe(ApplyTimeOfDay);
@@ -66,35 +77,124 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
     /// <example>VContainerが毎フレーム呼ぶ</example>
     public void Tick()
     {
-        if (!_isNight || _isCapturing || !_hasDetectedPlayer || _player.PlayerPosition == null)
+        // 敵が非表示の間も残ったノイズのフェードを進める
+        _staticOverlay?.Tick(Time.deltaTime);
+
+        // 消失から再出現が終わるまでは追跡も接触判定も再開しない
+        if (_escapePhase != EscapePhase.None)
         {
-            StopHeartbeat();
-            StopCloseEnemy();
+            if (_isNight && !_isCapturing) UpdateEscape(Time.deltaTime);
             return;
         }
 
+        // ポーズ中は追跡時間と再発見までの猶予を進めない
+        _rediscoveryRemaining = Mathf.Max(0f, _rediscoveryRemaining - Time.deltaTime);
+        if (_isNight && !_isCapturing && _rediscoveryRemaining <= 0f && _detectSensor.PlayerInside)
+            _hasDetectedPlayer = true;
+
+        if (!_isNight || _isCapturing || !_hasDetectedPlayer || _player.PlayerPosition == null)
+        {
+            _chaseElapsed = 0f;
+            _navigator.SetActive(false);
+            StopHeartbeat();
+            StopCloseEnemy();
+            _staticOverlay?.BeginFadeOut(_view.StaticFadeOutDuration);
+            return;
+        }
+
+        // 制限時間を逃げ切ったら経路を破棄し、範囲内でも一定時間は再追跡しない
+        _chaseElapsed += Time.deltaTime;
+        if (_chaseElapsed >= _view.ChaseDuration)
+        {
+            BeginEscape();
+            return;
+        }
+
+        _navigator.SetActive(true);
         _navigator.SetDestination(_player.PlayerPosition);
         UpdateHeartbeat();
         UpdateCloseEnemy();
+        _staticOverlay?.SetIntensity(_view.GetStaticIntensity(
+            Vector3.Distance(_view.Position, _player.PlayerPosition.position)), _view.GlitchStrength);
     }
 
-    /// <summary>追跡中の近距離だけ接近音をループ再生する</summary>
+    /// <summary>逃げ切り時に攻撃と移動を止め、透明化を始める</summary>
+    /// <example>追跡時間がChaseDurationに達したフレームで呼ぶ</example>
+    private void BeginEscape()
+    {
+        _hasDetectedPlayer = false;
+        _chaseElapsed = 0f;
+        _escapeElapsed = 0f;
+        _escapePhase = EscapePhase.FadingOut;
+        _detectSensor.SetSensing(false);
+        _deathSensor.SetSensing(false);
+        _navigator.SetActive(false);
+        StopHeartbeat();
+        StopCloseEnemy();
+        _view.SetCloakOpacity(1f);
+    }
+
+    /// <summary>透明化、再配置待ち、再出現をゲーム内時間で順に進める</summary>
+    /// <param name="deltaTime">ポーズ中は0になる経過秒数</param>
+    /// <example>逃走演出中のTickから呼ぶ</example>
+    private void UpdateEscape(float deltaTime)
+    {
+        if (deltaTime <= 0f) return;
+        _escapeElapsed += deltaTime;
+        switch (_escapePhase)
+        {
+            case EscapePhase.FadingOut:
+                _view.SetCloakOpacity(1f - Mathf.Clamp01(_escapeElapsed / _view.CloakFadeDuration));
+                if (_escapeElapsed < _view.CloakFadeDuration) return;
+                _view.SetVisible(false);
+                _staticOverlay?.BeginFadeOut(_view.StaticFadeOutDuration);
+                _escapePhase = EscapePhase.Hidden;
+                _escapeElapsed = 0f;
+                _rediscoveryRemaining = _view.RediscoveryDelay;
+                break;
+
+            case EscapePhase.Hidden:
+                _rediscoveryRemaining -= deltaTime;
+                if (_rediscoveryRemaining > 0f) return;
+                // 再配置失敗時は姿を戻さず、毎フレームの経路探索も避ける
+                _rediscoveryRemaining = 1f;
+                if (_player.PlayerPosition == null || !_navigator.TryRespawn(_player.PlayerPosition.position)) return;
+                _view.SetCloakOpacity(0f);
+                _view.SetVisible(true);
+                _escapePhase = EscapePhase.FadingIn;
+                _escapeElapsed = 0f;
+                break;
+
+            case EscapePhase.FadingIn:
+                _view.SetCloakOpacity(Mathf.Clamp01(_escapeElapsed / _view.CloakFadeDuration));
+                if (_escapeElapsed < _view.CloakFadeDuration) return;
+                _view.RestoreCloakMaterials();
+                _escapePhase = EscapePhase.None;
+                _rediscoveryRemaining = 0f;
+                _detectSensor.SetSensing(true);
+                _deathSensor.SetSensing(true);
+                break;
+        }
+    }
+
+    /// <summary>発見中のBGMをリスナー位置でループ再生し、敵との距離減衰を防ぐ</summary>
     /// <example>Tickから呼び、ポーズ中は再生位置を保持する</example>
     private void UpdateCloseEnemy()
     {
-        var distance = Vector3.Distance(_view.Position, _player.PlayerPosition.position);
-        if (!_view.ShouldPlayCloseEnemy(distance, _closeEnemy.isValid()))
-        {
-            StopCloseEnemy();
-            return;
-        }
-
         if (_closeEnemyFailed) return;
         try
         {
-            // 範囲内では同じインスタンスを維持し、多重再生を防ぐ
+            // BGMと同様に距離減衰の基準位置へ追従し、敵との距離に音量を左右させない
+            var result = RuntimeManager.StudioSystem.getListenerAttributes(0, out var attributes,
+                out var attenuationPosition);
+            if (result != FMOD.RESULT.OK) return;
+            attributes.position = attenuationPosition;
+
+            // 発見中は同じインスタンスを維持し、多重再生を防ぐ
             var starting = !_closeEnemy.isValid();
-            if (starting) _closeEnemy = RuntimeManager.CreateInstance(FMODEventPath.SE_CLOSE_ENEMY.Reference);
+            if (starting) _closeEnemy = RuntimeManager.CreateInstance(FMODEventPath.BGM_CLOSE_ENEMY.Reference);
+
+            _closeEnemy.set3DAttributes(attributes);
             _closeEnemy.setPaused(Time.timeScale == 0f);
             if (starting) _closeEnemy.start();
         }
@@ -106,7 +206,7 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
         }
     }
 
-    /// <summary>接近音を停止して解放し、次の接近で再生できる状態に戻す</summary>
+    /// <summary>接近音を停止して解放し、次の発見で再生できる状態に戻す</summary>
     /// <example>離脱、見失い、捕獲、昼への変更、シーン破棄で呼ぶ</example>
     private void StopCloseEnemy()
     {
@@ -137,6 +237,13 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
             _heartbeat.setVolume(levels.y);
             _heartbeat.setPaused(Time.timeScale == 0f);
             if (starting) _heartbeat.start();
+
+            // 心音の実波形から拍動を拾い、メインカメラに波を渡す
+            if (_heartbeatRipple == null && Camera.main != null)
+                _heartbeatRipple = Camera.main.gameObject.AddComponent<HeartbeatRippleView>();
+            if (_heartbeatRipple != null)
+                _heartbeatRipple.UpdateHeartbeat(_heartbeat, levels,
+                    _view.HeartbeatRippleStrength, _view.HeartbeatRippleThreshold);
         }
         catch (Exception exception)
         {
@@ -150,6 +257,7 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
     /// <example>見失い、昼への変更、捕獲、シーン破棄で呼ぶ</example>
     private void StopHeartbeat()
     {
+        if (_heartbeatRipple != null) _heartbeatRipple.Clear();
         if (RuntimeManager.IsInitialized && _heartbeat.isValid())
         {
             _heartbeat.stop(STOP_MODE.IMMEDIATE);
@@ -165,20 +273,27 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
     /// <example>GameProgress.StartNightで敵を出現させる</example>
     private void ApplyTimeOfDay(TimeOfDay timeOfDay)
     {
+        _staticOverlay?.BeginFadeOut(_view.StaticFadeOutDuration);
         _isNight = timeOfDay == TimeOfDay.Night;
         StopHeartbeat();
         StopCloseEnemy();
         _hasDetectedPlayer = false;
+        _escapePhase = EscapePhase.None;
+        _escapeElapsed = 0f;
+        _view.RestoreCloakMaterials();
         _view.SetVisible(_isNight);
+        _chaseElapsed = 0f;
+        _rediscoveryRemaining = 0f;
         _detectSensor.SetSensing(_isNight && !_isCapturing);
         _deathSensor.SetSensing(_isNight && !_isCapturing);
-        _navigator.SetActive(_isNight && !_isCapturing);
+        _navigator.SetActive(false);
     }
 
     /// <summary>捕獲演出中の再接触と通常の追跡を止める</summary>
     /// <example>GameOverPresenterが最初の接触通知で呼ぶ</example>
     public void BeginCapture()
     {
+        _staticOverlay?.Clear();
         if (_isCapturing) return;
         _isCapturing = true;
         StopHeartbeat();
@@ -202,9 +317,12 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
     /// <example>FishingStageから離れるときにVContainerが呼ぶ</example>
     public void Dispose()
     {
+        _staticOverlay?.Dispose();
+        _staticOverlay = null;
         StopHeartbeat();
         StopCloseEnemy();
         _timeSubscription?.Dispose();
+        if (_heartbeatRipple != null) UnityEngine.Object.Destroy(_heartbeatRipple);
         _detectedSubscription?.Dispose();
         _lostSubscription?.Dispose();
     }
