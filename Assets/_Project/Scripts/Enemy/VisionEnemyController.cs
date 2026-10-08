@@ -3,6 +3,9 @@ using Enemy;
 using _Project.Scripts.Core;
 using _Project.Scripts.Enemy;
 using R3;
+using FMOD.Studio;
+using FMODUnity;
+using FMODSettings;
 using UnityEngine;
 using VContainer.Unity;
 
@@ -21,6 +24,10 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
     private bool _isNight;
     private bool _hasDetectedPlayer;
     private bool _isCapturing;
+    private EventInstance _heartbeat;
+    private bool _heartbeatFailed;
+    private EventInstance _closeEnemy;
+    private bool _closeEnemyFailed;
 
     /// <summary>シーンの敵、プレイヤー、進行状態を受け取る</summary>
     /// <param name="view">敵の見た目</param>
@@ -59,9 +66,98 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
     /// <example>VContainerが毎フレーム呼ぶ</example>
     public void Tick()
     {
-        if (!_isNight || _isCapturing || !_hasDetectedPlayer || _player.PlayerPosition == null) return;
+        if (!_isNight || _isCapturing || !_hasDetectedPlayer || _player.PlayerPosition == null)
+        {
+            StopHeartbeat();
+            StopCloseEnemy();
+            return;
+        }
 
         _navigator.SetDestination(_player.PlayerPosition);
+        UpdateHeartbeat();
+        UpdateCloseEnemy();
+    }
+
+    /// <summary>追跡中の近距離だけ接近音をループ再生する</summary>
+    /// <example>Tickから呼び、ポーズ中は再生位置を保持する</example>
+    private void UpdateCloseEnemy()
+    {
+        var distance = Vector3.Distance(_view.Position, _player.PlayerPosition.position);
+        if (!_view.ShouldPlayCloseEnemy(distance, _closeEnemy.isValid()))
+        {
+            StopCloseEnemy();
+            return;
+        }
+
+        if (_closeEnemyFailed) return;
+        try
+        {
+            // 範囲内では同じインスタンスを維持し、多重再生を防ぐ
+            var starting = !_closeEnemy.isValid();
+            if (starting) _closeEnemy = RuntimeManager.CreateInstance(FMODEventPath.SE_CLOSE_ENEMY.Reference);
+            _closeEnemy.setPaused(Time.timeScale == 0f);
+            if (starting) _closeEnemy.start();
+        }
+        catch (Exception exception)
+        {
+            StopCloseEnemy();
+            _closeEnemyFailed = true;
+            Debug.LogException(exception);
+        }
+    }
+
+    /// <summary>接近音を停止して解放し、次の接近で再生できる状態に戻す</summary>
+    /// <example>離脱、見失い、捕獲、昼への変更、シーン破棄で呼ぶ</example>
+    private void StopCloseEnemy()
+    {
+        if (RuntimeManager.IsInitialized && _closeEnemy.isValid())
+        {
+            _closeEnemy.stop(STOP_MODE.IMMEDIATE);
+            _closeEnemy.release();
+        }
+
+        _closeEnemy.clearHandle();
+        _closeEnemyFailed = false;
+    }
+
+    /// <summary>心音を一つだけ再生し、接近に合わせて速度兼ピッチと音量を更新する</summary>
+    /// <example>発見中のTickから呼び、ポーズ中は再生位置を保持する</example>
+    private void UpdateHeartbeat()
+    {
+        if (_heartbeatFailed) return;
+
+        var levels = _view.GetHeartbeatLevels(Vector3.Distance(_view.Position, _player.PlayerPosition.position));
+        try
+        {
+            // 同じイベントを維持し、毎フレーム先頭から再生し直さない
+            var starting = !_heartbeat.isValid();
+            if (starting) _heartbeat = RuntimeManager.CreateInstance(FMODEventPath.SE_HEART_BEAT.Reference);
+
+            _heartbeat.setPitch(levels.x);
+            _heartbeat.setVolume(levels.y);
+            _heartbeat.setPaused(Time.timeScale == 0f);
+            if (starting) _heartbeat.start();
+        }
+        catch (Exception exception)
+        {
+            StopHeartbeat();
+            _heartbeatFailed = true;
+            Debug.LogException(exception);
+        }
+    }
+
+    /// <summary>心音を停止して解放し、次回の発見で再生できる状態に戻す</summary>
+    /// <example>見失い、昼への変更、捕獲、シーン破棄で呼ぶ</example>
+    private void StopHeartbeat()
+    {
+        if (RuntimeManager.IsInitialized && _heartbeat.isValid())
+        {
+            _heartbeat.stop(STOP_MODE.IMMEDIATE);
+            _heartbeat.release();
+        }
+
+        _heartbeat.clearHandle();
+        _heartbeatFailed = false;
     }
 
     /// <summary>昼夜変更に応じて敵の姿と追跡可否を切り替える</summary>
@@ -70,6 +166,8 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
     private void ApplyTimeOfDay(TimeOfDay timeOfDay)
     {
         _isNight = timeOfDay == TimeOfDay.Night;
+        StopHeartbeat();
+        StopCloseEnemy();
         _hasDetectedPlayer = false;
         _view.SetVisible(_isNight);
         _detectSensor.SetSensing(_isNight && !_isCapturing);
@@ -83,6 +181,8 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
     {
         if (_isCapturing) return;
         _isCapturing = true;
+        StopHeartbeat();
+        StopCloseEnemy();
         _hasDetectedPlayer = false;
         _detectSensor.SetSensing(false);
         _deathSensor.SetSensing(false);
@@ -102,6 +202,8 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
     /// <example>FishingStageから離れるときにVContainerが呼ぶ</example>
     public void Dispose()
     {
+        StopHeartbeat();
+        StopCloseEnemy();
         _timeSubscription?.Dispose();
         _detectedSubscription?.Dispose();
         _lostSubscription?.Dispose();

@@ -4,6 +4,8 @@ using _Project.Scripts.Data.Fish;
 using Controller;
 using Cysharp.Threading.Tasks;
 using R3;
+using FMODServices;
+using FMODSettings;
 using UnityEngine;
 
 namespace MiniGame
@@ -12,6 +14,7 @@ namespace MiniGame
     {
         private readonly MiniGameResultPresenter _resultPresenter;
         private readonly TutorialController _tutorialController;
+        private readonly IDisposable _rodSwingSubscription;
         private readonly IMiniGameController[] _controllers;
 
         private IMiniGameController _currentController;
@@ -19,14 +22,26 @@ namespace MiniGame
         private IDisposable _cancelSubscription;
         private FishDefinition _currentFishDefinition; // 今後使う
 
+        /// <summary>釣りの開始、結果、進行通知と効果音の依存関係を受け取る</summary>
+        /// <param name="rotationMiniGameController">回転ミニゲームの実行元</param>
+        /// <param name="resultPresenter">釣果の表示</param>
+        /// <param name="tutorialController">釣果に応じた進行通知先</param>
+        /// <param name="se">竿を振る音を再生するサービス</param>
+        /// <param name="inputReader">釣りシーンの操作入力と操作可否を取得する入力元</param>
+        /// <example>VContainerの登録から生成する</example>
         public MiniGameFlowPresenter(
             RotationMiniGameController rotationMiniGameController,
             MiniGameResultPresenter resultPresenter,
-            TutorialController tutorialController)
+            TutorialController tutorialController, FMODSEService se, PlayerInputReader inputReader)
         {
             _controllers = new IMiniGameController[] { rotationMiniGameController };
             _resultPresenter = resultPresenter;
             _tutorialController = tutorialController;
+
+            // 魚の有無に関係なく、操作可能な状態でJキーを押すたびに竿を振る音を鳴らす
+            _rodSwingSubscription = inputReader.OnInteractPressed
+                .Where(_ => inputReader.CanStartGameplayAction)
+                .Subscribe(_ => se.PlayOneShot(FMODEventPath.SE_FISH_ROD_SWING.Reference));
         }
 
 
@@ -114,8 +129,11 @@ namespace MiniGame
             _currentFishDefinition = null;
         }
 
+        /// <summary>竿を振る入力の購読と進行中のミニゲームの購読を解除する</summary>
+        /// <example>釣りシーン終了時にVContainerから呼ぶ</example>
         public void Dispose()
         {
+            _rodSwingSubscription.Dispose();
             ClearCurrentMiniGame();
         }
     }

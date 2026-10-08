@@ -19,6 +19,15 @@ namespace FMODSettings
         public static readonly FMODEventPath ENVIRONMENT_RAIN = new ("event:/Environment/Rain");
         public static readonly FMODEventPath ENVIRONMENT_SEA_GULL = new ("event:/Environment/SeaGull");
         public static readonly FMODEventPath ENVIRONMENT_SEA_WAVES = new ("event:/Environment/SeaWaves");
+        public static readonly FMODEventPath SE_CLOSE_ENEMY = new ("event:/SE/CloseEnemy");
+        public static readonly FMODEventPath SE_FISH_ROD_SWING = new ("event:/SE/FishRodSwing");
+        public static readonly FMODEventPath SE_FISSHING_GREAT = new ("event:/SE/FisshingGreat");
+        public static readonly FMODEventPath SE_FISSHING_MISS = new ("event:/SE/FisshingMiss");
+        public static readonly FMODEventPath SE_FISSHING_OK = new ("event:/SE/FisshingOK");
+        public static readonly FMODEventPath SE_HEART_BEAT = new ("event:/SE/HeartBeat");
+        public static readonly FMODEventPath SE_MESSAGE_WINDOW_OK = new ("event:/SE/MessageWindowOK");
+        public static readonly FMODEventPath SE_OLD_DOOR_OPEN = new ("event:/SE/OldDoorOpen");
+        public static readonly FMODEventPath SE_PLAYER_DEATH = new ("event:/SE/PlayerDeath");
         public static readonly FMODEventPath SE_WALK_FOREST = new ("event:/SE/WalkForest");
         public static readonly FMODEventPath SE_WALK_SEA = new ("event:/SE/WalkSea");
         public static readonly FMODEventPath TEST_BGM = new ("event:/TestBGM");

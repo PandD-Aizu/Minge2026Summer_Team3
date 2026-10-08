@@ -5,6 +5,7 @@ using _Project.Scripts.Data.Enum;
 using Cysharp.Threading.Tasks;
 using Enemy;
 using FMODServices;
+using FMODSettings;
 using GameOver;
 using R3;
 using SceneLoadServices;
@@ -41,7 +42,7 @@ public sealed class GameOverPresenter : IInitializable, IDisposable
     /// <param name="input">主人公の操作</param>
     /// <param name="progress">帰還時の一回限りの会話予約</param>
     /// <param name="sceneLoader">CampStageの読み込み</param>
-    /// <param name="se">噛みつき音の再生</param>
+    /// <param name="se">死亡音の再生</param>
     public GameOverPresenter(VisionEnemyDeathSensor sensor, VisionEnemyController enemyController,
         VisionEnemyView enemyView, GameOverView view, GameOverCameraView camera,
         CameraShaker shaker, PlayerInputReader input, GameProgress progress,
@@ -95,7 +96,7 @@ public sealed class GameOverPresenter : IInitializable, IDisposable
             await _enemyView.ApproachCaptureAsync(cancellation);
             _shaker.TriggerBigShake();
             await _enemyView.LungeCaptureAsync(cancellation);
-            if (!_enemyView.BiteSound.IsNull) _se.PlayOneShot(_enemyView.BiteSound);
+            _se.PlayOneShot(FMODEventPath.SE_PLAYER_DEATH.Reference);
             await _view.FadeToBlackAsync(cancellation);
 
             // 帰還後の会話はSceneを読み込む前に予約する

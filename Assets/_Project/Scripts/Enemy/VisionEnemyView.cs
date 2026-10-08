@@ -10,6 +10,14 @@ public sealed class VisionEnemyView : MonoBehaviour
 {
     [SerializeField] private EnemyDefinition _enemyDefinition;
     [SerializeField] private EventReference _biteSound;
+    [Header("敵の接近音")]
+    [SerializeField, Min(0f)] private float _closeEnemyStartDistance = 5f;
+    [SerializeField, Min(0f)] private float _closeEnemyStopDistance = 7f;
+    [Header("発見中の心音")]
+    [SerializeField, Min(0f)] private float _heartbeatNearDistance = 1f;
+    [SerializeField, Min(0.01f)] private float _heartbeatFarDistance = 15f;
+    [SerializeField] private Vector2 _heartbeatPitchRange = new(0.8f, 1.6f);
+    [SerializeField] private Vector2 _heartbeatVolumeRange = new(0.25f, 1f);
     [SerializeField, Min(0f)] private float _captureStartOffset = 2.5f;
     [SerializeField, Min(0f)] private float _captureApproachDuration = 1.8f;
     [SerializeField, Min(0f)] private float _captureLungeDuration = 0.1f;
@@ -22,6 +30,35 @@ public sealed class VisionEnemyView : MonoBehaviour
     public Vector3 Position => transform.position;
     public float MoveSpeed => _enemyDefinition != null ? _enemyDefinition.MoveSpeed : 0f;
     public EventReference BiteSound => _biteSound;
+
+    /// <summary>接近音の再生状態と距離から、再生を続けるか判定する</summary>
+    /// <param name="distance">敵とプレイヤーの距離</param>
+    /// <param name="isPlaying">接近音を再生中ならtrue</param>
+    /// <returns>接近音を再生する範囲ならtrue</returns>
+    /// <example>ShouldPlayCloseEnemy(distance, isPlaying)で境界付近の連続開閉を防ぐ</example>
+    public bool ShouldPlayCloseEnemy(float distance, bool isPlaying)
+    {
+        var start = Mathf.Max(0f, _closeEnemyStartDistance);
+        var stop = Mathf.Max(start + 0.01f, _closeEnemyStopDistance);
+        return isPlaying ? distance < stop : distance <= start;
+    }
+
+    /// <summary>敵との距離から心音の速度兼ピッチと音量を求める</summary>
+    /// <param name="distance">敵とプレイヤーの距離</param>
+    /// <returns>xが速度兼ピッチ倍率、yが音量倍率</returns>
+    /// <example>追跡中にGetHeartbeatLevels(distance)を呼ぶ</example>
+    public Vector2 GetHeartbeatLevels(float distance)
+    {
+        var near = Mathf.Max(0f, _heartbeatNearDistance);
+        var far = Mathf.Max(near + 0.01f, _heartbeatFarDistance);
+        var proximity = 1f - Mathf.InverseLerp(near, far, distance);
+        var minPitch = Mathf.Max(0.01f, _heartbeatPitchRange.x);
+        var maxPitch = Mathf.Max(minPitch, _heartbeatPitchRange.y);
+        var minVolume = Mathf.Clamp01(_heartbeatVolumeRange.x);
+        var maxVolume = Mathf.Clamp(_heartbeatVolumeRange.y, minVolume, 1f);
+        return new Vector2(Mathf.Lerp(minPitch, maxPitch, proximity),
+            Mathf.Lerp(minVolume, maxVolume, proximity));
+    }
 
     /// <summary>見た目のRendererを取得する</summary>
     /// <example>Unityがコンポーネント生成時に呼ぶ</example>

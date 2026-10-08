@@ -4,6 +4,8 @@ using Controller;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using R3;
+using FMODServices;
+using FMODSettings;
 using VContainer.Unity;
 
 namespace ExchangePoint
@@ -16,6 +18,7 @@ namespace ExchangePoint
         private readonly Input.MenuInputService _menuInput;
         private readonly TutorialController _tutorialController;
         private readonly bool _connectorInitiallyEnabled;
+        private readonly FMODSEService _se;
 
         private readonly CompositeDisposable _disposables = new();
         private readonly SerialDisposable _movementBlock = new();
@@ -26,15 +29,17 @@ namespace ExchangePoint
         /// <param name="inputReader">プレイヤーの入力元</param>
         /// <param name="menuInput">メニュー同士の入力を排他制御するサービス</param>
         /// <param name="tutorialController">交換画面を開ける進行段階か判断するController</param>
+        /// <param name="se">画面を開く音を再生するサービス</param>
         /// <example>VContainerのEntryPoint登録から生成する</example>
         public ExchangePointPresenter(ExchangePointView view, InteractableConnector connector, PlayerInputReader inputReader,
-            Input.MenuInputService menuInput, TutorialController tutorialController)
+            Input.MenuInputService menuInput, TutorialController tutorialController, FMODSEService se)
         {
             _view = view;
             _connector = connector;
             _inputReader = inputReader;
             _menuInput = menuInput;
             _tutorialController = tutorialController;
+            _se = se;
             _connectorInitiallyEnabled = connector.enabled;
         }
 
@@ -75,6 +80,7 @@ namespace ExchangePoint
                         _view.SetVisible(true);
                         // 非同期ロードが終わる前の入力では所有権を残さない
                         if (!_view.IsVisible) _menuInput.Release(this);
+                        else _se.PlayOneShot(FMODEventPath.SE_OLD_DOOR_OPEN.Reference);
                     }
                 })
                 .AddTo(_disposables);
