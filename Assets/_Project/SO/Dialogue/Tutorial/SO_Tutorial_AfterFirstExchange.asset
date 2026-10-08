@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69f1088660344b09a282e35d86447062, type: 3}
+  m_Name: SO_Tutorial_AfterFirstExchange
+  m_EditorClassIdentifier: Assembly-CSharp::Dialogue.DialogueData
+  _lines:
+  - _speaker: 1
+    _text: "\u9B5A\u3001\u7121\u4E8B\u4EA4\u63DB\u3067\u304D\u305F\u307F\u305F\u3044\u3060\u30CD\u3002"
+  - _speaker: 1
+    _text: "\u3053\u308C\u304B\u3089\u3082\u3088\u308D\u3057\u304F\u983C\u3080\u3088\u3002"
+  - _speaker: 1
+    _text: "\u3068\u3053\u308D\u3067\u3002\u3053\u306E\u30D0\u30A4\u30C8\u306B\u306F\u3001\r\n"
+  - _speaker: 1
+    _text: "\u6700\u7D42\u7684\u306B\u91E3\u3063\u3066\u6B32\u3057\u3044\u9B5A\u306E\u30CE\u30EB\u30DE\u304C\u3042\u308B\u3093\u3060\u30E8\u3002"
+  - _speaker: 1
+    _text: "\u30D0\u30A4\u30C8\u671F\u9593\u4E2D\u3001\u6700\u4F4E\u9650\u306E\u9B5A\u3060\u3051\u91E3\u3089\u308C\u3066\u3001"
+  - _speaker: 1
+    _text: "\u7121\u4EBA\u5CF6\u3067\u60A0\u3005\u81EA\u9069\u3067\u306F\u30A6\u30C1\u3082\u56F0\u3063\u3066\u3057\u307E\u3046\u304B\u3089\u30CD\u3002"
+  - _speaker: 1
+    _text: "\u6642\u671F\u3084\u6C17\u5019\u306B\u3088\u3063\u3066\u5909\u52D5\u3059\u308B\u304B\u3089\u7D30\u304B\u3044\u3053\u3068\u306F\u8A00\u3048\u306A\u3044\u3060\u3051\u3069\u3001"
+  - _speaker: 1
+    _text: "\u4ECA\u65E5\u306F\u3082\u3046\u5C11\u3057\u91E3\u3063\u305F\u65B9\u304C\u3044\u3044\u3068\u601D\u3046\u3002"
+  - _speaker: 1
+    _text: "\u3053\u306E\u5CF6\u306E\u591C\u3082\u5C11\u3057\u898B\u3066\u3082\u3089\u3044\u305F\u3044\u3057\u30CD\u3002"
+  _playOncePerSave: 0
+  _saveId: 98af5d3fc2c245dc8da1fd726bd9c12e

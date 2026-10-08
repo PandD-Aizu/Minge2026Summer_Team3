@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69f1088660344b09a282e35d86447062, type: 3}
+  m_Name: SO_CampStart
+  m_EditorClassIdentifier: Assembly-CSharp::Dialogue.DialogueData
+  _lines:
+  - _speaker: 0
+    _text: "\u5CF6\u306B\u7740\u3044\u305F\u3089\u30E9\u30B8\u30AA\u306E\u6307\u793A\u3092\u805E\u3051\u3068\u8A00\u308F\u308C\u305F\u306A..."
+  _playOncePerSave: 1
+  _saveId: 44423fb64b9ea8d42bc5f888d738272c

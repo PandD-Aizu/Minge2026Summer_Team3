@@ -1,15 +1,21 @@
-using System;
+using _Project.Scripts.Data.Item;
+using R3;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro; // 文字を表示するために必須の宣言
+using ItemMenus;
 
 public class InventoryView : MonoBehaviour
 {
-    // テンプレート通りのイベント（拡声器）
-    public event Action<int> OnItemSelected;
-    public event Action OnUseClicked;
-    public event Action<ItemType> OnTabSelected;
-    public event Action OnCloseClicked;
+    [SerializeField] private ItemMenuNavigation _navigation;
+    public ItemMenuNavigation Navigation => _navigation;
+    private readonly Subject<int> _itemSelected = new();
+    private readonly Subject<ItemType> _tabSelected = new();
+    private readonly Subject<Unit> _closeClicked = new();
+
+    public Observable<int> OnItemSelected => _itemSelected;
+    public Observable<ItemType> OnTabSelected => _tabSelected;
+    public Observable<Unit> OnCloseClicked => _closeClicked;
 
     // --- ここからインスペクターで紐付けるための枠 ---
     [Header("タブボタン")]
@@ -22,6 +28,9 @@ public class InventoryView : MonoBehaviour
     [SerializeField] private GameObject scrollViewIngredient;
     [SerializeField] private GameObject scrollViewFish;
 
+    [Header("アイテム枠テンプレート")]
+    [SerializeField] private GameObject itemSlotTemplate;
+
     [Header("閉じるボタン")]
     [SerializeField] private Button closeButton;
 
@@ -31,27 +40,54 @@ public class InventoryView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI detailNameText; // 名前（あれば）
     [SerializeField] private TextMeshProUGUI detailDescriptionText; // 「よさ」などの説明
     [SerializeField] private TextMeshProUGUI detailCountText;       // 個数（下に出す場合用）
-    [SerializeField] private Button useButton;        // 「使う」ボタン（[F]キー連動用など）
 
     // プロジェクト内にItemTypeがない場合のエラーを防ぐための仮定義（すでにある場合は削除してください）
-    public enum ItemType { Rod, Ingredient, Fish }
 
-    private void Start()
+
+    /// <summary>タブと使用・閉じるボタンの操作を接続する</summary>
+    /// <example>Prefabの生成時にUnityが呼ぶ</example>
+    private void Awake()
     {
         // 1. 各タブボタンが押された時の処理
-        if (rodButton != null) rodButton.onClick.AddListener(() => { SwitchTab(0); OnTabSelected?.Invoke(ItemType.Rod); });
-        if (ingredientButton != null) ingredientButton.onClick.AddListener(() => { SwitchTab(1); OnTabSelected?.Invoke(ItemType.Ingredient); });
-        if (fishButton != null) fishButton.onClick.AddListener(() => { SwitchTab(2); OnTabSelected?.Invoke(ItemType.Fish); });
+        if (_navigation != null)
+        {
+            _navigation.OnTabSelected.Subscribe(HandleTabSelected).AddTo(this);
+        }
+        else
+        {
+            // 既存のUI確認用シーンでは従来のボタン参照を利用する
+            if (rodButton != null) rodButton.OnClickAsObservable()
+                .Subscribe(_ => { SwitchTab(0); _tabSelected.OnNext(ItemType.Gear); }).AddTo(this);
+            if (ingredientButton != null) ingredientButton.OnClickAsObservable()
+                .Subscribe(_ => { SwitchTab(1); _tabSelected.OnNext(ItemType.Material); }).AddTo(this);
+            if (fishButton != null) fishButton.OnClickAsObservable()
+                .Subscribe(_ => { SwitchTab(2); _tabSelected.OnNext(ItemType.Fish); }).AddTo(this);
+            SwitchTab(0);
+        }
 
-        // 2. 使うボタン・閉じるボタンが押された時の処理
-        if (useButton != null) useButton.onClick.AddListener(() => OnUseClicked?.Invoke());
-        if (closeButton != null) closeButton.onClick.AddListener(() => OnCloseClicked?.Invoke());
+        // 2. 閉じるボタンが押された時の処理
+        if (closeButton != null) closeButton.OnClickAsObservable()
+            .Subscribe(_ => _closeClicked.OnNext(Unit.Default)).AddTo(this);
 
         // 起動時は、詳細画面（DetailView）を隠しておく
         if (detailView != null) detailView.SetActive(false);
+        if (itemSlotTemplate != null) itemSlotTemplate.SetActive(false);
 
-        // 初期状態：最初のタブ（釣り具）を表示
-        SwitchTab(0);
+    }
+
+    /// <summary>共通ナビゲーションのタブ番号を既存の通知へ変換する</summary>
+    /// <param name="index">画面左から釣り具、魚、素材の順のタブ番号</param>
+    /// <example>魚タブを確定した場合はFishを通知する</example>
+    private void HandleTabSelected(int index) => _tabSelected.OnNext(
+        index == 0 ? ItemType.Gear : index == 1 ? ItemType.Fish : ItemType.Material);
+
+    /// <summary>Viewが所有する通知ストリームを解放する</summary>
+    /// <example>Prefabの破棄時にUnityが呼ぶ</example>
+    private void OnDestroy()
+    {
+        _itemSelected.Dispose();
+        _tabSelected.Dispose();
+        _closeClicked.Dispose();
     }
 
     // タブのスクロールビューを一括で切り替える内部関数
@@ -71,37 +107,138 @@ public class InventoryView : MonoBehaviour
 
     // --- ここからテンプレートの関数の中身を実装 ---
 
-    // インベントリ画面全体を表示する
-    public void Show() 
+    /// <summary>インベントリを表示し、選択枠を初期化する</summary>
+    /// <example>Fで開くときにPresenterから呼ぶ</example>
+    public void Show()
     {
         gameObject.SetActive(true);
+        _navigation?.SelectFirst();
     }
 
-    // インベントリ画面全体を非表示にする
-    public void Hide() 
+    /// <summary>インベントリ全体を非表示にする</summary>
+    /// <example>FまたはEscで閉じるときに呼ぶ</example>
+    public void Hide()
     {
         gameObject.SetActive(false);
     }
 
     // アイテムが選択されたときに、そのアイテムのデータをUIに流し込む（セットする）
-    public void SetSelectedItem(Sprite icon, string itemName, string description, int count)
+    public void SetSelectedItem(ItemDefinition definition, int count)
     {
-        // 1. 非表示になっていた説明部屋(DetailView)を表示する
+        if (definition == null) return;
+
+        // 1. 非表示になっていた説明(DetailView)を表示する
         if (detailView != null) detailView.SetActive(true);
 
         // 2. 各UIパーツにアイテムの情報を流し込む
-        if (detailIcon != null) detailIcon.sprite = icon;
-        if (detailDescriptionText != null) detailDescriptionText.text = description; // 「よさ：〇〇」などを代入
+        if (detailIcon != null) detailIcon.sprite = definition.ItemImage;
+        if (detailDescriptionText != null) detailDescriptionText.text = definition.Description; // 「よさ：〇〇」などを代入
         if (detailCountText != null) detailCountText.text = count.ToString();
-        if (detailNameText != null) detailNameText.text = itemName;
+        if (detailNameText != null) detailNameText.text = definition.ItemName;
     }
 
-    // 「使う」ボタンのポチポチ（有効・無効）を切り替える
-    public void SetUseButtonInteractable(bool interactable)
+    /// <summary>一覧に表示しているアイテム枠を削除する</summary>
+    /// <example>インベントリを開くたびにPresenterから呼ぶ</example>
+    public void ClearItems()
     {
-        if (useButton != null)
+        ClearPage(scrollViewRod);
+        ClearPage(scrollViewIngredient);
+        ClearPage(scrollViewFish);
+
+        if (detailView != null) detailView.SetActive(false);
+    }
+
+    /// <summary>アイテム一覧に1つ分の表示枠を追加する</summary>
+    /// <param name="definition">表示するアイテム定義</param>
+    /// <param name="count">所持数</param>
+    /// <example>AddItem(itemDefinition, 3)で所持数3の枠を追加する</example>
+    public void AddItem(ItemDefinition definition, int count)
+    {
+        if (definition == null || count <= 0) return;
+
+        Transform content = GetContent(definition.ItemType);
+        if (content == null) return;
+
+        GameObject slot = CreateItemSlot(definition, count, content);
+        if (slot == null) return;
+
+        Button button = slot.GetComponent<Button>();
+        if (button == null) button = slot.AddComponent<Button>();
+        button.onClick.AddListener(() =>
         {
-            useButton.interactable = interactable;
+            SetSelectedItem(definition, count);
+            _itemSelected.OnNext(definition.ItemId);
+        });
+    }
+
+    private void ClearPage(GameObject page)
+    {
+        Transform content = GetContent(page);
+        if (content == null) return;
+
+        for (int i = content.childCount - 1; i >= 0; i--)
+        {
+            Transform child = content.GetChild(i);
+            if (child.gameObject == itemSlotTemplate) continue;
+
+            child.gameObject.SetActive(false);
+            Destroy(child.gameObject);
         }
+    }
+
+    private Transform GetContent(ItemType itemType)
+    {
+        return itemType switch
+        {
+            ItemType.Gear => GetContent(scrollViewRod),
+            ItemType.Fish => GetContent(scrollViewFish),
+            ItemType.Material => GetContent(scrollViewIngredient),
+            ItemType.Tool => GetContent(scrollViewIngredient),
+            _ => null
+        };
+    }
+
+    private static Transform GetContent(GameObject page)
+    {
+        if (page == null) return null;
+
+        ScrollRect scrollRect = page.GetComponentInChildren<ScrollRect>(true);
+        return scrollRect != null ? scrollRect.content : null;
+    }
+
+    private GameObject CreateItemSlot(ItemDefinition definition, int count, Transform parent)
+    {
+        if (itemSlotTemplate == null)
+        {
+            Debug.LogError("InventoryViewにItemSlotTemplateを設定してください", this);
+            return null;
+        }
+
+        GameObject slot = Instantiate(itemSlotTemplate, parent);
+        slot.name = $"InventoryItem_{definition.ItemId}";
+        slot.SetActive(true);
+
+        Image icon = FindIconImage(slot);
+        if (icon != null)
+        {
+            icon.sprite = definition.ItemImage;
+            icon.preserveAspect = true;
+        }
+
+        TextMeshProUGUI countText = slot.GetComponentInChildren<TextMeshProUGUI>(true);
+        if (countText != null)
+            countText.text = count.ToString();
+
+        return slot;
+    }
+
+    private static Image FindIconImage(GameObject slot)
+    {
+        Transform iconTransform = slot.transform.Find("ItemSlotSprite");
+        if (iconTransform != null && iconTransform.TryGetComponent(out Image namedIcon))
+            return namedIcon;
+
+        Image[] images = slot.GetComponentsInChildren<Image>(true);
+        return images.Length > 1 ? images[1] : images.Length == 1 ? images[0] : null;
     }
 }

@@ -1,10 +1,13 @@
 // アイテムIDと所持数を管理する
 using System.Collections.Generic;
-namespace _Project.Scripts.Inventory
+using _Project.Scripts.Data.Item;
+
+namespace InventoryData
 {
     public class Inventory
     {
-        private readonly Dictionary<int, int> items = new();
+        private readonly Dictionary<int, int> _items = new();
+        public IReadOnlyDictionary<int, int> Items => _items;
 
         /// <summary>
         /// itemIdを引数にアイテムの数を返すメゾット
@@ -13,9 +16,9 @@ namespace _Project.Scripts.Inventory
         /// <returns></returns>
         public int GetCount(int itemId)
         {
-            return items.TryGetValue(itemId, out var count) ? count : 0;
+            return _items.TryGetValue(itemId, out var count) ? count : 0;
         }
-        
+
         /// <summary>
         /// itemIdとamount(デフォルトは１)を引数にアイテム数をamount個増やすメゾット
         /// </summary>
@@ -23,15 +26,13 @@ namespace _Project.Scripts.Inventory
         /// <param name="amount"></param>
         public void Add(int itemId, int amount = 1)
         {
-            items[itemId] += amount;
+            _items[itemId] = GetCount(itemId) + amount;
         }
+
 
         /// <summary>
         /// itemIdとamount(デフォルトは１)を引数にアイテム数をamount個持っているか確認するメゾット
         /// </summary>
-        /// <param name="itemId"></param>
-        /// <param name="amount"></param>
-        /// <returns></returns>
         public bool Has(int itemId, int amount = 1)
         {
             return GetCount(itemId) >= amount;
@@ -40,21 +41,18 @@ namespace _Project.Scripts.Inventory
         /// <summary>
         /// itemIdとamount(デフォルトは１)を引数にアイテム数をamount個、減らすメゾット
         /// </summary>
-        /// <param name="itemId"></param>
-        /// <param name="amount"></param>
-        /// <returns></returns>
         public bool Remove(int itemId, int amount = 1)
         {
             if (!Has(itemId, amount))
             {
                 return false;
             }
-            
-            items[itemId] -= amount;
-            
-            if (items[itemId] <= 0)
+
+            _items[itemId] -= amount;
+
+            if (_items[itemId] <= 0)
             {
-                items.Remove(itemId);
+                _items.Remove(itemId);
             }
 
             return true;

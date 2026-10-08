@@ -15,8 +15,6 @@ namespace _Project.Scripts.Data.Fish
         [SerializeField]
         private Sprite _fishImage;
 
-        [SerializeField]
-        private int _fishId;
 
         [SerializeField]
         private MiniGameSettings[] _miniGameSettings;
@@ -30,9 +28,13 @@ namespace _Project.Scripts.Data.Fish
 
         public override ItemType ItemType => ItemType.Fish;
         public override Sprite ItemImage => _fishImage;
-        public int FishId => _fishId;
         public MiniGameSettings[] MiniGameSettings => _miniGameSettings;
         public Difficulty Difficulty => _difficulty;
         public FishingGimmickType GimmickType => _gimmickType;
+
+        public MiniGameSettings SelectMiniGameRandom()
+        {
+            return _miniGameSettings[Random.Range(0, _miniGameSettings.Length)];
+        }
     }
 }

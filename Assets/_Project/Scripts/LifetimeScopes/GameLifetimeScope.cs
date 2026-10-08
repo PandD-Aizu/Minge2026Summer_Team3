@@ -1,5 +1,9 @@
 using FMODServices;
 using FMODSettings;
+using _Project.Scripts.Core;
+using _Project.Scripts.Data.Item;
+using Controller;
+using GameOver;
 using Input;
 using SaveSettings;
 using SceneLoadServices;
@@ -11,20 +15,27 @@ namespace LifetimeScopes
 {
     public class GameLifetimeScope : LifetimeScope
     {
+        [SerializeField] private InventoryView _inventoryPrefab;
+        [SerializeField] private ItemCatalog _itemCatalog;
+        [SerializeField] private GameOverView _gameOverPrefab;
 
-        /// <summary>アプリ全体で共有する音声サービスを登録する</summary>
+        /// <summary>音声・入力・インベントリなどアプリ全体で共有する依存関係を登録する</summary>
         /// <param name="builder">Rootコンテナの登録先</param>
         /// <example>VContainerのRoot Prefabから自動実行される</example>
         protected override void Configure(IContainerBuilder builder)
         {
             // 音声インスタンスの所有権とセーブアクセスをRootに集約する
-            builder.Register<FMODBGMService>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<FMODBGMService>().AsSelf();
             builder.Register<FMODSEService>(Lifetime.Singleton);
             builder.Register<FMODVCAService>(Lifetime.Singleton);
             builder.Register<SaveService>(Lifetime.Singleton);
 
             // シーンのロード関係のサービス
             builder.Register<SceneLoadService>(Lifetime.Singleton);
+
+            // チュートリアル進行
+            builder.Register<GameProgress>(Lifetime.Singleton);
+            builder.Register<TutorialController>(Lifetime.Singleton);
 
             // 設定画面がなくても保存済みの音量を適用する
             builder.RegisterEntryPoint<FMODAudioInitializer>().AsSelf();
@@ -34,8 +45,15 @@ namespace LifetimeScopes
 
             // 入力の切り替え
             builder.Register<InputModeService>(Lifetime.Singleton);
+            builder.Register<MenuInputService>(Lifetime.Singleton);
 
-
+            // 専用Prefabと入力を接続し、全ゲームシーンで同じインベントリを使う
+            builder.RegisterComponentInNewPrefab(_inventoryPrefab, Lifetime.Singleton).UnderTransform(transform);
+            builder.RegisterFactory<InventoryView>(resolver => () => resolver.Resolve<InventoryView>(), Lifetime.Singleton);
+            builder.RegisterEntryPoint<_Project.Scripts.Inventory.InventoryPresenter>();
+            builder.Register<InventoryData.Inventory>(Lifetime.Singleton);
+            builder.RegisterInstance(_itemCatalog);
+            builder.RegisterComponentInNewPrefab(_gameOverPrefab, Lifetime.Singleton).UnderTransform(transform);
         }
     }
 }

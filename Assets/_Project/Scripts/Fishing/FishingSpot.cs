@@ -1,5 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Fishing;
 using R3;
 using UnityEngine;
 
@@ -52,6 +53,7 @@ namespace _Project.Scripts.Fishing
         private bool _isMoving;
 
         private IInteractableTarget _currentTarget;
+        private FishingTargetProvider _targetProvider;
 
         // インタラクトできる魚影が出てるかどうか
         public bool CanInteractShadow => _currentTarget != null && _currentTarget.CanInteract;
@@ -62,17 +64,27 @@ namespace _Project.Scripts.Fishing
         {
             if (!_isMoving || _shadow == null || !_shadow.gameObject.activeInHierarchy) return;
 
-            _movementTime += Time.deltaTime;
+            float deltaTime = Time.deltaTime;
+            if (deltaTime <= 0f) return;
+
+            _movementTime += deltaTime;
             float progress = (1f - Mathf.Cos(_movementTime * Mathf.PI * 2f / Mathf.Max(0.1f, _movementPeriod))) * 0.5f;
             Vector3 next = transform.TransformPoint(Vector3.Lerp(_movementStart, _movementTarget, progress)) + Vector3.up * _surfaceOffset;
-            _distanceSinceRipple += Vector3.Distance(_shadow.transform.position, next);
+            Vector3 displacement = next - _shadow.transform.position;
             _shadow.transform.position = next;
 
-            // 時間だけでは波紋を増やさず、実際に動いたときだけ発生させる
-            if (_distanceSinceRipple >= Mathf.Max(0.01f, _rippleDistance))
+            // 海面上の実変位から速度を求め、停止や高さの変化だけで波紋を増やさない
+            Vector2 planarDisplacement = new(displacement.x, displacement.z);
+            float distance = planarDisplacement.magnitude;
+            if (distance <= 0f) return;
+            _distanceSinceRipple += distance;
+
+            // 発生間隔で待つ間も移動距離を保持し、登録後は余った距離だけを次へ引き継ぐ
+            float rippleDistance = Mathf.Max(0.01f, _rippleDistance);
+            if (_distanceSinceRipple >= rippleDistance &&
+                _shadow.EmitRipple(false, planarDisplacement / deltaTime))
             {
-                _distanceSinceRipple = 0f;
-                _shadow.EmitRipple(false);
+                _distanceSinceRipple %= rippleDistance;
             }
         }
 
@@ -80,9 +92,11 @@ namespace _Project.Scripts.Fishing
         /// <example>スポットを再有効化した場合も初回待機から再開する</example>
         private void OnEnable()
         {
-            if (_shadowPrefab == null || _bigSprite == null || _smallSprite == null)
+            _targetProvider = GetComponent<FishingTargetProvider>();
+
+            if (_shadowPrefab == null || _bigSprite == null || _smallSprite == null || _targetProvider == null)
             {
-                Debug.LogError("FishingSpotに魚影Prefabと大小のSpriteを設定してください", this);
+                Debug.LogError("FishingSpotに魚影Prefab、大小のSprite、FishingTargetProviderを設定してください", this);
                 return;
             }
 
@@ -139,6 +153,8 @@ namespace _Project.Scripts.Fishing
                 _currentTarget = _shadow.GetComponent<IInteractableTarget>();
                 _shadow.gameObject.SetActive(false);
             }
+
+            _targetProvider.SelectFish();
 
             bool isBig = Random.value < _bigProbability;
             Vector3 localPoint = new(

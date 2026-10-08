@@ -1,131 +1,58 @@
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace _Project.Scripts.Fishing
 {
-    /// <summary>海面上の発生地点に残り、広がって消える波紋を再利用して描画する</summary>
+    /// <summary>魚影の出現と移動から、海面に残って広がる波紋を共有の波面へ送る</summary>
     [DisallowMultipleComponent]
     public sealed class FishRippleEmitter : MonoBehaviour
     {
-        private const int RippleCount = 6;
-        private const int SegmentCount = 48;
-
-        private static readonly Vector3[] CirclePoints = CreateCirclePoints();
-
+        [Tooltip("海面の高さと勾配を描く波紋用Material")]
         [SerializeField] private Material _material;
-        [SerializeField] private Color _color = new(0.65f, 0.9f, 1f, 0.45f);
-        [SerializeField, Min(0.01f)] private float _duration = 1.2f;
-        [SerializeField, Min(0.001f)] private float _lineWidth = 0.025f;
+        [Tooltip("波紋が発生してから消えるまでのゲーム時間")]
+        [SerializeField, Min(0.01f)] private float _duration = 3.2f;
+        [Tooltip("波紋の高さ、単位はメートル")]
+        [SerializeField, Min(0f)] private float _strength = 0.028f;
+        [Tooltip("同じ魚影から続けて波紋を出す最小のゲーム時間")]
+        [SerializeField, Min(0f)] private float _minimumInterval = 0.18f;
 
-        private readonly LineRenderer[] _lines = new LineRenderer[RippleCount];
-        private readonly Vector3[][] _points = new Vector3[RippleCount][];
-        private readonly Vector3[] _centers = new Vector3[RippleCount];
-        private readonly float[] _ages = new float[RippleCount];
-        private readonly float[] _sizes = new float[RippleCount];
-        private int _nextRipple;
         private float _opacity;
+        private float _lastEmissionTime = float.NegativeInfinity;
 
-        /// <summary>すべての波紋で共有する単位円の頂点を一度だけ計算する</summary>
-        /// <returns>X・Z平面上の単位円の頂点配列</returns>
-        /// <example>描画時に半径を掛けて発生位置へ移動する</example>
-        private static Vector3[] CreateCirclePoints()
-        {
-            var points = new Vector3[SegmentCount];
-            for (int i = 0; i < SegmentCount; i++)
-            {
-                float angle = i * (Mathf.PI * 2f / SegmentCount);
-                points[i] = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
-            }
-
-            return points;
-        }
-
-        /// <summary>波紋用の描画オブジェクトを一度だけ用意する</summary>
-        /// <example>魚影の初回出現時に6本のLineRendererを準備する</example>
-        private void Awake()
-        {
-            for (int i = 0; i < RippleCount; i++)
-            {
-                var ripple = new GameObject($"Ripple_{i + 1:00}");
-                ripple.transform.SetParent(transform, false);
-                var line = ripple.AddComponent<LineRenderer>();
-                line.sharedMaterial = _material;
-                line.useWorldSpace = true;
-                line.loop = true;
-                line.positionCount = SegmentCount;
-                line.widthMultiplier = _lineWidth;
-                line.shadowCastingMode = ShadowCastingMode.Off;
-                line.receiveShadows = false;
-                line.enabled = false;
-                _lines[i] = line;
-                _points[i] = new Vector3[SegmentCount];
-            }
-        }
-
-        /// <summary>魚影のフェードに波紋の透明度を合わせる</summary>
-        /// <param name="opacity">魚影の不透明度、0〜1</param>
+        /// <summary>これから発生させる移動波の強さを魚影の透明度に合わせる</summary>
+        /// <param name="opacity">魚影の不透明度、0〜1に制限する</param>
         /// <example>FishShadow.SetOpacityから同じ不透明度を渡す</example>
         public void SetOpacity(float opacity) => _opacity = Mathf.Clamp01(opacity);
 
-        /// <summary>指定した海面位置に波紋を発生させる</summary>
-        /// <param name="position">発生時点のワールド座標、移動後も波紋はこの地点に残る</param>
-        /// <param name="size">波紋の大きさを決める魚影の幅</param>
-        /// <example>Emit(transform.position, 2f)で大きい魚影の出現波紋を表示する</example>
-        public void Emit(Vector3 position, float size)
+        /// <summary>出現または移動による波紋を共有の波面に登録する</summary>
+        /// <param name="position">発生地点のワールド座標、魚影の移動後も波はこの地点に残る</param>
+        /// <param name="size">魚影の横幅、単位はメートル</param>
+        /// <param name="velocity">海面のX・Z方向の移動速度、単位はメートル毎秒</param>
+        /// <param name="isAppearance">出現波ならtrue、移動波ならfalse</param>
+        /// <returns>波面へ波紋を登録できた場合はtrue、停止中や発生間隔内ならfalse</returns>
+        /// <example>Emit(transform.position, 2f, new Vector2(0.2f, 0f), false)で移動波を出す</example>
+        public bool Emit(Vector3 position, float size, Vector2 velocity = default, bool isAppearance = true)
         {
-            if (!isActiveAndEnabled || _material == null) return;
+            if (!isActiveAndEnabled || _material == null || Time.deltaTime <= 0f) return false;
 
-            int index = _nextRipple;
-            _nextRipple = (_nextRipple + 1) % RippleCount;
-            _centers[index] = position + Vector3.up * 0.015f;
-            _sizes[index] = Mathf.Max(0.01f, size);
-            _ages[index] = 0f;
-            _lines[index].enabled = true;
-            DrawRipple(index);
+            // 移動波は停止時に追加せず、同じ魚の波頭が過密にならない間隔を保つ
+            if (!isAppearance && (velocity.sqrMagnitude <= 0.000001f || _opacity <= 0f)) return false;
+            if (Time.time - _lastEmissionTime < Mathf.Max(0f, _minimumInterval)) return false;
+
+            // 出現直後は魚影が透明でも波を出し、登録後の波は魚影のフェードから独立させる
+            float strength = Mathf.Max(0f, _strength) * (isAppearance ? 1f : _opacity);
+            if (strength <= 0f || !OceanRippleField.Emit(_material, position,
+                    Mathf.Max(0.01f, size), velocity, strength, Mathf.Max(0.01f, _duration),
+                    isAppearance, gameObject.scene)) return false;
+
+            _lastEmissionTime = Time.time;
+            return true;
         }
 
-        /// <summary>発生済みの波紋を拡大し、寿命に合わせて薄くする</summary>
-        /// <example>停止中の魚影には新しい波紋を追加せず、残った波紋だけを更新する</example>
-        private void Update()
-        {
-            for (int i = 0; i < RippleCount; i++)
-            {
-                if (!_lines[i].enabled) continue;
-                _ages[i] += Time.deltaTime;
-                if (_ages[i] >= Mathf.Max(0.01f, _duration)) _lines[i].enabled = false;
-                else DrawRipple(i);
-            }
-        }
-
-        /// <summary>1つの波紋の半径と透明度を更新する</summary>
-        /// <param name="index">再利用する波紋配列のインデックス</param>
-        /// <example>EmitとUpdateから呼び出し、頂点配列を再利用する</example>
-        private void DrawRipple(int index)
-        {
-            float progress = Mathf.Clamp01(_ages[index] / Mathf.Max(0.01f, _duration));
-            float radius = _sizes[index] * Mathf.Lerp(0.25f, 0.75f, progress);
-            for (int i = 0; i < SegmentCount; i++)
-            {
-                _points[index][i] = _centers[index] + CirclePoints[i] * radius;
-            }
-
-            Color color = _color;
-            color.a *= (1f - progress) * _opacity;
-            _lines[index].startColor = color;
-            _lines[index].endColor = color;
-            _lines[index].SetPositions(_points[index]);
-        }
-
-        /// <summary>無効化時にすべての波紋を消し、次回の出現へ備える</summary>
-        /// <example>魚影の消滅やスポットの無効化で古い波紋を残さない</example>
+        /// <summary>魚影の再出現に備えて発生間隔と透明度を初期化する</summary>
+        /// <example>魚影をプールへ戻しても共有の波面に登録済みの波紋は自然に消える</example>
         private void OnDisable()
         {
-            foreach (var line in _lines)
-            {
-                if (line != null) line.enabled = false;
-            }
-
-            _nextRipple = 0;
+            _lastEmissionTime = float.NegativeInfinity;
             _opacity = 0f;
         }
     }

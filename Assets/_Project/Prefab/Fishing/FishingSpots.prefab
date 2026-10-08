@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6783353888439763145}
   - component: {fileID: 3932677731416531945}
   - component: {fileID: 4129594356258089479}
+  - component: {fileID: 3581792491595692887}
   m_Layer: 0
   m_Name: FishingSpot_01
   m_TagString: Untagged
@@ -80,6 +81,20 @@ MonoBehaviour:
     TypeName: LifetimeScopes.FishingSceneLifetimeScope
   autoRun: 1
   autoInjectGameObjects: []
+--- !u!114 &3581792491595692887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1745859925078950671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b579199b67c48998a919fd99b9e8408, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fishing.FishingTargetProvider
+  _fishCandidates:
+  - {fileID: 11400000, guid: 1ccb6ed2e8ad32840be777f7317c75c1, type: 2}
 --- !u!1 &2891799755673908819
 GameObject:
   m_ObjectHideFlags: 0
@@ -91,6 +106,7 @@ GameObject:
   - component: {fileID: 5536131993168803508}
   - component: {fileID: 8602004644374570679}
   - component: {fileID: 9105038148827573085}
+  - component: {fileID: 4978124389350436983}
   m_Layer: 0
   m_Name: FishingSpot_03
   m_TagString: Untagged
@@ -159,7 +175,22 @@ MonoBehaviour:
   parentReference:
     TypeName: LifetimeScopes.FishingSceneLifetimeScope
   autoRun: 1
-  autoInjectGameObjects: []
+  autoInjectGameObjects:
+  - {fileID: 0}
+--- !u!114 &4978124389350436983
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2891799755673908819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b579199b67c48998a919fd99b9e8408, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fishing.FishingTargetProvider
+  _fishCandidates:
+  - {fileID: 11400000, guid: 1ccb6ed2e8ad32840be777f7317c75c1, type: 2}
 --- !u!1 &5499479025831818948
 GameObject:
   m_ObjectHideFlags: 0
@@ -206,6 +237,7 @@ GameObject:
   - component: {fileID: 3879664890260339334}
   - component: {fileID: 4549890729482906032}
   - component: {fileID: 1641164258739048422}
+  - component: {fileID: 6106972540407873605}
   m_Layer: 0
   m_Name: FishingSpot_02
   m_TagString: Untagged
@@ -275,6 +307,20 @@ MonoBehaviour:
     TypeName: LifetimeScopes.FishingSceneLifetimeScope
   autoRun: 1
   autoInjectGameObjects: []
+--- !u!114 &6106972540407873605
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6083412819871140469}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b579199b67c48998a919fd99b9e8408, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fishing.FishingTargetProvider
+  _fishCandidates:
+  - {fileID: 11400000, guid: 1ccb6ed2e8ad32840be777f7317c75c1, type: 2}
 --- !u!1 &6595229568258323136
 GameObject:
   m_ObjectHideFlags: 0
@@ -286,6 +332,7 @@ GameObject:
   - component: {fileID: 5689854498164933509}
   - component: {fileID: 8511674352747446283}
   - component: {fileID: 7079470738478086473}
+  - component: {fileID: 1477103754186457451}
   m_Layer: 0
   m_Name: FishingSpot_04
   m_TagString: Untagged
@@ -355,3 +402,17 @@ MonoBehaviour:
     TypeName: LifetimeScopes.FishingSceneLifetimeScope
   autoRun: 1
   autoInjectGameObjects: []
+--- !u!114 &1477103754186457451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6595229568258323136}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b579199b67c48998a919fd99b9e8408, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fishing.FishingTargetProvider
+  _fishCandidates:
+  - {fileID: 11400000, guid: 1ccb6ed2e8ad32840be777f7317c75c1, type: 2}

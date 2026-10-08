@@ -10,6 +10,9 @@ namespace FMODSettings
         [SerializeField] public Slider bgmVCA;
         [SerializeField] public Slider seVCA;
         [SerializeField] public Slider environmentVCA;
+        [SerializeField] private UnityEngine.UI.Button _backButton;
+
+        public UnityEngine.UI.Button BackButton => _backButton;
         
         public Observable<float> MasterVCA => masterVCA.OnValueChangedAsObservable();
         public Observable<float> BgmVCA => bgmVCA.OnValueChangedAsObservable();
