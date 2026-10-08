@@ -212857,6 +212857,7 @@ MonoBehaviour:
   _dialogueView: {fileID: 7812345678901234568}
   _fishingMonologuePresenter: {fileID: 2064955659}
   _timeOfDayView: {fileID: 601314516}
+  _pauseMenuView: {fileID: 1702632030}
 --- !u!4 &2064955658
 Transform:
   m_ObjectHideFlags: 0

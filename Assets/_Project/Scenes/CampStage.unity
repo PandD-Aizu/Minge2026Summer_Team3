@@ -5111,6 +5111,8 @@ MonoBehaviour:
   autoRun: 1
   autoInjectGameObjects: []
   _timeOfDayView: {fileID: 1825181107}
+  _playerInputReader: {fileID: 2576805471629690918}
+  _pauseMenuView: {fileID: 595531768}
 --- !u!1001 &614514801
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -16250,6 +16252,30 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1425586827991890792, guid: 68926b496fbfe2740a58a97c08b54b05, type: 3}
   m_PrefabInstance: {fileID: 5210391192856314282}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &595531767
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 2d1575dd078108d48b1c4f8858506c18, type: 3}
+--- !u!114 &595531768 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4638890090682562727, guid: 2d1575dd078108d48b1c4f8858506c18, type: 3}
+  m_PrefabInstance: {fileID: 595531767}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d1583bc83db4c208823b8e66134d0f5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::PauseMenu.PauseMenuView
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -16258,6 +16284,7 @@ SceneRoots:
   - {fileID: 98819726}
   - {fileID: 1615514004}
   - {fileID: 2576805471629690916}
+  - {fileID: 595531767}
   - {fileID: 1425355241}
   - {fileID: 635746541}
   - {fileID: 2034494601}
