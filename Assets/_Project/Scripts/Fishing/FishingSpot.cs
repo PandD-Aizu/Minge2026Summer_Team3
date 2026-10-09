@@ -3,6 +3,8 @@ using Cysharp.Threading.Tasks;
 using Fishing;
 using R3;
 using UnityEngine;
+using Controller;
+using VContainer;
 
 namespace _Project.Scripts.Fishing
 {
@@ -42,6 +44,17 @@ namespace _Project.Scripts.Fishing
         [SerializeField, Min(0f)] private float _fadeOutDuration = 0.4f;
         [SerializeField] private bool _respawn = true;
         [SerializeField] private Vector2 _respawnDelay = new(3f, 6f);
+        [SerializeField, Tooltip("最初の魚をこのスポットの中央に固定し、獲得するまで消さない")]
+        private bool _firstCatchSpot;
+        [SerializeField, Tooltip("初回の固定魚を獲得するまで、このスポットの通常出現を待つ")]
+        private bool _waitForFirstCatch;
+        private TutorialController _tutorial;
+
+        /// <summary>初回釣果の達成状態を受け取り、出現方法を切り替える</summary>
+        /// <param name="tutorial">シーンをまたいで共有する進行状態</param>
+        /// <example>FishingSpotLifetimeScopeから注入する</example>
+        [Inject]
+        public void Construct(TutorialController tutorial) => _tutorial = tutorial;
 
         private FishShadow _shadow;
         private CancellationTokenSource _spawnCancellation;
@@ -111,11 +124,17 @@ namespace _Project.Scripts.Fishing
         /// <example>再出現を無効にすると最初の魚影が消えた時点で終了する</example>
         private async UniTask SpawnCycleAsync(CancellationToken cancellationToken)
         {
-            await WaitAsync(_initialDelay, 0f, cancellationToken);
+            // OnEnableより後のDI注入を待ち、最初の一匹は指定スポットだけに出す
+            await UniTask.WaitUntil(() => _tutorial != null, cancellationToken: cancellationToken);
+            await UniTask.WaitUntil(() => _firstCatchSpot || !_waitForFirstCatch || !_tutorial.IsFirstFishingPending,
+                cancellationToken: cancellationToken);
+            if (!_firstCatchSpot || !_tutorial.IsFirstFishingPending)
+                await WaitAsync(_initialDelay, 0f, cancellationToken);
 
             do
             {
-                PrepareShadow();
+                bool isFirstCatch = _firstCatchSpot && _tutorial.IsFirstFishingPending;
+                PrepareShadow(isFirstCatch);
 
                 // 透明な状態から表示し、十分に見えるようになってから操作を受け付ける
                 _shadow.SetOpacity(0f);
@@ -124,9 +143,13 @@ namespace _Project.Scripts.Fishing
                 _shadow.EmitRipple(true);
                 await _shadow.FadeToAsync(1f, _fadeInDuration, cancellationToken);
                 _shadow.SetInteractionAvailable(true);
-                _isMoving = true;
+                _isMoving = !isFirstCatch;
 
-                await WaitAsync(_visibleDuration, 0.01f, cancellationToken);
+                // ミスやキャンセルでは進行が変わらないので、同じ位置で何度でも挑戦できる
+                if (isFirstCatch)
+                    await UniTask.WaitUntil(() => !_tutorial.IsFirstFishingPending, cancellationToken: cancellationToken);
+                else
+                    await WaitAsync(_visibleDuration, 0.01f, cancellationToken);
 
                 // プロンプトを閉じながら魚影を薄くし、完了後にインスタンスを無効化する
                 _isMoving = false;
@@ -143,8 +166,9 @@ namespace _Project.Scripts.Fishing
         }
 
         /// <summary>再利用する魚影の外観と範囲内の往復経路を準備する</summary>
+        /// <param name="fixedPosition">初回の魚をスポット中央へ固定する場合はtrue</param>
         /// <example>各出現サイクルのフェードイン前に呼ぶ</example>
-        private void PrepareShadow()
+        private void PrepareShadow(bool fixedPosition)
         {
             // 同じインスタンスを再利用し、待機中はプロンプトと判定も無効にする
             if (_shadow == null)
@@ -161,6 +185,7 @@ namespace _Project.Scripts.Fishing
                 Random.Range(-Mathf.Abs(_areaSize.x), Mathf.Abs(_areaSize.x)) * 0.5f,
                 0f,
                 Random.Range(-Mathf.Abs(_areaSize.y), Mathf.Abs(_areaSize.y)) * 0.5f);
+            if (fixedPosition) localPoint = Vector3.zero;
 
             // 出現位置の近くを移動先に選び、岸側の範囲外へ出ないよう制限する
             Vector2 direction = Random.insideUnitCircle.normalized * Mathf.Max(0f, _movementDistance);

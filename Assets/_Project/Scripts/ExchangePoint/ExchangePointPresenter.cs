@@ -47,7 +47,7 @@ namespace ExchangePoint
         /// <example>VContainerの初期化時に呼ばれる</example>
         public void Initialize()
         {
-            // 交換前のラジオ案内中は接近マークと交換入力をまとめて無効にする
+            // 初回帰還ナビ中はアクセスを受け付け、交換画面の制限は維持する
             if (_connectorInitiallyEnabled)
             {
                 UpdateAvailability();
@@ -73,6 +73,10 @@ namespace ExchangePoint
                     && (_view.IsVisible || _inputReader.CanStartGameplayAction))
                 .Subscribe(_ =>
                 {
+                    // 交換できない段階でも、集荷所へのアクセスで帰還ナビを終了する
+                    _tutorialController.NotifyCollectionAccessed();
+                    if (_connectorInitiallyEnabled) UpdateAvailability();
+
                     // 一覧を開いた次のJ入力で詳細パネルを開く
                     if (_view.IsVisible) _view.ConfirmSelection();
                     else if (_tutorialController.CanOpenExchangePoint() && _menuInput.TryAcquire(this))
@@ -105,7 +109,8 @@ namespace ExchangePoint
         /// <example>初期化時とラジオ案内完了後に呼ぶ</example>
         private void UpdateAvailability()
         {
-            _connector.enabled = _tutorialController.CanOpenExchangePoint();
+            _connector.enabled = _tutorialController.CanOpenExchangePoint()
+                || (!_tutorialController.IsFirstFishingPending && !_tutorialController.IsFirstCollectionAccessed);
         }
 
         /// <summary>Scopeの寿命に合わせて一覧を非同期で初期化する</summary>
