@@ -23,6 +23,10 @@ namespace LifetimeScopes
         [SerializeField] private TimeOfDayView _timeOfDayView;
         [SerializeField] private TimeOfDayLightingSettings _timeOfDayLighting = new();
         [SerializeField] private PauseMenuView _pauseMenuView;
+        [SerializeField] private Transform _firstFishApproach;
+        [SerializeField, Tooltip("初回釣果後に案内するCampStageへのワープ地点")]
+        private Transform _firstCatchReturnTarget;
+        [SerializeField] private View.NavigationArrowView _navigationView;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -51,6 +55,17 @@ namespace LifetimeScopes
 
             // 入力の受付
             builder.RegisterComponent(_playerInputReader);
+
+            // 初回の魚へ、キャンプと同じ縦横の経路と光の粒で案内する
+            if (_firstFishApproach != null && _navigationView != null)
+            {
+                builder.RegisterComponent(_navigationView);
+                Vector3? returnPosition = _firstCatchReturnTarget != null ? _firstCatchReturnTarget.position : null;
+                builder.RegisterInstance(new NavigationArrowServices.NavigationArrowService(
+                    _playerInputReader.transform, _firstFishApproach.position, guideFirstFish: true,
+                    firstCatchReturnPosition: returnPosition));
+                builder.RegisterEntryPoint<NavigationArrowPresenter>();
+            }
 
             // 敵の判断は通常のC#クラスで行い、Scene上の表示、移動、判定を渡す
             builder.RegisterComponentInHierarchy<PlayerMovement>().As<IPlayerPosition>();

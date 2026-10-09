@@ -4,6 +4,7 @@ using System.Threading;
 using _Project.Scripts.Data.Fish;
 using Cysharp.Threading.Tasks;
 using Unity.Cinemachine;
+using UnityEngine.InputSystem;
 
 namespace _Project.Scripts.View
 {
@@ -25,7 +26,7 @@ namespace _Project.Scripts.View
         private TextMeshProUGUI _fishName;
         private TextMeshProUGUI _fishDescription;
 
-        /// <summary>SOの釣果を頭上と説明欄へ表示し、カメラを寄せて元へ戻す</summary>
+        /// <summary>釣果を頭上と説明欄へ表示し、時間経過またはJキーで終了してカメラを戻す</summary>
         /// <param name="fish">釣った魚の画像、名前、説明</param>
         /// <param name="player">頭上表示の基準となるプレイヤー</param>
         /// <param name="cancellation">シーン終了時に演出を中断するトークン</param>
@@ -54,6 +55,8 @@ namespace _Project.Scripts.View
             float closeDistance = originalDistance * _cameraDistanceRatio;
             float elapsed = 0f;
             float duration = _zoomSeconds * 2f + _fishDisplaySeconds;
+            // 判定に使ったJキーを押したままでも、釣果表示を即座に飛ばさない
+            bool skipKeyReady = Keyboard.current == null || !Keyboard.current.jKey.isPressed;
 
             try
             {
@@ -63,6 +66,15 @@ namespace _Project.Scripts.View
                     await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, cancellation);
                     if (player == null || !isActiveAndEnabled) break;
                     if (brain != null && !ReferenceEquals(brain.ActiveVirtualCamera, activeCamera)) break;
+
+                    // 結果表示中はActionMapが無効なので、演出内だけでJキーを確認する
+                    // キャンセル例外にせず通常終了させ、魚の獲得後の進行通知を維持する
+                    var keyboard = Keyboard.current;
+                    if (keyboard != null)
+                    {
+                        if (!keyboard.jKey.isPressed) skipKeyReady = true;
+                        else if (skipKeyReady && keyboard.jKey.wasPressedThisFrame) break;
+                    }
                     elapsed += Time.deltaTime;
 
                     float zoom = elapsed < _zoomSeconds
@@ -88,7 +100,7 @@ namespace _Project.Scripts.View
             }
             finally
             {
-                // シーン離脱や別カメラへの切替でもズームと釣果表示を残さない
+                // Jスキップ、シーン離脱、別カメラへの切替でもズームと釣果表示を残さない
                 if (composer != null) composer.CameraDistance = originalDistance;
                 if (_fishRoot != null) _fishRoot.gameObject.SetActive(false);
             }

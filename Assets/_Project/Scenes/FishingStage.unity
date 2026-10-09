@@ -5464,6 +5464,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2129840441734961871, guid: 09c20fdef941a5447a43190b45d1fc93, type: 3}
   m_PrefabInstance: {fileID: 54548389}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &54728794
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 54728795}
+  m_Layer: 0
+  m_Name: First Fish Navigation Target
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &54728795
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 54728794}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.5833335, z: 2.5999994}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 853693350}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &55362619
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -46672,6 +46703,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2129840441734961871, guid: 09c20fdef941a5447a43190b45d1fc93, type: 3}
   m_PrefabInstance: {fileID: 461254367}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &462799428
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 462799429}
+  m_Layer: 0
+  m_Name: First Catch Return Target
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &462799429
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 462799428}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.08333349, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 0.2}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 801573038}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &463670502
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -78722,7 +78784,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 2778652990258394822, guid: 2d9dedb6bd61f984da717560c6a52428, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 462799429}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2d9dedb6bd61f984da717560c6a52428, type: 3}
 --- !u!4 &801573038 stripped
@@ -84000,6 +84065,14 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: -9.3
       objectReference: {fileID: 0}
+    - target: {fileID: 3932677731416531945, guid: 36583e4b4eb014848bed0a9c3870c2af, type: 3}
+      propertyPath: _waitForFirstCatch
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4549890729482906032, guid: 36583e4b4eb014848bed0a9c3870c2af, type: 3}
+      propertyPath: _waitForFirstCatch
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4994995886354076573, guid: 36583e4b4eb014848bed0a9c3870c2af, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -84056,11 +84129,31 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: -9.3
       objectReference: {fileID: 0}
+    - target: {fileID: 8511674352747446283, guid: 36583e4b4eb014848bed0a9c3870c2af, type: 3}
+      propertyPath: _firstCatchSpot
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8511674352747446283, guid: 36583e4b4eb014848bed0a9c3870c2af, type: 3}
+      propertyPath: _waitForFirstCatch
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8602004644374570679, guid: 36583e4b4eb014848bed0a9c3870c2af, type: 3}
+      propertyPath: _waitForFirstCatch
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 5689854498164933509, guid: 36583e4b4eb014848bed0a9c3870c2af, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 54728795}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 36583e4b4eb014848bed0a9c3870c2af, type: 3}
+--- !u!4 &853693350 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5689854498164933509, guid: 36583e4b4eb014848bed0a9c3870c2af, type: 3}
+  m_PrefabInstance: {fileID: 853693349}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &853716954
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -211998,6 +212091,7 @@ GameObject:
   - component: {fileID: 2064955658}
   - component: {fileID: 2064955657}
   - component: {fileID: 2064955659}
+  - component: {fileID: 2064955660}
   m_Layer: 0
   m_Name: FishingSceneLifetimeScope
   m_TagString: Untagged
@@ -212037,6 +212131,9 @@ MonoBehaviour:
     DawnSunlightVisibility: 0.6
     TransitionDuration: 2
   _pauseMenuView: {fileID: 1702632030}
+  _firstFishApproach: {fileID: 54728795}
+  _firstCatchReturnTarget: {fileID: 462799429}
+  _navigationView: {fileID: 2064955660}
 --- !u!4 &2064955658
 Transform:
   m_ObjectHideFlags: 0
@@ -212067,6 +212164,24 @@ MonoBehaviour:
   _stepDialogues:
   - _step: 3
     _dialogue: {fileID: 11400000, guid: aac025733a8046647950f212b90671b2, type: 2}
+--- !u!114 &2064955660
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2064955656}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22ab50527b614a1b90fc1e51aaca7ab2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::View.NavigationArrowView
+  _arrowTransform: {fileID: 0}
+  _pathMaterial: {fileID: 2100000, guid: ae52dbba1c312af43bf2b5bff2dce750, type: 2}
+  _pointSpacing: 0.6
+  _surfaceOffset: 0.08
+  _emissionInterval: 0.12
+  _spreadAngle: 35
 --- !u!1001 &2065205154
 PrefabInstance:
   m_ObjectHideFlags: 0
