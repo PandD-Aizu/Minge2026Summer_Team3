@@ -17,6 +17,9 @@ namespace Dialogue
         private bool _playing;
         private bool _disposed;
 
+        //RadioMovingの為に追加
+        private readonly RadioTalkingAnimation _radioTalkingAnimation;
+
         /// <summary>同じシーンの会話サービスと主人公の入力を受け取る</summary>
         /// <param name="dialogue">共通の会話サービス</param>
         /// <param name="input">操作を制限する主人公</param>

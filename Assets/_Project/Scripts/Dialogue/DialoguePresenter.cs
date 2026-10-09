@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using R3;
 using VContainer.Unity;
 
@@ -10,14 +10,20 @@ namespace Dialogue
         private readonly DialogueService _service;
         private readonly CompositeDisposable _disposables = new();
 
+        //RadioMoveの為に追加
+        private readonly RadioTalkingAnimation _radioAnimation;
+
         /// <summary>会話の状態とUIを接続する依存関係を受け取る</summary>
         /// <param name="view">会話の表示とクリック通知を担当するView</param>
         /// <param name="service">会話の進行を管理するService</param>
         /// <example>LifetimeScopeのEntryPoint登録から生成する</example>
-        public DialoguePresenter(DialogueUIView view, DialogueService service)
+        public DialoguePresenter(DialogueUIView view, DialogueService service, RadioTalkingAnimation radioAnimation=null)
         {
             _view = view;
             _service = service;
+
+            //RadioMovingの為に追加
+            _radioAnimation = radioAnimation;
         }
 
         /// <summary>クリックと会話状態を購読し、現在の表示を同期する</summary>
@@ -29,6 +35,13 @@ namespace Dialogue
 
             // 初回通知で、初期化より前に開始された会話も表示へ反映する
             _service.CurrentLine.Subscribe(ShowLine).AddTo(_disposables);
+
+            //RadioMovingの為に追加
+            _radioAnimation.ConnectDialogueService(_service);
+            if(_radioAnimation != null)
+            {
+                _radioAnimation.ConnectDialogueService(_service);
+            }
         }
 
         /// <summary>
