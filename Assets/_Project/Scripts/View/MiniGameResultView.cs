@@ -254,7 +254,7 @@ namespace _Project.Scripts.View
             BringToFront();
             _canvas.enabled = true;
             _resultText.enabled = true;
-            _resultText.text = "Great!";
+            _resultText.text = "Great";
         }
 
         public void GoodResult()
@@ -262,7 +262,7 @@ namespace _Project.Scripts.View
             BringToFront();
             _canvas.enabled = true;
             _resultText.enabled = true;
-            _resultText.text = "Good!";
+            _resultText.text = "Good";
         }
 
         public void MissResult()
