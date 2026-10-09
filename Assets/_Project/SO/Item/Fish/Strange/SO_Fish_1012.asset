@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c85d36ded3d64aa68e757458b8bc6a67, type: 3}
   m_Name: SO_Fish_1012
   m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Data.Fish.FishDefinition
-  itemId: 1002
+  itemId: 1012
   itemName: "\u30C9\u30AF\u30ED\u30A4\u30BD\u30E1"
   description: "\u6D77\u5E95\u306B\u6F5C\u307F\u3001\u7372\u7269\u3092\u5F85\u3061\u4F0F\u305B\u3059\u308B\u7570\u5F62\u306E\u30A4\u30BD\u30E1\u3002\u30C9\u30AF\u30ED\u306E\u3088\u3046\u306A\u9854\u304C\u898B\u3048\u3066\u3044\u305F\u3089\u3001\u8DB3\u5143\u306F\u3082\u3046\u5B89\u5168\u3067\u306F\u306A\u3044\u3002"
   _fishImage: {fileID: 21300000, guid: be916cfb4e711de4992eeaed976feb74, type: 3}

@@ -30,8 +30,12 @@ public class FishingInteractPresenter : IDisposable, IInitializable
     {
         _inputReader.OnInteractPressed
             .Where(_ => _inputReader.CanStartGameplayAction && _fishingSpot.CanInteractShadow)
-            .Where(_ => _targetProvider.FishDefinition != null)
-            .Subscribe(_ => _miniGameFlowPresenter.StartMiniGame(_targetProvider.FishDefinition))
+            .Subscribe(_ =>
+            {
+                // 釣り開始直前に他のスポットの釣果も反映して重複を避ける
+                var fish = _targetProvider.GetFishForCatch();
+                if (fish != null) _miniGameFlowPresenter.StartMiniGame(fish);
+            })
             .AddTo(_disposables);
     }
 

@@ -2,6 +2,7 @@ using _Project.Scripts.Data.Fish;
 using _Project.Scripts.View;
 using Cysharp.Threading.Tasks;
 using InventoryData;
+using _Project.Scripts.Core;
 using FMODServices;
 using FMODSettings;
 using MiniGame;
@@ -15,6 +16,7 @@ public class MiniGameResultPresenter
     private readonly RotationMiniGameView _miniGameView;
     private readonly IPlayerPosition _player;
     private readonly PlayerInputReader _input;
+    private readonly GameProgress _progress;
     private FishDefinition _currentFishDefinition;
 
     /// <summary>釣果の表示、所持品への追加、結果音の再生に必要な依存関係を受け取る</summary>
@@ -24,9 +26,10 @@ public class MiniGameResultPresenter
     /// <param name="miniGameView">釣果表示前に隠すミニゲーム画面</param>
     /// <param name="player">頭上表示の基準位置</param>
     /// <param name="input">演出中の歩行を止める入力元</param>
+    /// <param name="progress">最後に釣った魚を記録するゲーム進行</param>
     /// <example>FishingSceneLifetimeScopeの登録から生成する</example>
     public MiniGameResultPresenter(MiniGameResultView view, Inventory inventory, FMODSEService se,
-        RotationMiniGameView miniGameView, IPlayerPosition player, PlayerInputReader input)
+        RotationMiniGameView miniGameView, IPlayerPosition player, PlayerInputReader input, GameProgress progress)
     {
         _view = view;
         _inventory = inventory;
@@ -34,6 +37,7 @@ public class MiniGameResultPresenter
         _miniGameView = miniGameView;
         _player = player;
         _input = input;
+        _progress = progress;
     }
 
     /// <summary>釣果をInventoryへ追加して結果UIを閉じ、追加できたかを返す</summary>
@@ -124,6 +128,7 @@ public class MiniGameResultPresenter
         }
 
         _inventory.Add(_currentFishDefinition.ItemId);
+        _progress.RecordFishCaught(_currentFishDefinition.ItemId);
         return true;
     }
 }

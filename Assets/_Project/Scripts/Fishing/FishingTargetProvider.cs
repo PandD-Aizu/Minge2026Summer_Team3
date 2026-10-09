@@ -19,6 +19,18 @@ namespace Fishing
 
         public FishDefinition FishDefinition => _fishDefinition;
 
+        /// <summary>表示済みの魚影も直前の釣果と重複しないよう確認する 引数はなし</summary>
+        /// <returns>釣りを始める魚 候補がなければnull</returns>
+        /// <example>インタラクト時にGetFishForCatch()で魚を受け取る</example>
+        public FishDefinition GetFishForCatch()
+        {
+            // 別の魚影を釣った後は、出現時の抽選結果が古くなっている場合がある
+            if (_fishDefinition == null || _fishDefinition.ItemId == _gameProgress?.LastCaughtFishId)
+                SelectFish();
+
+            return _fishDefinition;
+        }
+
         /// <summary>時間帯を接続し、表示中の魚も時間帯変更時に抽選し直す 戻り値はなし</summary>
         /// <param name="gameProgress">現在の時間帯と変更通知を持つゲーム進行</param>
         /// <example>FishingSpotLifetimeScopeに登録したコンポーネントへVContainerが注入する</example>
@@ -57,12 +69,13 @@ namespace Fishing
             int candidateCount = 0;
             foreach (var fish in _fishCandidates)
             {
-                if (fish != null && (allowAbnormal || !fish.IsAbnormal)) candidateCount++;
+                if (fish != null && (allowAbnormal || !fish.IsAbnormal)
+                    && fish.ItemId != _gameProgress?.LastCaughtFishId) candidateCount++;
             }
 
             if (candidateCount == 0)
             {
-                Debug.LogError("現在の時間帯で釣れる魚候補がない 普通の魚を設定してほしい", this);
+                Debug.LogError("現在の時間帯で直前の釣果と異なる魚候補がない 普通の魚を複数設定してほしい", this);
                 return;
             }
 
@@ -70,7 +83,8 @@ namespace Fishing
             int selectedIndex = Random.Range(0, candidateCount);
             foreach (var fish in _fishCandidates)
             {
-                if (fish == null || (!allowAbnormal && fish.IsAbnormal)) continue;
+                if (fish == null || (!allowAbnormal && fish.IsAbnormal)
+                    || fish.ItemId == _gameProgress?.LastCaughtFishId) continue;
                 if (selectedIndex-- != 0) continue;
 
                 _fishDefinition = fish;

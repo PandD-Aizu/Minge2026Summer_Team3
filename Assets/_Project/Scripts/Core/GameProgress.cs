@@ -6,6 +6,12 @@ namespace _Project.Scripts.Core
     {
         public int CurrentDay { get; private set; } = 1;
         public TimeOfDay CurrentTimeOfDay { get; private set; } = TimeOfDay.Day;
+        public int? LastCaughtFishId { get; private set; }
+
+        /// <summary>最後に釣り成功した魚を全釣り場で共有する 戻り値はなし</summary>
+        /// <param name="fishId">インベントリへ追加した魚のItemId</param>
+        /// <example>魚の追加に成功した直後にRecordFishCaught(fish.ItemId)を呼ぶ</example>
+        public void RecordFishCaught(int fishId) => LastCaughtFishId = fishId;
 
         private readonly Subject<TimeOfDay> _timeOfDayChanged = new();
         public Observable<TimeOfDay> TimeOfDayChanged => _timeOfDayChanged;
