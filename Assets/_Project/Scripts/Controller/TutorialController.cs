@@ -12,6 +12,18 @@ namespace Controller
         public TutorialStep CurrentStep { get; private set; } = TutorialStep.TalkToRadioFirst;
         public Observable<TutorialStep> OnStepChanged => _stepChanged;
         public bool IsCompleted => CurrentStep == TutorialStep.Completed;
+        public bool IsFirstFishingPending => !_gameProgress.HasStoryFlag(StoryFlag.FirstFishingCompleted);
+        public bool IsFirstCollectionAccessed { get; private set; }
+
+        /// <summary>初回釣果後に集荷所へアクセスしたことを記録し、帰還ナビを終了する</summary>
+        /// <example>集荷所の操作入力を受け取ったときに呼ぶ</example>
+        public void NotifyCollectionAccessed()
+        {
+            // 初回の魚を釣る前の操作では帰還案内を終了しない
+            if (IsFirstFishingPending) return;
+
+            IsFirstCollectionAccessed = true;
+        }
 
         /// <summary>時間帯などのゲーム進行データを受け取る</summary>
         /// <param name="gameProgress">日数や時間帯を保持する進行データ</param>
