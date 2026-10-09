@@ -480,8 +480,10 @@ Shader "Minge/Environment/HD2D Ocean"
 
                 Light mainLight = GetMainLight(TransformWorldToShadowCoord(input.positionWS));
                 float caustics = OceanCaustics(backgroundWS.xz, waterDepth) * hasGeometry;
-                sceneColor *= 1.0 + caustics * _CausticsStrength * mainLight.shadowAttenuation;
-                waterTint *= lerp(0.72, 1.0, mainLight.shadowAttenuation);
+                // 集光模様と水の散乱色にも太陽色を反映し、夕方や明け方の暖色へ追従する
+                sceneColor *= 1.0 + caustics * _CausticsStrength
+                    * mainLight.color * mainLight.shadowAttenuation;
+                waterTint *= mainLight.color * lerp(0.72, 1.0, mainLight.shadowAttenuation);
 
                 // 反射プローブが暗いシーンでも空色の反射を保つ
                 float3 reflectionWS = reflect(-viewWS, normalWS);
@@ -496,6 +498,8 @@ Shader "Minge/Environment/HD2D Ocean"
                 float3 probeReflection = GlossyEnvironmentReflection(reflectionWS, input.positionWS,
                     _Roughness, 1.0h, screenUV);
                 float3 reflectedColor = lerp(skyReflection, max(probeReflection, skyReflection * 0.7), _EnvironmentBlend);
+                // 固定色の空・雲とベイク済みプローブにも時間帯の光を適用し、夜に昼の反射が残るのを防ぐ
+                reflectedColor *= mainLight.color;
                 float nDotV = saturate(dot(normalWS, viewWS));
                 float reflectionWeight = saturate((0.02 + 0.98 * pow(1.0 - nDotV, 5.0)) * _ReflectionStrength);
 
@@ -503,7 +507,8 @@ Shader "Minge/Environment/HD2D Ocean"
                 float foam = OceanFoam(input.positionWS.xz, centerDepth, input.waveData.x, surfaceNoise);
                 foam = saturate(foam + fishRipple.w * _FishRippleFoamStrength
                     * lerp(0.45, 1.0, surfaceNoise));
-                float3 foamColor = _FoamColor.rgb * lerp(0.65, 1.0, mainLight.shadowAttenuation);
+                float3 foamColor = _FoamColor.rgb * mainLight.color
+                    * lerp(0.65, 1.0, mainLight.shadowAttenuation);
                 float3 backgroundWeight = transmission * (1.0 - reflectionWeight) * (1.0 - foam);
                 float3 surfaceColor = waterTint * (1.0 - transmission) * (1.0 - reflectionWeight);
                 surfaceColor += reflectedColor * reflectionWeight;

@@ -1,5 +1,7 @@
 ﻿using Dialogue;
 using Controller;
+using FMODServices;
+using FMODSettings;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -22,6 +24,10 @@ namespace LifetimeScopes
             // 会話後のシーン遷移はイントロ側で管理する
             builder.RegisterInstance(_introDialogue);
             builder.RegisterEntryPoint<IntroController>();
+
+            // イントロ単独起動でも昼BGMを再生し、タイトルからの遷移時は再生位置を維持する
+            builder.RegisterBuildCallback(resolver => resolver.Resolve<FMODBGMService>()
+                .PlayBGM(FMODEventPath.BGM_BENEATH_THE_WAVES.Reference));
         }
     }
 }

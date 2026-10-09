@@ -3,6 +3,8 @@
     public enum TimeOfDay
     {
         Day,
-        Night
+        Night,
+        Evening,
+        Dawn
     }
 }

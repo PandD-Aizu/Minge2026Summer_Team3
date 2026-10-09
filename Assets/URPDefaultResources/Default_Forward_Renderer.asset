@@ -24,7 +24,9 @@ MonoBehaviour:
     probeSamplingDebugMesh: {fileID: 0}
     probeSamplingDebugTexture: {fileID: 0}
     probeVolumeBlendStatesCS: {fileID: 0}
-  m_RendererFeatures: []
+  m_RendererFeatures:
+  - {fileID: 5505610943858919197}
+  - {fileID: 6020155566027090116}
   m_RendererFeatureMap: 
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -54,3 +56,31 @@ MonoBehaviour:
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 0
   m_TileOnlyMode: 0
+--- !u!114 &5505610943858919197
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72a190a242687f349a700ee28e87d6df, type: 3}
+  m_Name: Heartbeat Ripple
+  m_EditorClassIdentifier: Assembly-CSharp::HeartbeatRippleRendererFeature
+  m_Active: 1
+  _shader: {fileID: 4800000, guid: 43e7558f26d655d49a6e48bef5756bf6, type: 3}
+--- !u!114 &6020155566027090116
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16d926aad91f15b4a9036964cf66e673, type: 3}
+  m_Name: Ocean Capture
+  m_EditorClassIdentifier: Assembly-CSharp::OceanCaptureRendererFeature
+  m_Active: 1
+  _shader: {fileID: 4800000, guid: b0b50d4abe6db794e913dbcd3431e065, type: 3}

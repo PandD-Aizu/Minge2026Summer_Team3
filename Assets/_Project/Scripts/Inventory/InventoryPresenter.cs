@@ -2,6 +2,8 @@ using System;
 using _Project.Scripts.Data.Item;
 using Input;
 using R3;
+using FMODServices;
+using FMODSettings;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -19,20 +21,25 @@ namespace _Project.Scripts.Inventory
         private InventoryView _view;
         private readonly InventoryData.Inventory _inventory;
         private readonly ItemCatalog _itemCatalog;
+        private readonly FMODSEService _se;
 
         /// <summary>共通入力とインベントリ用Prefabを受け取る</summary>
         /// <param name="input">ゲーム全体の入力アクション</param>
         /// <param name="menuInput">メニュー同士の入力の競合を防ぐサービス</param>
         /// <param name="viewFactory">VContainerに登録したインベントリを初回だけ生成するFactory</param>
+        /// <param name="inventory">所持アイテムの一覧</param>
+        /// <param name="itemCatalog">アイテムの表示情報</param>
+        /// <param name="se">画面を開く音を再生するサービス</param>
         /// <example>GameLifetimeScopeのEntryPointとして登録する</example>
         public InventoryPresenter(PlayerInputAction input, MenuInputService menuInput, Func<InventoryView> viewFactory,
-            InventoryData.Inventory inventory, ItemCatalog itemCatalog)
+            InventoryData.Inventory inventory, ItemCatalog itemCatalog, FMODSEService se)
         {
             _input = input;
             _menuInput = menuInput;
             _viewFactory = viewFactory;
             _inventory = inventory;
             _itemCatalog = itemCatalog;
+            _se = se;
         }
 
         /// <summary>開閉・決定キーとシーン終了の通知を購読する</summary>
@@ -80,6 +87,7 @@ namespace _Project.Scripts.Inventory
 
                 RefreshItem();
                 _view.Show();
+                _se.PlayOneShot(FMODEventPath.SE_OLD_DOOR_OPEN.Reference);
             }
             catch
             {

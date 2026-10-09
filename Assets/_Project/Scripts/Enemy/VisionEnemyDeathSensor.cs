@@ -27,7 +27,7 @@ namespace Enemy
 
         private void OnTriggerEnter(Collider other)
         {
-            if (other.gameObject.CompareTag("Player"))
+            if (_trigger != null && _trigger.enabled && other.gameObject.CompareTag("Player"))
             {
                 _deathCollisionEnter.OnNext(EnemyType.Vision);
             }

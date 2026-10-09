@@ -55,6 +55,9 @@ namespace FMODServices
             }
         }
 
+        /// <summary>単発の主観効果音をリスナーの減衰基準位置で再生する</summary>
+        /// <param name="eventReference">再生するFMODイベント</param>
+        /// <example>主人公をAttenuation Objectに設定して釣竿やUIの効果音を再生する</example>
         public void PlayOneShot(EventReference eventReference)
         {
             if (eventReference.IsNull)
@@ -65,7 +68,16 @@ namespace FMODServices
 
             try
             {
-                RuntimeManager.PlayOneShot(eventReference);
+                // カメラの位置ではなく減衰基準位置を使い、見下ろし視点の高さによる減衰を防ぐ
+                var result = RuntimeManager.StudioSystem.getListenerAttributes(0, out _, out var attenuationPosition);
+                if (result != FMOD.RESULT.OK)
+                {
+                    Debug.LogError($"[FMODSEService] Failed to get listener attenuation position: {result}");
+                    return;
+                }
+
+                var position = new Vector3(attenuationPosition.x, attenuationPosition.y, attenuationPosition.z);
+                RuntimeManager.PlayOneShot(eventReference, position);
             }
             catch (Exception e)
             {

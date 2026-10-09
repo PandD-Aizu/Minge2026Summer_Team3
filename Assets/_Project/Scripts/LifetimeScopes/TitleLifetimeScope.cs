@@ -1,4 +1,6 @@
 using Presentation;
+using FMODServices;
+using FMODSettings;
 using VContainer;
 using VContainer.Unity;
 
@@ -13,6 +15,10 @@ namespace LifetimeScopes
         {
             builder.RegisterEntryPoint<TitleUIPresenter>();
             builder.RegisterComponentInHierarchy<TitleUIView>();
+
+            // ステージと同じ昼BGMをRootで再生し、イントロへの遷移後も継続する
+            builder.RegisterBuildCallback(resolver => resolver.Resolve<FMODBGMService>()
+                .PlayBGM(FMODEventPath.BGM_BENEATH_THE_WAVES.Reference));
         }
     }
 }
