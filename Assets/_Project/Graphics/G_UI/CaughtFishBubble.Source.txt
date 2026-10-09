@@ -1,0 +1,18 @@
+CaughtFishBubble.png
+Author: TopeconHeroes / ダーヤマ
+Asset: よくあるフキダシ, white variation with a downward tail (e1464_0)
+Page: https://fukidesign.com/e1464/
+Source: https://fukidesign.com/e/e1464/e1464_0.svg
+Terms: https://fukidesign.com/terms/
+Retrieved: 2026-10-10
+
+Original SVG rasterized to a transparent 800 x 544 PNG
+Tint and shadow are applied by the game's UI
+
+The site permits use in games, including commercial use, with up to 20 assets
+Additional groups of 20 assets require satisfying the conditions on the terms page
+Attribution and usage reporting are not required
+The artwork remains copyrighted by its author
+Do not resell or redistribute it as a standalone stock asset
+
+This file is included as a game asset for the caught-fish display
