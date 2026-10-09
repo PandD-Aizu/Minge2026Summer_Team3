@@ -15543,6 +15543,102 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 702434514179630928, guid: 817f6e13999a0fb498339ce26d7d661e, type: 3}
   m_PrefabInstance: {fileID: 2078919799}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &2085234511
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2085234515}
+  - component: {fileID: 2085234514}
+  - component: {fileID: 2085234513}
+  - component: {fileID: 2085234512}
+  m_Layer: 0
+  m_Name: Weather System
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2085234512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2085234511}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
+  m_IsGlobal: 1
+  priority: 25
+  blendDistance: 0
+  weight: 0
+  sharedProfile: {fileID: 11400000, guid: fcb81edb95b5a8a46948d6670a20af53, type: 2}
+--- !u!114 &2085234513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2085234511}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d6d1a92ebfc8754883a4c76d52cff8f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Minge2026.Weather.WeatherAtmosphere
+  _sun: {fileID: 98819725}
+  _shafts:
+  - {fileID: 1682541645}
+  _stormVolume: {fileID: 2085234512}
+--- !u!114 &2085234514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2085234511}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60843e4da6c9ffd48ab1c10726d09445, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Minge2026.Weather.WeatherController
+  _settings: {fileID: 11400000, guid: 8b3e8a4d53188544897af7a451583fe7, type: 2}
+  _focus: {fileID: 1425355260}
+  _groundBounds:
+    m_Center: {x: 1, y: 0, z: 22}
+    m_Extent: {x: 48, y: 0.5, z: 33}
+  _groundRoot: {fileID: 1615514004}
+  _groundMaterials:
+  - {fileID: 2100000, guid: 22c6093bd76d8154691bf1c0a5335303, type: 2}
+  - {fileID: 2100000, guid: 4bad6fedb62fb0940ad540ae5ccbf74e, type: 2}
+  - {fileID: 2100000, guid: 1f605710b0d5c244093393945b57c2ce, type: 2}
+  - {fileID: 2100000, guid: dc96f7c6623b2ab498589274d723676a, type: 2}
+  - {fileID: 2100000, guid: c8e013d9712ac45439318b99823d066b, type: 2}
+  - {fileID: 2100000, guid: 94c108aa0b430074c87664cadbf5b509, type: 2}
+  _rainMaterial: {fileID: 2100000, guid: b382c0bd6c8aff645b3560932dcde5b9, type: 2}
+  _lightningMaterial: {fileID: 2100000, guid: bb5000190eabff44bafd1dc6c9692df4, type: 2}
+  _puddleMaterial: {fileID: 2100000, guid: ee81b0d7272881448ab66139127dc5a9, type: 2}
+  _atmosphere: {fileID: 2085234513}
+--- !u!4 &2085234515
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2085234511}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &2104026592
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -16699,3 +16795,4 @@ SceneRoots:
   - {fileID: 1303408913}
   - {fileID: 1958967042}
   - {fileID: 1551773959}
+  - {fileID: 2085234515}
