@@ -4524,10 +4524,7 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1425586827991890792, guid: 68926b496fbfe2740a58a97c08b54b05, type: 3}
       insertIndex: 2
       addedObject: {fileID: 52691815}
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 5062271622154469019, guid: 68926b496fbfe2740a58a97c08b54b05, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 548867111}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 68926b496fbfe2740a58a97c08b54b05, type: 3}
 --- !u!114 &548867108 stripped
 MonoBehaviour:
@@ -4550,23 +4547,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 5062271622154469019, guid: 68926b496fbfe2740a58a97c08b54b05, type: 3}
   m_PrefabInstance: {fileID: 548867107}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &548867111
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 548867110}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2f0ac18065ee1ed4b8230b3accfd1a17, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Dialogue.DialogueTrigger
-  _eventDialogues: []
-  _randomDialogues: []
-  _connector: {fileID: 548867108}
-  _dialogue: {fileID: 11400000, guid: 5a733334f3b857f4c83e73843aaf2954, type: 2}
-  _playOnce: 0
 --- !u!1001 &553694495
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -14817,7 +14797,6 @@ MonoBehaviour:
   _captureReturnDialogue: {fileID: 11400000, guid: b454f49e420585344856fe35fc5e4533, type: 2}
   _triggers:
   - {fileID: 1586639471}
-  - {fileID: 548867111}
   _radioTalkingAnimation: {fileID: 1166581092}
 --- !u!4 &2034494601
 Transform:
