@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 using Unity.Cinemachine;
 
 public class CameraZoom : MonoBehaviour
@@ -11,52 +10,41 @@ public class CameraZoom : MonoBehaviour
     [Header("UI")]
     [SerializeField] private GameObject itemListPanel;
 
-    private bool isZooming;
-
-    /// <summary>
-    /// シーン開始時に通常表示を設定する Unityが自動で呼び出す 引数と戻り値はなし
-    /// </summary>
-    private void Start()
+    /// <summary>通常表示で初期化する 引数と戻り値はなし</summary>
+    /// <example>Unityが会話開始より前に呼び出す</example>
+    private void Awake()
     {
-        // 参照不足の状態ではカメラを切り替えない
-        if (followPlayerCamera == null || zoomCamera == null || followPlayerCamera == zoomCamera)
-        {
-            Debug.LogError("通常用とズーム用に別々のCinemachineCameraを設定してほしい", this);
-            enabled = false;
-            return;
-        }
-
         SetZoom(false);
     }
 
-    /// <summary>
-    /// Tキーでズーム表示を切り替える Unityが毎フレーム呼び出す 引数と戻り値はなし
-    /// </summary>
-    private void Update()
-    {
-        // キーボードが接続されている場合だけ入力を確認する
-        if (Keyboard.current != null && Keyboard.current.tKey.wasPressedThisFrame)
-        {
-            SetZoom(!isZooming);
-        }
-    }
-
-    /// <summary>
-    /// 表示するバーチャルカメラを設定する 戻り値はなし
-    /// 例: SetZoom(true)でズーム表示に切り替える
-    /// </summary>
+    /// <summary>表示するバーチャルカメラを設定する 戻り値はなし</summary>
     /// <param name="zooming">trueならズーム表示 falseなら通常表示</param>
-    private void SetZoom(bool zooming)
+    /// <example>ラジオ会話の開始時にSetZoom(true)、終了時にSetZoom(false)を呼ぶ</example>
+    public void SetZoom(bool zooming)
     {
-        // 描画用Cameraは有効のまま Brainが有効なバーチャルカメラへ切り替える
-        isZooming = zooming;
+        // 参照不足や同じカメラの指定では切り替えない
+        if (followPlayerCamera == null || zoomCamera == null || followPlayerCamera == zoomCamera)
+        {
+            Debug.LogError("通常用とズーム用に別々のCinemachineCameraを設定してほしい", this);
+            return;
+        }
+
+        // 描画用Cameraは有効のまま Brainがバーチャルカメラを切り替える
         followPlayerCamera.enabled = !zooming;
         zoomCamera.enabled = zooming;
 
-        // カメラの切り替え時はアイテム一覧を閉じる
+        // 切り替え時はアイテム一覧を閉じる
         if (itemListPanel != null)
         {
             itemListPanel.SetActive(false);
         }
+    }
+
+    /// <summary>無効化時に通常表示へ戻す 引数と戻り値はなし</summary>
+    /// <example>会話中にカメラ管理オブジェクトを無効化した場合にUnityが呼ぶ</example>
+    private void OnDisable()
+    {
+        if (followPlayerCamera != null && zoomCamera != null && followPlayerCamera != zoomCamera)
+            SetZoom(false);
     }
 }

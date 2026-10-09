@@ -35,9 +35,10 @@ namespace Dialogue
         /// <summary>操作を制限して会話を再生し、終了理由にかかわらず自分の制限を解除する</summary>
         /// <param name="data">再生する会話データ</param>
         /// <param name="cancellationToken">イベントや呼び出し元の寿命に対応するトークン</param>
+        /// <param name="onStarted">会話が実際に開始した場合の処理 省略可能</param>
         /// <returns>正常終了、中断、開始拒否、またはセーブで表示済みの場合のSkipped</returns>
         /// <example>if (await controller.PlayAsync(data, token) == DialogueResult.Completed) イベントを進める</example>
-        public async UniTask<DialogueResult> PlayAsync(DialogueData data, CancellationToken cancellationToken = default)
+        public async UniTask<DialogueResult> PlayAsync(DialogueData data, CancellationToken cancellationToken = default, Action onStarted = null)
         {
             if (_disposed || cancellationToken.IsCancellationRequested) return DialogueResult.Canceled;
             if (data != null && data.PlayOncePerSave)
@@ -58,6 +59,9 @@ namespace Dialogue
                 // 歩行だけでなく、背後の釣り・交換・インベントリ入力も止める
                 _inputBlock = _input.BlockGameplayInput();
                 var playback = _dialogue.PlayAsync(data, cancellation.Token);
+
+                // 開始拒否やスキップではカメラの開始演出を実行しない
+                if (_dialogue.IsPlaying) onStarted?.Invoke();
 
                 // 開始拒否や表示できないUIは記録せず、表示が始まった会話だけ保存する
                 if (_dialogue.IsPlaying && data.PlayOncePerSave && !_save.MarkDialogueShown(data.SaveId))

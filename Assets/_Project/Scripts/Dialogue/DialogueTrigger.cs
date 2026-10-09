@@ -41,6 +41,9 @@ namespace Dialogue
         [SerializeField, HideInInspector] private DialogueData _dialogue;
         [SerializeField, HideInInspector] private bool _playOnce;
 
+        [SerializeField, Tooltip("この対象との会話中に使うカメラ 未設定なら切り替えない")]
+        private CameraZoom _conversationCamera;
+
         private GameplayDialogueController _controller;
         private TutorialController _tutorialController;
         private IDisposable _subscription;
@@ -89,7 +92,7 @@ namespace Dialogue
 
                 if (_dialogue == null || (_playOnce && _legacyCompleted)) return;
 
-                var result = await _controller.PlayAsync(_dialogue, cancellation.Token);
+                var result = await PlayDialogueAsync(_dialogue, cancellation.Token);
                 if (result == DialogueResult.Completed) _legacyCompleted = true;
             }
             finally
@@ -112,7 +115,7 @@ namespace Dialogue
                 if (!_tutorialController.CanPlayRadioDialogue(entry.RequiredTutorialStep, entry.RequiredStoryFlag))
                     continue;
 
-                var result = await _controller.PlayAsync(entry.Dialogue, cancellationToken);
+                var result = await PlayDialogueAsync(entry.Dialogue, cancellationToken);
                 if (result == DialogueResult.Completed || result == DialogueResult.Skipped)
                 {
                     _completedEventIndices.Add(i);
@@ -145,8 +148,33 @@ namespace Dialogue
 
             var selectedIndex = candidates[UnityEngine.Random.Range(0, candidates.Count)];
             _lastRandomIndex = selectedIndex;
-            var result = await _controller.PlayAsync(_randomDialogues[selectedIndex], cancellationToken);
+            var result = await PlayDialogueAsync(_randomDialogues[selectedIndex], cancellationToken);
             if (result == DialogueResult.Skipped) _skippedRandomIndices.Add(selectedIndex);
+        }
+
+        /// <summary>選んだ会話の開始と終了にカメラ切り替えを接続する</summary>
+        /// <param name="data">再生する会話データ</param>
+        /// <param name="cancellationToken">対象の無効化に伴う中断トークン</param>
+        /// <returns>会話の終了結果</returns>
+        /// <example>イベント会話とランダム会話の両方から呼ぶ</example>
+        private async UniTask<DialogueResult> PlayDialogueAsync(DialogueData data, CancellationToken cancellationToken)
+        {
+            var zoomStarted = false;
+            try
+            {
+                // 会話が開始できた場合だけ、この対象に設定されたカメラへ切り替える
+                return await _controller.PlayAsync(data, cancellationToken, () =>
+                {
+                    if (_conversationCamera == null || !_conversationCamera.isActiveAndEnabled) return;
+                    zoomStarted = true;
+                    _conversationCamera.SetZoom(true);
+                });
+            }
+            finally
+            {
+                // 正常終了、中断、例外のいずれでも通常表示へ戻す
+                if (zoomStarted && _conversationCamera != null) _conversationCamera.SetZoom(false);
+            }
         }
 
         /// <summary>対象が無効になったら、その対象が開始した会話を中断する</summary>
