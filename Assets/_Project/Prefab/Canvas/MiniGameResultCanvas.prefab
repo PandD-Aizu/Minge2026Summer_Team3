@@ -120,6 +120,7 @@ MonoBehaviour:
   _resultText: {fileID: 2138278859976197857}
   _fishFont: {fileID: 11400000, guid: f7c988fee95ce12488505a7e3c56ff47, type: 2}
   _messageBackground: {fileID: 21300000, guid: 5d74195e405c1c1449d111c806858669, type: 3}
+  _fishBubble: {fileID: 21300000, guid: 139dc4538b209bb4d8aa5596be53f321, type: 3}
   _zoomSeconds: 0.7
   _fishDisplaySeconds: 5
   _cameraDistanceRatio: 0.65
