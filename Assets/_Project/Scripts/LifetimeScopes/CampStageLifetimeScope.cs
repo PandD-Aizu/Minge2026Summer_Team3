@@ -12,6 +12,7 @@ namespace LifetimeScopes
     public sealed class CampStageLifetimeScope : LifetimeScope
     {
         [SerializeField] private TimeOfDayView _timeOfDayView;
+        [SerializeField] private TimeOfDayLightingSettings _timeOfDayLighting = new();
         [SerializeField] private PlayerInputReader _playerInputReader;
         [SerializeField] private PauseMenuView _pauseMenuView;
 
@@ -20,6 +21,7 @@ namespace LifetimeScopes
         /// <example>CampStageのLifetimeScopeから自動実行される</example>
         protected override void Configure(IContainerBuilder builder)
         {
+            _timeOfDayView.ConfigureLighting(_timeOfDayLighting);
             builder.RegisterComponent(_timeOfDayView);
             builder.RegisterEntryPoint<TutorialCollectionReturnEntryPoint>();
             builder.RegisterEntryPoint<TimeOfDayPresenter>();

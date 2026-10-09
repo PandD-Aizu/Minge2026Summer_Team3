@@ -89,6 +89,8 @@ namespace Controller
             if (CurrentStep == TutorialStep.CatchDayFish)
             {
                 _gameProgress.SetStoryFlag(StoryFlag.FirstFishingCompleted);
+                // 帰還までを夕方とし、キャンプ到着時に夜へ進める
+                _gameProgress.StartEvening();
                 SetStep(TutorialStep.ReturnToCollectionAtNight);
                 return true;
             }
@@ -103,7 +105,7 @@ namespace Controller
             return false;
         }
 
-        /// <summary>集荷所に戻ったことを通知し、必要なら夜へ切り替える</summary>
+        /// <summary>集荷所への帰還時に、昼釣り後は夜、夜釣り後は明け方へ切り替える</summary>
         /// <returns>チュートリアルが進んだ場合はtrue</returns>
         /// <example>CampStageへ戻ったときのPresenterやSensorから呼ぶ</example>
         public bool NotifyReturnedToCollection()
@@ -115,7 +117,12 @@ namespace Controller
                 return true;
             }
 
-            return TryAdvance(TutorialStep.ReturnFromNightFishing, TutorialStep.TalkToRadioAfterNightFishing);
+            if (CurrentStep != TutorialStep.ReturnFromNightFishing) return false;
+
+            // 夜釣りを終えて帰還したら、最後のラジオ会話を明け方に行う
+            _gameProgress.StartDawn();
+            SetStep(TutorialStep.TalkToRadioAfterNightFishing);
+            return true;
         }
 
         /// <summary>交換が完了したことを通知し、夜釣りへ進める</summary>

@@ -91,9 +91,11 @@ MonoBehaviour:
       Data3: 0
       Data4: 0
     Path: 
+  _cloakShader: {fileID: 4800000, guid: 173b710d9eb84745848a66c111bb8ec2, type: 3}
+  _cloakFadeDuration: 1.5
   _captureStartOffset: 3
-  _captureApproachDuration: 0.5
-  _captureLungeDuration: 0.01
+  _captureApproachDuration: 1.2
+  _captureLungeDuration: 0.12
 --- !u!54 &7080000000000000012
 Rigidbody:
   m_ObjectHideFlags: 0
