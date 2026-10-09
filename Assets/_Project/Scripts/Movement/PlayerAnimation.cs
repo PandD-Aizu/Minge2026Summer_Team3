@@ -26,6 +26,7 @@ public sealed class PlayerAnimation : MonoBehaviour
     [SerializeField, Min(0f)] private float _minimumMoveSpeed = 0.05f;
 
     private CharacterController _characterController;
+    private PlayerInputReader _inputReader;
     private Material _material;
     private Transform _cameraTransform;
     private Texture _displayedTexture;
@@ -41,6 +42,7 @@ public sealed class PlayerAnimation : MonoBehaviour
     private void Awake()
     {
         _characterController = GetComponentInParent<CharacterController>();
+        _inputReader = GetComponentInParent<PlayerInputReader>();
         if (_characterController == null)
         {
             Debug.LogError("PlayerAnimationには親のCharacterControllerが必要です", this);
@@ -116,11 +118,20 @@ public sealed class PlayerAnimation : MonoBehaviour
         if (_material != null) Destroy(_material);
     }
 
-    /// <summary>移動方向をカメラから見た前後左右へ変換する</summary>
+    /// <summary>横入力を優先し、それ以外は移動方向をカメラから見た前後左右へ変換する</summary>
     /// <param name="movement">地面に沿ったプレイヤーの移動方向</param>
     /// <returns>表示するキャラクターの向き</returns>
+    /// <example>W+DやS+Dでは右向き、W+AやS+Aでは左向きになる</example>
     private Facing GetFacing(Vector3 movement)
     {
+        // 斜め移動時の速度の揺れで前後と横の歩行画像が切り替わらないようにする
+        if (_inputReader != null)
+        {
+            float horizontalInput = _inputReader.MoveInput.x;
+            if (Mathf.Abs(horizontalInput) > 0.001f)
+                return horizontalInput > 0f ? Facing.Right : Facing.Left;
+        }
+
         Vector3 right = _cameraTransform != null ? _cameraTransform.right : Vector3.right;
         Vector3 forward = _cameraTransform != null ? _cameraTransform.forward : Vector3.forward;
         right.y = 0f;
