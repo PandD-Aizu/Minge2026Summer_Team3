@@ -11,16 +11,18 @@ namespace Dialogue
         private readonly DialogueUIView _view;
         private readonly DialogueService _service;
         private readonly Action _playAdvanceSound;
+        private readonly RadioTalkingAnimation _radioAnimation;
         private readonly CompositeDisposable _disposables = new();
 
         /// <summary>会話の状態とUIを接続する依存関係を受け取る</summary>
         /// <param name="view">会話の表示とクリック通知を担当するView</param>
         /// <param name="service">会話の進行を管理するService</param>
         /// <param name="se">会話送りの決定音を再生するサービス</param>
+        /// <param name="radioAnimation">会話中のラジオ演出 省略時は演出なし</param>
         /// <example>LifetimeScopeのEntryPoint登録から生成する</example>
         [VContainer.Inject]
-        public DialoguePresenter(DialogueUIView view, DialogueService service, FMODSEService se)
-            : this(view, service, () => se.PlayOneShot(FMODEventPath.SE_MESSAGE_WINDOW_OK.Reference))
+        public DialoguePresenter(DialogueUIView view, DialogueService service, FMODSEService se, RadioTalkingAnimation radioAnimation = null)
+            : this(view, service, () => se.PlayOneShot(FMODEventPath.SE_MESSAGE_WINDOW_OK.Reference), radioAnimation)
         {
         }
 
@@ -28,12 +30,14 @@ namespace Dialogue
         /// <param name="view">会話UI</param>
         /// <param name="service">会話の進行状態</param>
         /// <param name="playAdvanceSound">決定時に一度呼ぶ音声再生処理</param>
+        /// <param name="radioAnimation">会話中のラジオ演出 省略時は演出なし</param>
         /// <example>Edit Modeの検証では再生回数を記録する処理を渡す</example>
-        public DialoguePresenter(DialogueUIView view, DialogueService service, Action playAdvanceSound)
+        public DialoguePresenter(DialogueUIView view, DialogueService service, Action playAdvanceSound, RadioTalkingAnimation radioAnimation = null)
         {
             _view = view;
             _service = service;
             _playAdvanceSound = playAdvanceSound;
+            _radioAnimation = radioAnimation;
         }
 
         /// <summary>クリックと会話状態を購読し、現在の表示を同期する</summary>
@@ -45,6 +49,9 @@ namespace Dialogue
 
             // 初回通知で、初期化より前に開始された会話も表示へ反映する
             _service.CurrentLine.Subscribe(ShowLine).AddTo(_disposables);
+
+            // ラジオがあるシーンだけ会話の話者とアニメーションを接続する
+            if (_radioAnimation != null) _radioAnimation.ConnectDialogueService(_service);
         }
 
         /// <summary>
@@ -105,6 +112,7 @@ namespace Dialogue
         public void Dispose()
         {
             _disposables.Dispose();
+            if (_radioAnimation != null) _radioAnimation.ConnectDialogueService(null);
             if (_view != null) _view.Hide();
         }
     }
