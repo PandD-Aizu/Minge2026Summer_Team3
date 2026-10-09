@@ -122,6 +122,7 @@ MonoBehaviour:
   _messageBackground: {fileID: 21300000, guid: 5d74195e405c1c1449d111c806858669, type: 3}
   _fishBubble: {fileID: 21300000, guid: 139dc4538b209bb4d8aa5596be53f321, type: 3}
   _zoomSeconds: 0.7
+  _fishFadeSeconds: 0.3
   _fishDisplaySeconds: 5
   _cameraDistanceRatio: 0.65
   _fishOffset: {x: 0, y: 2.4, z: 0}

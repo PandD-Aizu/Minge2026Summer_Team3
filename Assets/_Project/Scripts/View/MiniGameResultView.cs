@@ -17,17 +17,19 @@ namespace _Project.Scripts.View
         [SerializeField] private Sprite _messageBackground;
         [SerializeField] private Sprite _fishBubble;
         [SerializeField, Min(0.1f)] private float _zoomSeconds = 0.7f;
+        [SerializeField, Min(0.01f)] private float _fishFadeSeconds = 0.3f;
         [SerializeField, Min(1f)] private float _fishDisplaySeconds = 5f;
         [SerializeField, Range(0.3f, 1f)] private float _cameraDistanceRatio = 0.65f;
         [SerializeField] private Vector3 _fishOffset = new(0f, 2.4f, 0f);
 
         private RectTransform _fishRoot;
+        private CanvasGroup _fishCanvasGroup;
         private RectTransform _fishHeader;
         private UnityEngine.UI.Image _fishImage;
         private TextMeshProUGUI _fishName;
         private TextMeshProUGUI _fishDescription;
 
-        /// <summary>釣果を頭上と説明欄へ表示し、時間経過またはJキーで終了してカメラを戻す</summary>
+        /// <summary>釣果をフェードで表示し、時間経過またはJキーでフェードアウトしてカメラを戻す</summary>
         /// <param name="fish">釣った魚の画像、名前、説明</param>
         /// <param name="player">頭上表示の基準となるプレイヤー</param>
         /// <param name="cancellation">シーン終了時に演出を中断するトークン</param>
@@ -45,6 +47,7 @@ namespace _Project.Scripts.View
             _fishDescription.text = fish.Description;
             _resultText.enabled = false;
             _canvas.enabled = true;
+            _fishCanvasGroup.alpha = 0f;
             _fishRoot.gameObject.SetActive(true);
             _fishHeader.gameObject.SetActive(false);
 
@@ -55,13 +58,17 @@ namespace _Project.Scripts.View
             float originalDistance = composer != null ? composer.CameraDistance : 0f;
             float closeDistance = originalDistance * _cameraDistanceRatio;
             float elapsed = 0f;
-            float duration = _zoomSeconds * 2f + _fishDisplaySeconds;
+            float fadeSeconds = Mathf.Max(0.01f, _fishFadeSeconds);
+            float exitElapsed = 0f;
+            float exitStartAlpha = 0f;
+            float exitStartDistance = originalDistance;
+            bool isFadingOut = false;
             // 判定に使ったJキーを押したままでも、釣果表示を即座に飛ばさない
             bool skipKeyReady = Keyboard.current == null || !Keyboard.current.jKey.isPressed;
 
             try
             {
-                while (elapsed < duration)
+                while (true)
                 {
                     // Cinemachineの更新後に画面座標を求め、カメラ移動中も頭上へ追従する
                     await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, cancellation);
@@ -71,18 +78,39 @@ namespace _Project.Scripts.View
                     // 結果表示中はActionMapが無効なので、演出内だけでJキーを確認する
                     // キャンセル例外にせず通常終了させ、魚の獲得後の進行通知を維持する
                     var keyboard = Keyboard.current;
+                    bool skipRequested = false;
                     if (keyboard != null)
                     {
                         if (!keyboard.jKey.isPressed) skipKeyReady = true;
-                        else if (skipKeyReady && keyboard.jKey.wasPressedThisFrame) break;
+                        else if (skipKeyReady && keyboard.jKey.wasPressedThisFrame) skipRequested = true;
                     }
                     elapsed += Time.deltaTime;
 
-                    float zoom = elapsed < _zoomSeconds
-                        ? Mathf.Clamp01(elapsed / _zoomSeconds)
-                        : 1f - Mathf.Clamp01((elapsed - _zoomSeconds - _fishDisplaySeconds) / _zoomSeconds);
-                    if (composer != null)
-                        composer.CameraDistance = Mathf.Lerp(originalDistance, closeDistance, Mathf.SmoothStep(0f, 1f, zoom));
+                    // 途中でスキップしても、現在の透明度とカメラ距離から滑らかに終了する
+                    if (!isFadingOut && (skipRequested || elapsed >= _zoomSeconds + _fishDisplaySeconds))
+                    {
+                        isFadingOut = true;
+                        exitStartAlpha = _fishCanvasGroup.alpha;
+                        exitStartDistance = composer != null ? composer.CameraDistance : originalDistance;
+                    }
+
+                    if (isFadingOut)
+                    {
+                        exitElapsed += Time.deltaTime;
+                        _fishCanvasGroup.alpha = Mathf.Lerp(exitStartAlpha, 0f,
+                            Mathf.SmoothStep(0f, 1f, exitElapsed / fadeSeconds));
+                        if (composer != null)
+                            composer.CameraDistance = Mathf.Lerp(exitStartDistance, originalDistance,
+                                Mathf.SmoothStep(0f, 1f, exitElapsed / _zoomSeconds));
+                        if (exitElapsed >= Mathf.Max(_zoomSeconds, fadeSeconds)) break;
+                    }
+                    else
+                    {
+                        _fishCanvasGroup.alpha = Mathf.SmoothStep(0f, 1f, elapsed / fadeSeconds);
+                        if (composer != null)
+                            composer.CameraDistance = Mathf.Lerp(originalDistance, closeDistance,
+                                Mathf.SmoothStep(0f, 1f, elapsed / _zoomSeconds));
+                    }
 
                     if (outputCamera != null)
                     {
@@ -103,6 +131,7 @@ namespace _Project.Scripts.View
             {
                 // Jスキップ、シーン離脱、別カメラへの切替でもズームと釣果表示を残さない
                 if (composer != null) composer.CameraDistance = originalDistance;
+                if (_fishCanvasGroup != null) _fishCanvasGroup.alpha = 0f;
                 if (_fishRoot != null) _fishRoot.gameObject.SetActive(false);
             }
         }
@@ -117,6 +146,12 @@ namespace _Project.Scripts.View
             _fishRoot.anchorMax = Vector2.one;
             _fishRoot.offsetMin = Vector2.zero;
             _fishRoot.offsetMax = Vector2.zero;
+
+            // 吹き出し、魚名、魚画像、説明欄を同じ透明度でまとめてフェードする
+            _fishCanvasGroup = _fishRoot.gameObject.AddComponent<CanvasGroup>();
+            _fishCanvasGroup.alpha = 0f;
+            _fishCanvasGroup.interactable = false;
+            _fishCanvasGroup.blocksRaycasts = false;
 
             // 頭上の画像と名前はひとまとまりとしてプレイヤーへ追従する
             _fishHeader = CreateRect("FishHeader", _fishRoot, new Vector2(620f, 300f), Vector2.zero);
