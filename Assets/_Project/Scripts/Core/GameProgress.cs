@@ -11,6 +11,25 @@ namespace _Project.Scripts.Core
         public Observable<TimeOfDay> TimeOfDayChanged => _timeOfDayChanged;
 
         private readonly HashSet<StoryFlag> storyFlags = new();
+        private bool _captureReturnPending;
+
+        /// <summary>捕獲から戻った後に再生する会話を予約する</summary>
+        /// <example>FishingStageからCampStageへ移動する直前に呼ぶ</example>
+        public void MarkCaptureReturn() => _captureReturnPending = true;
+
+        /// <summary>捕獲からの帰還を一度だけ取り出す</summary>
+        /// <returns>未処理の帰還があればtrue</returns>
+        /// <example>CampStageの開始会話を選ぶときに呼ぶ</example>
+        public bool ConsumeCaptureReturn()
+        {
+            if (!_captureReturnPending) return false;
+            _captureReturnPending = false;
+            return true;
+        }
+
+        /// <summary>シーン移動に失敗した場合の帰還予約を取り消す</summary>
+        /// <example>CampStageを読み込めなかった場合に呼ぶ</example>
+        public void ClearCaptureReturn() => _captureReturnPending = false;
 
         public void StartDay()
         {
@@ -18,10 +37,26 @@ namespace _Project.Scripts.Core
             _timeOfDayChanged.OnNext(TimeOfDay.Day);
         }
 
+        /// <summary>夕方へ切り替え、BGMと照明へ通知する</summary>
+        /// <example>最初の昼釣りが完了したときにStartEvening()を呼ぶ</example>
+        public void StartEvening()
+        {
+            CurrentTimeOfDay = TimeOfDay.Evening;
+            _timeOfDayChanged.OnNext(TimeOfDay.Evening);
+        }
+
         public void StartNight()
         {
             CurrentTimeOfDay = TimeOfDay.Night;
             _timeOfDayChanged.OnNext(TimeOfDay.Night);
+        }
+
+        /// <summary>明け方へ切り替え、時間帯を購読する照明や敵へ通知する</summary>
+        /// <example>夜釣りから帰還したときにStartDawn()を呼ぶ</example>
+        public void StartDawn()
+        {
+            CurrentTimeOfDay = TimeOfDay.Dawn;
+            _timeOfDayChanged.OnNext(TimeOfDay.Dawn);
         }
 
         public void AdvanceDay()

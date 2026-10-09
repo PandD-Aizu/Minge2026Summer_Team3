@@ -2,7 +2,10 @@ using _Project.Scripts.Enemy;
 using _Project.Scripts.View;
 using Controller;
 using Dialogue;
+using Enemy;
 using MiniGame;
+using PauseMenu;
+using Presentation;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -18,10 +21,13 @@ namespace LifetimeScopes
         [SerializeField] private DialogueUIView _dialogueView;
         [SerializeField] private FishingMonologuePresenter _fishingMonologuePresenter;
         [SerializeField] private TimeOfDayView _timeOfDayView;
+        [SerializeField] private TimeOfDayLightingSettings _timeOfDayLighting = new();
+        [SerializeField] private PauseMenuView _pauseMenuView;
 
         protected override void Configure(IContainerBuilder builder)
         {
             // シーン上のViewを登録
+            _timeOfDayView.ConfigureLighting(_timeOfDayLighting);
             builder.RegisterComponent(_rotationMiniGameView);
             builder.RegisterComponent(_miniGameResultView);
             builder.RegisterComponent(_timeOfDayView);
@@ -51,12 +57,24 @@ namespace LifetimeScopes
             builder.RegisterComponentInHierarchy<VisionEnemyView>();
             builder.RegisterComponentInHierarchy<VisionEnemyDetectSensor>();
             builder.RegisterComponentInHierarchy<VisionEnemyDeathSensor>();
-            builder.RegisterEntryPoint<VisionEnemyController>();
+            builder.RegisterEntryPoint<VisionEnemyController>().AsSelf();
             builder.RegisterComponentInHierarchy<VisionEnemyNavigator>();
+
+            // GameOverの演出関連
+            builder.RegisterComponentInHierarchy<CameraShaker>();
+            builder.RegisterComponentInHierarchy<GameOverCameraView>();
+            builder.RegisterEntryPoint<GameOverPresenter>();
+
 
             // 釣り場への到着をチュートリアルへ通知する
             builder.RegisterEntryPoint<TutorialFishingStageEntryPoint>();
             builder.RegisterEntryPoint<TimeOfDayPresenter>();
+
+            if (_pauseMenuView != null)
+            {
+                builder.RegisterComponent(_pauseMenuView);
+                builder.RegisterEntryPoint<PauseMenuPresenter>();
+            }
 
             // シーンに置いた独り言Presenterへ会話と進行を注入する
             builder.RegisterBuildCallback(container => container.Inject(_fishingMonologuePresenter));

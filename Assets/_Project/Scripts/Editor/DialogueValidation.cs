@@ -260,7 +260,8 @@ public static class DialogueValidation
         var instance = Object.Instantiate(prefab);
         var view = instance.GetComponent<DialogueUIView>();
         using var service = new DialogueService();
-        using var presenter = new DialoguePresenter(view, service);
+        var advanceSoundCount = 0;
+        using var presenter = new DialoguePresenter(view, service, () => advanceSoundCount++);
         var previousKeyboard = Keyboard.current;
         var keyboard = InputSystem.AddDevice<Keyboard>();
         try
@@ -276,6 +277,7 @@ public static class DialogueValidation
             Check(service.CurrentLine.CurrentValue == data.GetLine(1), "button advances");
             button.onClick.Invoke();
             Check(Result(play) == DialogueResult.Completed && !view.gameObject.activeSelf, "button completes and hides");
+            Check(advanceSoundCount == 2, "advance sound includes final line");
 
             // 会話開始時に押されていたJキーでは先頭を飛ばさない
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.J));

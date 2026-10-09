@@ -15,6 +15,9 @@ namespace _Project.Scripts.Data.Fish
         [SerializeField]
         private Sprite _fishImage;
 
+        [Header("魚の分類")]
+        [SerializeField, Tooltip("チェックすると異形魚として扱う 未チェックなら普通の魚")]
+        private bool _isAbnormal;
 
         [SerializeField]
         private MiniGameSettings[] _miniGameSettings;
@@ -28,6 +31,8 @@ namespace _Project.Scripts.Data.Fish
 
         public override ItemType ItemType => ItemType.Fish;
         public override Sprite ItemImage => _fishImage;
+        /// <summary>異形魚ならtrue、普通の魚ならfalseを返す</summary>
+        public bool IsAbnormal => _isAbnormal;
         public MiniGameSettings[] MiniGameSettings => _miniGameSettings;
         public Difficulty Difficulty => _difficulty;
         public FishingGimmickType GimmickType => _gimmickType;
