@@ -16,13 +16,18 @@ namespace LifetimeScopes
         private DialogueData _captureReturnDialogue;
         [SerializeField] private DialogueTrigger[] _triggers = System.Array.Empty<DialogueTrigger>();
 
+        //RadioMoveの為に追加
+        [SerializeField] private RadioTalkingAnimation _radioTalkingAnimation;
+
+
         /// <summary>会話単体と本編用Controllerを同じScopeへ登録する</summary>
         /// <param name="builder">このシーンの登録先</param>
         /// <example>親にGameLifetimeScopeを指定し、UI、主人公、TriggersをInspectorで設定する</example>
         protected override void Configure(IContainerBuilder builder)
         {
-            builder.RegisterDialogue(_dialogueView);
+            builder.RegisterDialogue(_dialogueView, _radioTalkingAnimation);
             builder.RegisterComponent(_playerInputReader);
+
             builder.Register<GameplayDialogueController>(Lifetime.Scoped);
 
             // 自動再生は呼び出し側に置き、会話単体のサービスから分離する
@@ -42,5 +47,6 @@ namespace LifetimeScopes
                 }
             });
         }
+
     }
 }

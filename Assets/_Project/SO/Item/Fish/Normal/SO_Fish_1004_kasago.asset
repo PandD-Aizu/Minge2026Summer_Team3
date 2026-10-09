@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c85d36ded3d64aa68e757458b8bc6a67, type: 3}
+  m_Name: SO_Fish_1004_kasago
+  m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Data.Fish.FishDefinition
+  itemId: 1000
+  itemName: "カサゴ"
+  description: "岩陰でじっとしている魚。岩だと思っていると、目が合う。"
+  _fishImage: {fileID: 21300000, guid: 004fcc43e108c4242a497f1b9bdf3ea1, type: 3}
+  _isAbnormal: 0
+  _miniGameSettings:
+  - {fileID: 11400000, guid: 4e889da42eb92484abd5453731d96544, type: 2}
+  - {fileID: 11400000, guid: 042d6b8879c971b4298a9f27de569cee, type: 2}
+  - {fileID: 11400000, guid: 54b0f753b61930347a825a577c4900f8, type: 2}
+  - {fileID: 11400000, guid: c75eef024325c104995fae59f76c1323, type: 2}
+  _difficulty: 0
+  _gimmickType: 0
