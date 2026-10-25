@@ -37,6 +37,9 @@ namespace LifetimeScopes
             builder.Register<GameProgress>(Lifetime.Singleton);
             builder.Register<TutorialController>(Lifetime.Singleton);
 
+            // ゲーム内時計をすすめる
+            builder.RegisterEntryPoint<GameClock>();
+
             // 設定画面がなくても保存済みの音量を適用する
             builder.RegisterEntryPoint<FMODAudioInitializer>().AsSelf();
 

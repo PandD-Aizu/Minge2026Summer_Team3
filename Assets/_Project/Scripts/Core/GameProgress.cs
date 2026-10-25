@@ -1,12 +1,34 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using R3;
 namespace _Project.Scripts.Core
 {
-    public class GameProgress
+    public class GameProgress : IDisposable
     {
+        /// <summary>
+        /// 現在の日付、時間
+        /// </summary>
         public int CurrentDay { get; private set; } = 1;
         public TimeOfDay CurrentTimeOfDay { get; private set; } = TimeOfDay.Day;
+        private readonly ReactiveProperty<float> _gameSeconds = new(7f * 3600f);
+        private readonly ReadOnlyReactiveProperty<int> _gameHours;
+        public ReactiveProperty<float> GameSeconds => _gameSeconds;
+        public ReadOnlyReactiveProperty<int> GameHours => _gameHours;
+
+        private readonly IDisposable _timeOfDaySubscription;
         public int? LastCaughtFishId { get; private set; }
+
+        public GameProgress()
+        {
+            _gameHours = _gameSeconds
+                .Select(seconds => (int)(seconds / 3600f) % 24)
+                .ToReadOnlyReactiveProperty();
+
+            Observable<TimeOfDay> timeOfDayStream = _gameHours.Select(GetTimeOfDay);
+            _timeOfDaySubscription = timeOfDayStream
+                .DistinctUntilChanged() // 直前と同じ値が来たら省く、変わったら次へ行く
+                .Subscribe(ChangeTimeOfDay);
+        }
 
         /// <summary>最後に釣り成功した魚を全釣り場で共有する 戻り値はなし</summary>
         /// <param name="fishId">インベントリへ追加した魚のItemId</param>
@@ -18,6 +40,16 @@ namespace _Project.Scripts.Core
 
         private readonly HashSet<StoryFlag> storyFlags = new();
         private bool _captureReturnPending;
+
+
+        /// <summary>
+        /// ゲーム内時間を引数秒数進める
+        /// </summary>
+        /// <param name="seconds"></param>
+        public void AdvanceGameTimeSeconds(float seconds)
+        {
+            _gameSeconds.Value += seconds;
+        }
 
         /// <summary>捕獲から戻った後に再生する会話を予約する</summary>
         /// <example>FishingStageからCampStageへ移動する直前に呼ぶ</example>
@@ -82,6 +114,38 @@ namespace _Project.Scripts.Core
         public bool HasStoryFlag(StoryFlag storyFlag)
         {
             return storyFlags.Contains(storyFlag);
+        }
+
+        /// <summary>
+        /// ゲーム内時間(hour)から、その時刻の時間帯を判定する。
+        /// </summary>
+        /// <param name="seconds"></param>
+        /// <returns></returns>
+        private static TimeOfDay GetTimeOfDay(int hour)
+        {
+            if(hour >= 18 || hour < 5) return TimeOfDay.Night;
+            if(hour >= 16) return TimeOfDay.Evening;
+            if(hour >= 7)  return TimeOfDay.Day;
+            return TimeOfDay.Dawn;
+        }
+
+        private void ChangeTimeOfDay(TimeOfDay timeOfDay)
+        {
+            switch (timeOfDay)
+            {
+                case TimeOfDay.Day: StartDay(); break;
+                case TimeOfDay.Evening: StartEvening(); break;
+                case TimeOfDay.Night: StartNight(); break;
+                case TimeOfDay.Dawn: StartDawn(); break;
+            }
+        }
+
+        public void Dispose()
+        {
+            _gameHours.Dispose();
+            _gameSeconds.Dispose();
+            _timeOfDayChanged.Dispose();
+            _timeOfDaySubscription.Dispose();
         }
 
     }
