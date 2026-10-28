@@ -45,7 +45,18 @@ namespace LifetimeScopes
                 {
                     if (trigger != null) container.Inject(trigger);
                 }
+                if (_radioTalkingAnimation != null)
+                    _radioTalkingAnimation.ConfigureSignal(_playerInputReader.transform, HasRadioEvent);
             });
+        }
+
+        /// <summary>登録された会話対象に未消化のイベントが残っているか確認する</summary>
+        /// <returns>再生可能なイベントが一つでもあればtrue</returns>
+        private bool HasRadioEvent()
+        {
+            foreach (var trigger in _triggers)
+                if (trigger != null && trigger.HasAvailableEvent) return true;
+            return false;
         }
 
     }

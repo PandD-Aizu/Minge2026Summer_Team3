@@ -22,5 +22,14 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 042d6b8879c971b4298a9f27de569cee, type: 2}
   - {fileID: 11400000, guid: 042d6b8879c971b4298a9f27de569cee, type: 2}
   - {fileID: 11400000, guid: 042d6b8879c971b4298a9f27de569cee, type: 2}
+  _miniGameOptions:
+  - Type: 3
+    Weight: 1
+    Settings:
+    - {fileID: 11400000, guid: 042d6b8879c971b4298a9f27de569cee, type: 2}
+  - Type: 2
+    Weight: 1
+    Settings:
+    - {fileID: 11400000, guid: 694b09dcfc7146f41ac22cf82af6dec0, type: 2}
   _difficulty: 1
   _gimmickType: 0
