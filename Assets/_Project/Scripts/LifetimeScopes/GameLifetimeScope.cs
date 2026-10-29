@@ -57,6 +57,8 @@ namespace LifetimeScopes
             builder.Register<InventoryData.Inventory>(Lifetime.Singleton);
             builder.RegisterInstance(_itemCatalog);
             builder.RegisterComponentInNewPrefab(_gameOverPrefab, Lifetime.Singleton).UnderTransform(transform);
+
+
         }
     }
 }

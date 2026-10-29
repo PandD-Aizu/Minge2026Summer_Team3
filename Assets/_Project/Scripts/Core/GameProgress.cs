@@ -8,12 +8,17 @@ namespace _Project.Scripts.Core
         /// <summary>
         /// 現在の日付、時間
         /// </summary>
-        public int CurrentDay { get; private set; } = 1;
+
         public TimeOfDay CurrentTimeOfDay { get; private set; } = TimeOfDay.Day;
         private readonly ReactiveProperty<float> _gameSeconds = new(7f * 3600f);
         private readonly ReadOnlyReactiveProperty<int> _gameHours;
+        private readonly ReadOnlyReactiveProperty<int> _currentDay;
+        private readonly ReadOnlyReactiveProperty<int> _currentWeek;
         public ReactiveProperty<float> GameSeconds => _gameSeconds;
         public ReadOnlyReactiveProperty<int> GameHours => _gameHours;
+        public ReadOnlyReactiveProperty<int> CurrentDay => _currentDay;
+        public ReadOnlyReactiveProperty<int> CurrentWeek => _currentWeek;
+
 
         private readonly IDisposable _timeOfDaySubscription;
         public int? LastCaughtFishId { get; private set; }
@@ -22,6 +27,12 @@ namespace _Project.Scripts.Core
         {
             _gameHours = _gameSeconds
                 .Select(seconds => (int)(seconds / 3600f) % 24)
+                .ToReadOnlyReactiveProperty();
+            _currentDay = _gameSeconds
+                .Select(seconds => (int)(seconds / (3600f * 24f)) + 1)
+                .ToReadOnlyReactiveProperty();
+            _currentDay = _gameSeconds
+                .Select(seconds => (int)(seconds / ((3600f * 24f) * 7)) + 1)
                 .ToReadOnlyReactiveProperty();
 
             Observable<TimeOfDay> timeOfDayStream = _gameHours.Select(GetTimeOfDay);
@@ -95,11 +106,6 @@ namespace _Project.Scripts.Core
         {
             CurrentTimeOfDay = TimeOfDay.Dawn;
             _timeOfDayChanged.OnNext(TimeOfDay.Dawn);
-        }
-
-        public void AdvanceDay()
-        {
-            CurrentDay++;
         }
 
         /// <summary>
