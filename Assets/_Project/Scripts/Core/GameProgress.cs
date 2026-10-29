@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using R3;
+using UnityEngine;
+
 namespace _Project.Scripts.Core
 {
     public class GameProgress : IDisposable
@@ -31,7 +33,7 @@ namespace _Project.Scripts.Core
             _currentDay = _gameSeconds
                 .Select(seconds => (int)(seconds / (3600f * 24f)) + 1)
                 .ToReadOnlyReactiveProperty();
-            _currentDay = _gameSeconds
+            _currentWeek = _gameSeconds
                 .Select(seconds => (int)(seconds / ((3600f * 24f) * 7)) + 1)
                 .ToReadOnlyReactiveProperty();
 
@@ -60,6 +62,39 @@ namespace _Project.Scripts.Core
         public void AdvanceGameTimeSeconds(float seconds)
         {
             _gameSeconds.Value += seconds;
+        }
+
+        ///<summary>
+        /// ゲーム内時間を指定時刻まで進める
+        /// </summary>
+        public void AdvanceGameTimeHours(int hours)
+        {
+            if (hours < 0 || hours > 23)
+            {
+                Debug.Log("指定している時刻がおかしい");
+                return;
+            }
+
+            // 既に目的の時間帯なら、そのままにする
+            if (GetTimeOfDay(_gameHours.CurrentValue) == GetTimeOfDay(hours))
+                return;
+
+            float secondsPerDay = 24 * 3600f;  //一日の時間
+            float currentSeconds = _gameSeconds.Value;
+
+            // 今日の0時を基準に、指定のの時刻を求める
+            // 経過日数を求める(intで切り捨て) -> 1日分の秒数を掛けて０時にする
+            float dayStart = (int)(currentSeconds / secondsPerDay) * secondsPerDay;
+            // 指定時刻を求める
+            float targetSeconds = dayStart + hours * 3600f;
+
+            // 翌日に進める必要がある場合
+            if (targetSeconds < currentSeconds)
+                targetSeconds += secondsPerDay;
+
+            // 時間を巻き戻さず、必要な場合だけ進める
+            if (targetSeconds > currentSeconds)
+                AdvanceGameTimeSeconds(targetSeconds - currentSeconds); // 差分を代入
         }
 
         /// <summary>捕獲から戻った後に再生する会話を予約する</summary>
@@ -129,8 +164,8 @@ namespace _Project.Scripts.Core
         /// <returns></returns>
         private static TimeOfDay GetTimeOfDay(int hour)
         {
-            if(hour >= 18 || hour < 5) return TimeOfDay.Night;
-            if(hour >= 16) return TimeOfDay.Evening;
+            if(hour >= 19 || hour < 4) return TimeOfDay.Night;
+            if(hour >= 17) return TimeOfDay.Evening;
             if(hour >= 7)  return TimeOfDay.Day;
             return TimeOfDay.Dawn;
         }

@@ -102,7 +102,8 @@ namespace Controller
             {
                 _gameProgress.SetStoryFlag(StoryFlag.FirstFishingCompleted);
                 // 帰還までを夕方とし、キャンプ到着時に夜へ進める
-                _gameProgress.StartEvening();
+                _gameProgress.AdvanceGameTimeHours(17);
+                //_gameProgress.StartEvening();
                 SetStep(TutorialStep.ReturnToCollectionAtNight);
                 return true;
             }
@@ -124,7 +125,8 @@ namespace Controller
         {
             if (CurrentStep == TutorialStep.ReturnToCollectionAtNight)
             {
-                _gameProgress.StartNight();
+                _gameProgress.AdvanceGameTimeHours(19);
+                //_gameProgress.StartNight();
                 SetStep(TutorialStep.TalkToRadioBeforeFirstExchange);
                 return true;
             }

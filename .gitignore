@@ -122,3 +122,12 @@ InitTestScene*.unity*
 # If the source bank files are kept outside of the StreamingAssets folder then these can be ignored.
 # Log files can be ignored.
 fmod_editor.log
+
+# Keep generated mockups and screenshots local; share Markdown documents in Git.
+/Docs/GameLoopMockup/**/*.html
+/Docs/GameLoopMockup/**/*.htm
+/Docs/GameLoopMockup/**/*.png
+/Docs/GameLoopMockup/**/*.jpg
+/Docs/GameLoopMockup/**/*.jpeg
+/Docs/GameLoopMockup/**/*.webp
+/Docs/GameLoopMockup/**/*.gif

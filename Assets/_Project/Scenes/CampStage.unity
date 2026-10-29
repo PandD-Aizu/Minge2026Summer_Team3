@@ -7982,6 +7982,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameClockView
   _transformClockHand: {fileID: 1644384079}
+  _dayText: {fileID: 1949401636}
+  _weekText: {fileID: 693626141}
 --- !u!1001 &916622279
 PrefabInstance:
   m_ObjectHideFlags: 0

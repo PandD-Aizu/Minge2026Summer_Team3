@@ -26,9 +26,12 @@ public class GameTimeView : MonoBehaviour
         _gameProgress.CurrentDay
             .Subscribe(UpdateDayText)
             .AddTo(this);
+        _gameProgress.CurrentWeek
+            .Subscribe(UpdateWeekText)
+            .AddTo(this);
     }
 
-   // 時計の秒針を現実世界で12分で一周、ゲーム内時間で24時間で一周動かす
+   // 時計の秒針を現実世界で24分で一周、ゲーム内時間で24時間で一周動かす
     private void ChangeClockHand(float second)
     {
         // 時刻を0時以上24時未満へ収める
