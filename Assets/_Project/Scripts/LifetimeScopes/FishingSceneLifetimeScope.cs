@@ -1,4 +1,5 @@
 using _Project.Scripts.Enemy;
+using _Project.Scripts.Fishing;
 using _Project.Scripts.View;
 using Controller;
 using Dialogue;
@@ -16,6 +17,8 @@ namespace LifetimeScopes
     {
         [SerializeField] private PlayerInputReader _playerInputReader;
         [SerializeField] private RotationMiniGameView _rotationMiniGameView;
+        [SerializeField] private GaugeMiniGameView _gaugeMiniGameView;
+        [SerializeField] private FishingBiteSettings _fishingBiteSettings;
         [SerializeField] private MiniGameResultView _miniGameResultView;
         [SerializeField] private RotationMiniGameSettings _rotationMiniGameSettings;
         [SerializeField] private DialogueUIView _dialogueView;
@@ -33,6 +36,8 @@ namespace LifetimeScopes
             // シーン上のViewを登録
             _timeOfDayView.ConfigureLighting(_timeOfDayLighting);
             builder.RegisterComponent(_rotationMiniGameView);
+            builder.RegisterComponent(_gaugeMiniGameView);
+            builder.RegisterInstance(_fishingBiteSettings);
             builder.RegisterComponent(_miniGameResultView);
             builder.RegisterComponent(_timeOfDayView);
             builder.RegisterDialogue(_dialogueView);
@@ -41,14 +46,19 @@ namespace LifetimeScopes
             // 設定用のScriptableObjectを登録
             builder.RegisterInstance(_rotationMiniGameSettings);
 
-            // ミニゲーム単体のControllerを登録
-            builder.Register<RotationMiniGameController>(Lifetime.Scoped)
+            // 子の釣り場Scopeから解決しても、シーン内で同じ実行元と進行管理を共有する
+            builder.Register<RotationMiniGameController>(Lifetime.Singleton)
                 .AsSelf()
                 .As<IMiniGameController>();
+            builder.Register<GaugeMiniGameController>(Lifetime.Singleton).AsSelf().As<IMiniGameController>();
+            builder.Register<MiniGameRegistry>(Lifetime.Singleton);
+            builder.Register<MiniGameSelector>(Lifetime.Singleton);
+            builder.Register<FishingBiteController>(Lifetime.Singleton);
+            builder.Register<FishingFlowPresenter>(Lifetime.Singleton);
 
             // ミニゲーム全体の進行と結果表示を登録
-            builder.Register<MiniGameResultPresenter>(Lifetime.Scoped);
-            builder.Register<MiniGameFlowPresenter>(Lifetime.Scoped);
+            builder.Register<MiniGameResultPresenter>(Lifetime.Singleton);
+            builder.Register<MiniGameFlowPresenter>(Lifetime.Singleton);
 
             // テスト用
             //builder.RegisterEntryPoint<RotationMiniGameTestEntryPoint>();

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: SO_Fish_1006_madai
   m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Data.Fish.FishDefinition
   itemId: 1006
-  itemName: "マダイ"
-  description: "お祝いの席によく呼ばれる魚。本人にめでたいことがあったわけではない。"
+  itemName: "\u30DE\u30C0\u30A4"
+  description: "\u304A\u795D\u3044\u306E\u5E2D\u306B\u3088\u304F\u547C\u3070\u308C\u308B\u9B5A\u3002\u672C\u4EBA\u306B\u3081\u3067\u305F\u3044\u3053\u3068\u304C\u3042\u3063\u305F\u308F\u3051\u3067\u306F\u306A\u3044\u3002"
   _fishImage: {fileID: 21300000, guid: 984c81f43dd1b6244b4afbeb6b397ba8, type: 3}
   _isAbnormal: 0
   _miniGameSettings:
@@ -22,5 +22,17 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 042d6b8879c971b4298a9f27de569cee, type: 2}
   - {fileID: 11400000, guid: 54b0f753b61930347a825a577c4900f8, type: 2}
   - {fileID: 11400000, guid: c75eef024325c104995fae59f76c1323, type: 2}
+  _miniGameOptions:
+  - Type: 3
+    Weight: 1
+    Settings:
+    - {fileID: 11400000, guid: 4e889da42eb92484abd5453731d96544, type: 2}
+    - {fileID: 11400000, guid: 042d6b8879c971b4298a9f27de569cee, type: 2}
+    - {fileID: 11400000, guid: 54b0f753b61930347a825a577c4900f8, type: 2}
+    - {fileID: 11400000, guid: c75eef024325c104995fae59f76c1323, type: 2}
+  - Type: 2
+    Weight: 1
+    Settings:
+    - {fileID: 11400000, guid: 855e01dba6fd4f44e86bdcc23ece6764, type: 2}
   _difficulty: 0
   _gimmickType: 0

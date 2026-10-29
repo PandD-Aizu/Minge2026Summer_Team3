@@ -13,10 +13,76 @@ namespace _Project.Scripts.Fishing
         [SerializeField] private SpriteRenderer _visual;
         [SerializeField] private InteractableConnector _connector;
         [SerializeField] private FishRippleEmitter _ripples;
+        [SerializeField, Tooltip("Sprite矩形内の頭の位置、左下が(0,0)、右上が(1,1)")]
+        private Vector2 _headPoint = new(0.95f, 0.5f);
 
         private float _rippleSize;
 
         public bool IsPlayerNearby => _connector.IsPlayerNearby;
+
+        /// <summary>Spriteの大きさ、ピボット、表示倍率を反映した頭のワールド座標</summary>
+        public Vector3 HeadPosition
+        {
+            get
+            {
+                if (_visual == null || _visual.sprite == null) return transform.position;
+                Bounds bounds = _visual.sprite.bounds;
+                Vector3 point = new(
+                    Mathf.Lerp(bounds.min.x, bounds.max.x, Mathf.Clamp01(_headPoint.x)),
+                    Mathf.Lerp(bounds.min.y, bounds.max.y, Mathf.Clamp01(_headPoint.y)), 0f);
+                if (_visual.flipX) point.x = -point.x;
+                if (_visual.flipY) point.y = -point.y;
+                return _visual.transform.TransformPoint(point);
+            }
+        }
+
+        /// <summary>魚影の頭が向いている海面上の方向</summary>
+        public Vector3 HeadDirection
+        {
+            get
+            {
+                Vector3 direction = HeadPosition - VisualCenter;
+                direction.y = 0f;
+                return direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.right;
+            }
+        }
+
+        /// <summary>ピボットや子Transformのオフセットを含む魚影の中心</summary>
+        public Vector3 VisualCenter
+        {
+            get
+            {
+                if (_visual == null || _visual.sprite == null) return transform.position;
+                Vector3 center = _visual.sprite.bounds.center;
+                if (_visual.flipX) center.x = -center.x;
+                if (_visual.flipY) center.y = -center.y;
+                return _visual.transform.TransformPoint(center);
+            }
+        }
+
+        /// <summary>接近判定を回さず、魚影の頭を進行方向へ向ける</summary>
+        /// <param name="direction">海面上の進行方向、Y成分は無視する</param>
+        /// <param name="maxDegrees">この更新で回転できる最大角度</param>
+        /// <example>FaceDirection(displacement, 180f * Time.deltaTime)</example>
+        public void FaceDirection(Vector3 direction, float maxDegrees)
+        {
+            direction.y = 0f;
+            if (_visual == null || direction.sqrMagnitude < 0.0001f) return;
+
+            // 実際の頭方向との差分を回転させ、素材の左右反転にも追従する
+            float angle = Vector3.SignedAngle(HeadDirection, direction, Vector3.up);
+            float step = Mathf.Clamp(angle, -Mathf.Max(0f, maxDegrees), Mathf.Max(0f, maxDegrees));
+            _visual.transform.rotation = Quaternion.AngleAxis(step, Vector3.up) * _visual.transform.rotation;
+        }
+
+        /// <summary>頭を指定位置へ合わせるための魚影ルート座標を求める</summary>
+        /// <param name="headPosition">頭の目標ワールド座標</param>
+        /// <returns>表示用の高さオフセットも含めて頭を合わせたルート座標</returns>
+        /// <example>transform.position = RootPositionForHead(bobberPosition)</example>
+        public Vector3 RootPositionForHead(Vector3 headPosition)
+        {
+            return transform.position + headPosition - HeadPosition;
+        }
 
         /// <summary>現在位置へ出現時または移動中の波紋を発生させる</summary>
         /// <param name="isAppearance">出現波ならtrue、移動による航跡ならfalse</param>

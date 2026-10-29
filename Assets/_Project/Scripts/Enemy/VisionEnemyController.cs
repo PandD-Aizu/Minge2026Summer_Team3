@@ -115,7 +115,8 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
         UpdateHeartbeat();
         UpdateCloseEnemy();
         _staticOverlay?.SetIntensity(_view.GetStaticIntensity(
-            Vector3.Distance(_view.Position, _player.PlayerPosition.position)), _view.GlitchStrength);
+            Vector3.Distance(_view.Position, _player.PlayerPosition.position)), _view.GlitchStrength,
+            _view.StaticFadeInDuration);
     }
 
     /// <summary>逃げ切り時に攻撃と移動を止め、透明化を始める</summary>
