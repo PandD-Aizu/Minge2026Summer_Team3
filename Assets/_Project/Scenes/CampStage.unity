@@ -9440,7 +9440,9 @@ MonoBehaviour:
   moveFrequency: 8
   tiltAngle: 3
   returnSpeed: 8
-  enableDebugKey: 0
+  scaleAmplitude: 0.09
+  noiseDistance: 5
+  noiseVolume: 0.035
 --- !u!1001 &1185505479
 PrefabInstance:
   m_ObjectHideFlags: 0

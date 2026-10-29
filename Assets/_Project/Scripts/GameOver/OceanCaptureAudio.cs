@@ -85,6 +85,38 @@ public sealed class OceanCaptureAudio : IDisposable
         }
     }
 
+    /// <summary>入水音だけを再生し、捕獲用の音量減衰や水中フィルターは適用しない</summary>
+    /// <param name="volume">再生音量、0から1</param>
+    /// <example>釣り上げ時にPlaySplash(0.5f)を呼び、演出終了時にDisposeする</example>
+    public void PlaySplash(float volume)
+    {
+        if (!RuntimeManager.IsInitialized || !_sound.hasHandle()) return;
+        var system = RuntimeManager.CoreSystem;
+        if (system.getMasterChannelGroup(out _master) != RESULT.OK) return;
+
+        // 音量を設定してから再生し、先頭だけ大音量になることを防ぐ
+        if (_channel.hasHandle()) _channel.stop();
+        if (system.playSound(_sound, _master, true, out _channel) != RESULT.OK) return;
+        SetSplashVolume(volume);
+        _channel.setPaused(false);
+    }
+
+    /// <summary>水しぶきの音量にSEとMasterの設定を反映する</summary>
+    /// <param name="volume">フェードを含めた再生音量、0から1</param>
+    /// <example>釣り上げ音の末尾で0へ近づけ、自然に音を止める</example>
+    public void SetSplashVolume(float volume)
+    {
+        if (!RuntimeManager.IsInitialized || !_channel.hasHandle()) return;
+
+        // Core APIの音はStudioのVCAを通らないため、設定された音量を明示的に反映する
+        float gain = Mathf.Clamp01(volume);
+        if (RuntimeManager.StudioSystem.getVCA("vca:/Master", out var master) == RESULT.OK &&
+            master.getVolume(out float masterVolume) == RESULT.OK) gain *= masterVolume;
+        if (RuntimeManager.StudioSystem.getVCA("vca:/SE", out var se) == RESULT.OK &&
+            se.getVolume(out float seVolume) == RESULT.OK) gain *= seVolume;
+        _channel.setVolume(gain);
+    }
+
     /// <summary>水中へ入る深さに合わせて音をくぐもらせる</summary>
     /// <param name="amount">0で通常、1で水中の音</param>
     /// <example>入水後にUpdateMuffling(progress)を呼ぶ</example>

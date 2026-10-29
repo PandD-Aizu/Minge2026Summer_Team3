@@ -14,7 +14,7 @@ public class RotationMiniGameView : MonoBehaviour
     private RotationMiniGameSettings _settings;
     private bool _isRotating;
 
-    void Start()
+    void Awake()
     {
         _canvas.enabled = false;
     }

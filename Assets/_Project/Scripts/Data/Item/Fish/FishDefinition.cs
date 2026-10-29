@@ -19,8 +19,12 @@ namespace _Project.Scripts.Data.Fish
         [SerializeField, Tooltip("チェックすると異形魚として扱う 未チェックなら普通の魚")]
         private bool _isAbnormal;
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private MiniGameSettings[] _miniGameSettings;
+
+        [Header("ミニゲーム抽選 種類ごとに1行登録する")]
+        [SerializeField] private MiniGameOption[] _miniGameOptions;
+        public MiniGameOption[] MiniGameOptions => _miniGameOptions;
 
         [Header("表示用の難易度")]
         [SerializeField]
@@ -37,9 +41,5 @@ namespace _Project.Scripts.Data.Fish
         public Difficulty Difficulty => _difficulty;
         public FishingGimmickType GimmickType => _gimmickType;
 
-        public MiniGameSettings SelectMiniGameRandom()
-        {
-            return _miniGameSettings[Random.Range(0, _miniGameSettings.Length)];
-        }
     }
 }
