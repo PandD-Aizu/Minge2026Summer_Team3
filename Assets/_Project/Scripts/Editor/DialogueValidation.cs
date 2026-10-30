@@ -111,17 +111,20 @@ public static class DialogueValidation
         input.Construct(actions, menuInput);
         var savePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "dialogue-" + Guid.NewGuid() + ".json");
         var save = new SaveSettings.SaveService(savePath);
-        using var controller = new GameplayDialogueController(service, input, save);
+        var clock = new Controller.ClockController();
+        using var controller = new GameplayDialogueController(service, input, save, clock);
         try
         {
             Check(input.CanStartGameplayAction, "player ready");
             Check(Result(controller.PlayAsync(empty)) == DialogueResult.Rejected, "invalid request rejected");
             Check(!input.IsGameplayInputBlocked && input.CanStartGameplayAction, "invalid request releases input");
+            Check(!clock.IsPaused, "invalid request releases clock");
 
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
             InputSystem.Update();
             Check(input.MoveInput.sqrMagnitude > 0f, "real movement input");
             var play = controller.PlayAsync(data);
+            Check(clock.IsPaused, "dialogue pauses clock");
             Check(input.IsGameplayInputBlocked && input.MoveInput == Vector2.zero, "movement blocked");
             Check(Result(controller.PlayAsync(data)) == DialogueResult.Rejected, "controller double start");
             var interactions = 0;
@@ -139,6 +142,7 @@ public static class DialogueValidation
                 service.Advance();
                 service.Advance();
                 Check(Result(play) == DialogueResult.Completed && !input.IsGameplayInputBlocked, "completed unlock");
+                Check(!clock.IsPaused, "completed dialogue releases clock");
                 Check(input.MoveInput == Vector2.zero, "other movement owner preserved");
                 Check(Result(controller.PlayAsync(data)) == DialogueResult.Rejected, "shop busy rejected");
             }
@@ -148,6 +152,17 @@ public static class DialogueValidation
             var interrupted = controller.PlayAsync(data, cancellation.Token);
             cancellation.Cancel();
             Check(Result(interrupted) == DialogueResult.Canceled && input.CanStartGameplayAction, "cancel unlock");
+            Check(!clock.IsPaused, "canceled dialogue releases clock");
+
+            // 会話以外の停止は、会話の正常終了や開始拒否では解除しない
+            using (clock.Pause())
+            {
+                var overlapping = controller.PlayAsync(data);
+                service.Advance();
+                service.Advance();
+                Check(Result(overlapping) == DialogueResult.Completed && clock.IsPaused, "other clock owner preserved");
+            }
+            Check(!clock.IsPaused, "all clock owners released");
 
             ValidateSaveHistory(data, empty, service, controller, input, save, savePath);
 
@@ -157,6 +172,7 @@ public static class DialogueValidation
             var dying = controller.PlayAsync(data);
             controller.Dispose();
             Check(Result(dying) == DialogueResult.Canceled && !input.IsGameplayInputBlocked, "scope dispose unlock");
+            Check(!clock.IsPaused, "scope dispose releases clock");
         }
         finally
         {
@@ -204,7 +220,8 @@ public static class DialogueValidation
 
         // インスタンスを作り直し、メモリではなくファイルから履歴を復元する
         using (var reloadedService = new DialogueService())
-        using (var reloaded = new GameplayDialogueController(reloadedService, input, new SaveSettings.SaveService(savePath)))
+        using (var reloaded = new GameplayDialogueController(reloadedService, input, new SaveSettings.SaveService(savePath),
+            new Controller.ClockController()))
         {
             Check(Result(reloaded.PlayAsync(data)) == DialogueResult.Skipped, "history survives reload");
             Check(!reloadedService.IsPlaying && input.CanStartGameplayAction, "skip leaves input untouched");

@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using Controller;
 using Cysharp.Threading.Tasks;
 using SaveSettings;
 using UnityEngine;
@@ -12,8 +13,10 @@ namespace Dialogue
         private readonly DialogueService _dialogue;
         private readonly PlayerInputReader _input;
         private readonly SaveService _save;
+        private readonly ClockController _clockController;
         private readonly CancellationTokenSource _lifetime = new();
         private IDisposable _inputBlock;
+        private IDisposable _clockPause;
         private bool _playing;
         private bool _disposed;
 
@@ -24,12 +27,15 @@ namespace Dialogue
         /// <param name="dialogue">共通の会話サービス</param>
         /// <param name="input">操作を制限する主人公</param>
         /// <param name="save">会話の表示履歴を保存するサービス</param>
+        /// <param name="clockController">会話中の時計を停止する共有Controller</param>
         /// <example>シーンのLifetimeScopeに登録してVContainerから生成する</example>
-        public GameplayDialogueController(DialogueService dialogue, PlayerInputReader input, SaveService save)
+        public GameplayDialogueController(DialogueService dialogue, PlayerInputReader input, SaveService save,
+            ClockController clockController)
         {
             _dialogue = dialogue;
             _input = input;
             _save = save;
+            _clockController = clockController;
         }
 
         /// <summary>操作を制限して会話を再生し、終了理由にかかわらず自分の制限を解除する</summary>
@@ -57,6 +63,7 @@ namespace Dialogue
             try
             {
                 // 歩行だけでなく、背後の釣り・交換・インベントリ入力も止める
+                _clockPause = _clockController.Pause();
                 _inputBlock = _input.BlockGameplayInput();
                 var playback = _dialogue.PlayAsync(data, cancellation.Token);
 
@@ -71,6 +78,8 @@ namespace Dialogue
             }
             finally
             {
+                _clockPause?.Dispose();
+                _clockPause = null;
                 _inputBlock?.Dispose();
                 _inputBlock = null;
                 _playing = false;
@@ -84,6 +93,8 @@ namespace Dialogue
             if (_disposed) return;
             _disposed = true;
             _lifetime.Cancel();
+            _clockPause?.Dispose();
+            _clockPause = null;
             _inputBlock?.Dispose();
             _inputBlock = null;
             _lifetime.Dispose();

@@ -35,6 +35,7 @@ namespace LifetimeScopes
 
             // チュートリアル進行
             builder.Register<GameProgress>(Lifetime.Singleton);
+            builder.Register<ClockController>(Lifetime.Singleton);
             builder.Register<TutorialController>(Lifetime.Singleton);
 
             // ゲーム内時計をすすめる

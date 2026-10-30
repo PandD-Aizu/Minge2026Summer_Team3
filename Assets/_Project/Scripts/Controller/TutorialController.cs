@@ -1,13 +1,16 @@
+using System;
 using _Project.Scripts.Core;
 using R3;
 
 namespace Controller
 {
     /// <summary>チュートリアル中に起きた出来事を受け取り、現在の段階を進める</summary>
-    public class TutorialController
+    public class TutorialController : IDisposable
     {
         private readonly GameProgress _gameProgress;
+        private readonly ClockController _clockController;
         private readonly Subject<TutorialStep> _stepChanged = new();
+        private IDisposable _clockPause;
 
         public TutorialStep CurrentStep { get; private set; } = TutorialStep.TalkToRadioFirst;
         public Observable<TutorialStep> OnStepChanged => _stepChanged;
@@ -27,10 +30,13 @@ namespace Controller
 
         /// <summary>時間帯などのゲーム進行データを受け取る</summary>
         /// <param name="gameProgress">日数や時間帯を保持する進行データ</param>
+        /// <param name="clockController">チュートリアル中の時計を停止する共有Controller</param>
         /// <example>GameLifetimeScopeでSingleton登録して生成する</example>
-        public TutorialController(GameProgress gameProgress)
+        public TutorialController(GameProgress gameProgress, ClockController clockController)
         {
             _gameProgress = gameProgress;
+            _clockController = clockController;
+            UpdateClockPause();
         }
 
         /// <summary>ラジオに話しかけたことを通知し、該当する段階なら次へ進める</summary>
@@ -103,7 +109,6 @@ namespace Controller
                 _gameProgress.SetStoryFlag(StoryFlag.FirstFishingCompleted);
                 // 帰還までを夕方とし、キャンプ到着時に夜へ進める
                 _gameProgress.AdvanceGameTimeHours(17);
-                //_gameProgress.StartEvening();
                 SetStep(TutorialStep.ReturnToCollectionAtNight);
                 return true;
             }
@@ -126,15 +131,14 @@ namespace Controller
             if (CurrentStep == TutorialStep.ReturnToCollectionAtNight)
             {
                 _gameProgress.AdvanceGameTimeHours(19);
-                //_gameProgress.StartNight();
                 SetStep(TutorialStep.TalkToRadioBeforeFirstExchange);
                 return true;
             }
 
             if (CurrentStep != TutorialStep.ReturnFromNightFishing) return false;
 
-            // 夜釣りを終えて帰還したら、最後のラジオ会話を明け方に行う
-            _gameProgress.StartDawn();
+            // 最後のラジオ会話を翌4時に行い、時計・日付・明け方の見た目を一致させる
+            _gameProgress.AdvanceGameTimeHours(4);
             SetStep(TutorialStep.TalkToRadioAfterNightFishing);
             return true;
         }
@@ -180,7 +184,33 @@ namespace Controller
             if (CurrentStep == next) return;
 
             CurrentStep = next;
+            UpdateClockPause();
             _stepChanged.OnNext(next);
+        }
+
+        /// <summary>チュートリアル中は自然な時間進行を止め、完了後に自分の停止要求を解除する</summary>
+        /// <example>初期化時とSetStepから呼び、他の会話や画面の停止要求は維持する</example>
+        private void UpdateClockPause()
+        {
+            // 釣りや移動にかける時間によらず、出来事による明示的な時刻更新だけを使う
+            if (IsCompleted)
+            {
+                _clockPause?.Dispose();
+                _clockPause = null;
+            }
+            else
+            {
+                _clockPause ??= _clockController.Pause();
+            }
+        }
+
+        /// <summary>Root破棄時にチュートリアルが所有する停止要求と段階通知を解放する</summary>
+        /// <example>GameLifetimeScopeの破棄時、検証ではusingで呼ぶ</example>
+        public void Dispose()
+        {
+            _clockPause?.Dispose();
+            _clockPause = null;
+            _stepChanged.Dispose();
         }
     }
 }

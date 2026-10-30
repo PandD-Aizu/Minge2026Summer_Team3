@@ -136,7 +136,7 @@ public static class CampNavigationSetup
 
         // 本番のPresenterでラジオ会話完了直後の切り替えと初回交換後の消灯を確認する
         var service = new NavigationArrowService(player, radio.position, target.position);
-        var tutorial = new TutorialController(new _Project.Scripts.Core.GameProgress());
+        using var tutorial = new TutorialController(new _Project.Scripts.Core.GameProgress(), new Controller.ClockController());
         var view = scope.GetComponent<NavigationArrowView>();
         var presenter = new Presentation.NavigationArrowPresenter(view, service, tutorial);
         var existingParticles = view.GetComponentInChildren<ParticleSystem>();
@@ -218,7 +218,7 @@ public static class CampNavigationSetup
         Debug.Log($"Navigation path validated: {corners.Length} corners: {string.Join(", ", corners)}");
 
         // 本番と同じPresenterで、初回表示と会話後の消灯を検証する
-        var tutorial = new TutorialController(new _Project.Scripts.Core.GameProgress());
+        using var tutorial = new TutorialController(new _Project.Scripts.Core.GameProgress(), new Controller.ClockController());
         var view = UnityEngine.Object.FindFirstObjectByType<NavigationArrowView>();
         var presenter = new Presentation.NavigationArrowPresenter(view, service, tutorial);
         presenter.LateTick();
