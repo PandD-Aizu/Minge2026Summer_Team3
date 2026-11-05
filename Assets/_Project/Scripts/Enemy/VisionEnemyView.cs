@@ -15,6 +15,7 @@ public sealed class VisionEnemyView : MonoBehaviour
     [SerializeField, Min(0.01f)] private float _staticFarDistance = 15f;
     [SerializeField, Range(0f, 1f)] private float _staticMinIntensity = 0.08f;
     [SerializeField, Range(0f, 1f)] private float _staticMaxIntensity = 0.55f;
+    [SerializeField, Min(0f)] private float _staticFadeInDuration = 0.8f;
     [SerializeField, Min(0f)] private float _staticFadeOutDuration = 1.5f;
     [SerializeField, Range(0f, 1f)] private float _glitchStrength = 0.6f;
     [Header("逃げ切りと再発見")]
@@ -51,6 +52,7 @@ public sealed class VisionEnemyView : MonoBehaviour
     public float CloakFadeDuration => Mathf.Max(0.1f, _cloakFadeDuration);
     public float MoveSpeed => _enemyDefinition != null ? _enemyDefinition.MoveSpeed : 0f;
     public EventReference BiteSound => _biteSound;
+    public float StaticFadeInDuration => Mathf.Max(0f, _staticFadeInDuration);
     public float StaticFadeOutDuration => Mathf.Max(0f, _staticFadeOutDuration);
     public float GlitchStrength => Mathf.Clamp01(_glitchStrength);
     public float HeartbeatRippleStrength => _heartbeatRippleStrength;

@@ -1,0 +1,4 @@
+Generator: built-in image_gen (2026-11-05)
+Prompt: Create a single seashell currency icon for a Japanese coastal fishing game UI. A warm ivory scallop shell with soft sandy gold shading, defined radial ribs and a dark muted brown outline, hand painted pixel-art-inspired game inventory sprite, simple silhouette legible at 32 pixels. Front view, centered, entire shell visible with generous transparent margin. No text, numbers, badge, coins, background or cast shadow. Square canvas. Save generated asset for Unity project use.
+Transparent background: true
+Original generated PNG preserved, Unity importer maximum size 256

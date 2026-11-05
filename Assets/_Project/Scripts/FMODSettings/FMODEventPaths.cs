@@ -29,8 +29,9 @@ namespace FMODSettings
         public static readonly FMODEventPath SE_OLD_DOOR_OPEN = new ("event:/SE/OldDoorOpen");
         public static readonly FMODEventPath SE_PLAYER_DEATH = new ("event:/SE/PlayerDeath");
         public static readonly FMODEventPath SE_PLAYER_DEATH_VOICE = new ("event:/SE/PlayerDeathVoice");
+        public static readonly FMODEventPath SE_WALK_CONC = new ("event:/SE/WalkConc");
         public static readonly FMODEventPath SE_WALK_FOREST = new ("event:/SE/WalkForest");
-        public static readonly FMODEventPath SE_WALK_SEA = new ("event:/SE/WalkSea");
+        public static readonly FMODEventPath SE_WALK_SAND = new ("event:/SE/WalkSand");
         public static readonly FMODEventPath TEST_BGM = new ("event:/TestBGM");
         public static readonly FMODEventPath TEST_SE = new ("event:/TestSE");
     }

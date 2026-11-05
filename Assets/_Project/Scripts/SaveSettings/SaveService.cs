@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using VContainer;
 using UnityEngine;
@@ -9,6 +9,7 @@ namespace SaveSettings
     {
         private const string SaveFileName = "GameData.json";
         private readonly string _savePath;
+        public bool Exists => File.Exists(_savePath);
 
         /// <summary>通常のゲーム用セーブ先を使用する</summary>
         /// <example>VContainerがRoot Scopeで生成する</example>

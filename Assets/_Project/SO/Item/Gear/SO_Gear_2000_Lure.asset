@@ -16,3 +16,4 @@ MonoBehaviour:
   itemName: Lure
   description: "\u652F\u7D66\u3055\u308C\u305F\u91E3\u308A\u7AFF\u3002"
   _gearImage: {fileID: 21300000, guid: ca47e00bc96be0440a0cd944201f16ca, type: 3}
+  _purchasePrice: 100

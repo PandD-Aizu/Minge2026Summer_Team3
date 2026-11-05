@@ -13,6 +13,8 @@ namespace _Project.Scripts.View
         [SerializeField] private Canvas _canvas;
         [SerializeField] private TextMeshProUGUI _resultText;
         [Header("釣り上げ演出")]
+        [SerializeField, Tooltip("敵の落水演出と共用する水しぶきのWAVデータ")]
+        private TextAsset _catchSplashSound;
         [SerializeField] private TMP_FontAsset _fishFont;
         [SerializeField] private Sprite _messageBackground;
         [SerializeField] private Sprite _fishBubble;
@@ -51,6 +53,9 @@ namespace _Project.Scripts.View
             _fishRoot.gameObject.SetActive(true);
             _fishHeader.gameObject.SetActive(false);
 
+            // 魚の表示開始に合わせ、入水音の冒頭だけを一度再生する
+            PlayCatchSplashAsync(cancellation).Forget();
+
             var outputCamera = Camera.main;
             var brain = outputCamera != null ? outputCamera.GetComponent<CinemachineBrain>() : null;
             var activeCamera = brain != null ? brain.ActiveVirtualCamera as CinemachineCamera : null;
@@ -75,7 +80,7 @@ namespace _Project.Scripts.View
                     if (player == null || !isActiveAndEnabled) break;
                     if (brain != null && !ReferenceEquals(brain.ActiveVirtualCamera, activeCamera)) break;
 
-                    // 結果表示中はActionMapが無効なので、演出内だけでJキーを確認する
+                    // 個別ゲームの終了後なので、演出内だけでスキップ用のJキーを確認する
                     // キャンセル例外にせず通常終了させ、魚の獲得後の進行通知を維持する
                     var keyboard = Keyboard.current;
                     bool skipRequested = false;
@@ -133,6 +138,27 @@ namespace _Project.Scripts.View
                 if (composer != null) composer.CameraDistance = originalDistance;
                 if (_fishCanvasGroup != null) _fishCanvasGroup.alpha = 0f;
                 if (_fishRoot != null) _fishRoot.gameObject.SetActive(false);
+            }
+        }
+
+        /// <summary>共用の入水音から短い水しぶきを再生し、水中の余韻に入る前に終了する</summary>
+        /// <param name="cancellation">シーン終了時に音も中断するトークン</param>
+        /// <returns>水しぶきの再生と音声リソースの解放までの待機</returns>
+        /// <example>魚の頭上表示を開始するときに一度だけ呼ぶ</example>
+        private async UniTask PlayCatchSplashAsync(CancellationToken cancellation)
+        {
+            if (_catchSplashSound == null || !FMODUnity.RuntimeManager.IsInitialized) return;
+            cancellation.ThrowIfCancellationRequested();
+
+            // 完了とキャンセルのどちらでもチャンネルを止めて音声メモリを解放する
+            using var audio = new OceanCaptureAudio(_catchSplashSound);
+            audio.PlaySplash(0.5f);
+            float elapsed = 0f;
+            while (elapsed < 0.8f)
+            {
+                await UniTask.Yield(PlayerLoopTiming.Update, cancellation);
+                elapsed += Time.unscaledDeltaTime;
+                audio.SetSplashVolume(0.5f * (1f - Mathf.InverseLerp(0.5f, 0.8f, elapsed)));
             }
         }
 

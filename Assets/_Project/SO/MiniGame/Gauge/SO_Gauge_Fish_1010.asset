@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce0a54e79067e244790dc649f6b49f15, type: 3}
+  m_Name: SO_Gauge_Fish_1010
+  m_EditorClassIdentifier: Assembly-CSharp::MiniGame.GaugeMiniGameSettings
+  BarSize: 0.2
+  InitialProgress: 0.35
+  GainPerSecond: 0.17
+  LossPerSecond: 0.18
+  GraceSeconds: 0.7
+  Motion: 1
+  HeightRange: {x: 0.1, y: 0.85}
+  FishSpeed: 0.65
+  FishAcceleration: 1.8
+  ChangeInterval: {x: 0.7, y: 1.6}
+  DartMultiplier: 2
+  DartSeconds: 0.25
+  LiftAcceleration: 2.8
+  Gravity: 1.8
+  MaxBarSpeed: 1.1
+  Bounce: 0.2

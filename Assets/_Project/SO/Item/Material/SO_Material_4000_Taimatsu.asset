@@ -16,3 +16,4 @@ MonoBehaviour:
   itemName: Taimatsu
   description: 
   _materialImage: {fileID: 0}
+  _purchasePrice: 100

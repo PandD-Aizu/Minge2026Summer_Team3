@@ -26,6 +26,9 @@ namespace LifetimeScopes
             builder.RegisterEntryPoint<TutorialCollectionReturnEntryPoint>();
             builder.RegisterEntryPoint<TimeOfDayPresenter>();
 
+            // 時計
+            builder.RegisterComponentInHierarchy<GameTimeView>();
+
             if (_pauseMenuView == null) return;
             if (_playerInputReader == null)
                 throw new InvalidOperationException("CampStageLifetimeScopeのPlayer Input Readerを設定してください");
@@ -33,6 +36,7 @@ namespace LifetimeScopes
             builder.RegisterComponent(_playerInputReader);
             builder.RegisterComponent(_pauseMenuView);
             builder.RegisterEntryPoint<PauseMenuPresenter>();
+
         }
     }
 }

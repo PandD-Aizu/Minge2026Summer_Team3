@@ -1,4 +1,5 @@
 using UnityEngine;
+using FMODUnity;
 
 /// <summary>PlayerVisualのQuadに移動方向と歩行フレームに応じた画像を表示する</summary>
 [DisallowMultipleComponent]
@@ -25,6 +26,8 @@ public sealed class PlayerAnimation : MonoBehaviour
     [SerializeField, Min(0.01f)] private float _secondsPerFrame = 0.12f;
     [SerializeField, Min(0f)] private float _minimumMoveSpeed = 0.05f;
 
+    private EventReference _walkSound;
+    private string _walkSoundPath;
     private CharacterController _characterController;
     private PlayerInputReader _inputReader;
     private Material _material;
@@ -37,6 +40,19 @@ public sealed class PlayerAnimation : MonoBehaviour
     private bool _isMirrored;
     private float _frameElapsed;
     private int _frameIndex;
+
+    /// <summary>Playerが配置されたステージに対応する足音を取得する</summary>
+    /// <example>CampStageではWalkSand、FishingStageではWalkConcを使用する</example>
+    private void Start()
+    {
+        // 対象外のシーンでは足音を鳴らさない
+        _walkSoundPath = gameObject.scene.name switch
+        {
+            "CampStage" => "event:/SE/WalkSand",
+            "FishingStage" => "event:/SE/WalkConc",
+            _ => null
+        };
+    }
 
     /// <summary>親の移動コンポーネントとQuad専用のマテリアルを取得する</summary>
     private void Awake()
@@ -65,6 +81,8 @@ public sealed class PlayerAnimation : MonoBehaviour
     /// <summary>移動が反映された後に向きと歩行画像を更新する</summary>
     private void LateUpdate()
     {
+        if (Time.deltaTime <= 0f) return;
+
         if (_cameraTransform == null)
         {
             Camera mainCamera = Camera.main;
@@ -85,7 +103,8 @@ public sealed class PlayerAnimation : MonoBehaviour
         }
 
         Facing nextFacing = GetFacing(movement);
-        if (!_wasMoving || nextFacing != _facing)
+        bool startedMoving = !_wasMoving;
+        if (startedMoving)
         {
             _frameElapsed = 0f;
             _frameIndex = 0;
@@ -101,15 +120,43 @@ public sealed class PlayerAnimation : MonoBehaviour
             return;
         }
 
+        // 向きが変わっても歩行の位相を維持し、足音の連打を防ぐ
+        _frameIndex %= frames.Length;
+        bool playStep = startedMoving;
         _frameElapsed += Time.deltaTime;
         while (_frameElapsed >= _secondsPerFrame)
         {
             _frameElapsed -= _secondsPerFrame;
             _frameIndex = (_frameIndex + 1) % frames.Length;
+            if (_frameIndex == 0) playStep = true;
         }
 
         Texture2D frame = frames[_frameIndex] != null ? frames[_frameIndex] : GetIdleTexture(_facing);
         ShowTexture(frame, _facing == Facing.Left);
+
+        // フレーム落ちで複数周しても同時に鳴らす足音は一つだけにする
+        if (playStep && _characterController.isGrounded) PlayWalkSound();
+    }
+
+    /// <summary>Bankのロード完了後、歩行フレームに同期して足音を一度再生する</summary>
+    /// <example>歩き始めと歩行アニメーションが一周したタイミングで呼ぶ</example>
+    private void PlayWalkSound()
+    {
+        if (_walkSoundPath == null || !RuntimeManager.HaveAllBanksLoaded) return;
+
+        if (_walkSound.IsNull)
+            _walkSound = RuntimeManager.PathToEventReference(_walkSoundPath);
+
+        if (!_walkSound.IsNull)
+            RuntimeManager.PlayOneShot(_walkSound, _characterController.transform.position);
+    }
+
+    /// <summary>再有効化時に歩行と足音を先頭フレームから再開できるようリセットする</summary>
+    private void OnDisable()
+    {
+        _wasMoving = false;
+        _frameElapsed = 0f;
+        _frameIndex = 0;
     }
 
     /// <summary>Quad用に生成されたマテリアルを破棄する</summary>

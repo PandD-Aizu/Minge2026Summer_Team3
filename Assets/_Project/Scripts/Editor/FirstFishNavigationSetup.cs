@@ -76,7 +76,7 @@ public static class FirstFishNavigationSetup
                 && (hit.position - path[i]).sqrMagnitude >= 0.0001f)
                 throw new InvalidOperationException("First fish route crosses an obstacle");
         }
-        var tutorial = new TutorialController(new _Project.Scripts.Core.GameProgress());
+        using var tutorial = new TutorialController(new _Project.Scripts.Core.GameProgress(), new Controller.ClockController());
         tutorial.NotifyRadioInteracted();
         var presenter = new NavigationArrowPresenter(view, service, tutorial);
         try

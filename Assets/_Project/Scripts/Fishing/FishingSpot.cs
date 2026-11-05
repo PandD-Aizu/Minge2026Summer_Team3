@@ -28,11 +28,13 @@ namespace _Project.Scripts.Fishing
         [Tooltip("Y軸方向のオフセット")]
         [SerializeField, Min(0.001f)] private float _surfaceOffset = 0.03f;
 
-        [Header("ゆらぎと波紋")]
-        [Tooltip("出現位置から動く最大距離、ローカル座標の単位")]
+        [Header("遊泳と波紋")]
+        [Tooltip("次の移動先までの最小距離の目安、出現範囲の半分より短い場合は半分を使う")]
         [SerializeField, Min(0f)] private float _movementDistance = 0.5f;
-        [Tooltip("出現位置から移動先へ往復する秒数")]
+        [Tooltip("出現範囲の対角線を往復する秒数、広さに応じて遊泳速度を決める")]
         [SerializeField, Min(0.1f)] private float _movementPeriod = 6f;
+        [SerializeField, Min(1f), Tooltip("遊泳中に頭を進行方向へ向ける速さ、度毎秒")]
+        private float _turnSpeed = 240f;
         [Tooltip("移動中の波紋を発生させる移動距離、ワールド座標の単位")]
         [SerializeField, Min(0.01f)] private float _rippleDistance = 0.12f;
 
@@ -59,37 +61,95 @@ namespace _Project.Scripts.Fishing
         private FishShadow _shadow;
         private CancellationTokenSource _spawnCancellation;
         private System.IDisposable _movementSubscription;
-        private Vector3 _movementStart;
         private Vector3 _movementTarget;
-        private float _movementTime;
         private float _distanceSinceRipple;
         private bool _isMoving;
+        private bool _isReserved;
+        private bool _fixedPosition;
+        private bool _returningToCenter;
+        private Vector3 _biteDirection;
 
         private IInteractableTarget _currentTarget;
         private FishingTargetProvider _targetProvider;
 
         // インタラクトできる魚影が出てるかどうか
-        public bool CanInteractShadow => _currentTarget != null && _currentTarget.CanInteract;
+        public bool CanInteractShadow => !_isReserved && _currentTarget != null && _currentTarget.CanInteract;
 
-        /// <summary>出現範囲内でゆっくり往復し、移動距離に応じて波紋を出す</summary>
+        /// <summary>釣り中の魚影を確保し、解放時に現在位置から遊泳を再開する</summary>
+        /// <returns>確保を解除するオブジェクト、確保できない場合はnull</returns>
+        /// <example>釣り開始時に保持し、共通フローのfinallyでDisposeする</example>
+        public System.IDisposable TryReserve()
+        {
+            if (!CanInteractShadow) return null;
+            _isReserved = true;
+            _returningToCenter = false;
+            _movementTarget = PickSwimTarget();
+            _shadow.SetInteractionAvailable(false);
+            return Disposable.Create(() =>
+            {
+                _isReserved = false;
+                if (this != null && isActiveAndEnabled && _shadow != null && _shadow.gameObject.activeSelf)
+                {
+                    // 中断後も古い経路へ瞬間移動させず、初回の魚だけ中央へ泳いで戻す
+                    _returningToCenter = _fixedPosition;
+                    _movementTarget = _fixedPosition ? Vector3.zero : PickSwimTarget();
+                    _shadow.SetInteractionAvailable(true);
+                }
+            });
+        }
+
+        /// <summary>浮きを投げる魚影の現在位置、未出現ならスポットの海面位置</summary>
+        public Vector3 CastPosition => _shadow != null ? _shadow.transform.position
+            : transform.position + Vector3.up * _surfaceOffset;
+
+        /// <summary>出現範囲を巡回し、初回の魚は中断後に中央へ戻す</summary>
         /// <example>魚影のルートを動かすため、接近判定とアイコンも同じ位置へ追従する</example>
         private void UpdateMovement()
         {
-            if (!_isMoving || _shadow == null || !_shadow.gameObject.activeInHierarchy) return;
+            if (_isReserved || (!_isMoving && !_returningToCenter)) return;
+            Swim(Time.deltaTime);
+        }
 
-            float deltaTime = Time.deltaTime;
-            if (deltaTime <= 0f) return;
+        /// <summary>確保中の魚を食いつき待ちの間も泳がせる</summary>
+        /// <param name="deltaTime">今回進めるゲーム時間</param>
+        /// <example>食いつきControllerの待機ループでSwimWhileWaiting(Time.deltaTime)を呼ぶ</example>
+        public void SwimWhileWaiting(float deltaTime)
+        {
+            if (_isReserved) Swim(deltaTime);
+        }
 
-            _movementTime += deltaTime;
-            float progress = (1f - Mathf.Cos(_movementTime * Mathf.PI * 2f / Mathf.Max(0.1f, _movementPeriod))) * 0.5f;
-            Vector3 next = transform.TransformPoint(Vector3.Lerp(_movementStart, _movementTarget, progress)) + Vector3.up * _surfaceOffset;
+        /// <summary>次の目的地へ進み、到着後に範囲内の離れた場所を選ぶ</summary>
+        /// <param name="deltaTime">今回進めるゲーム時間、0以下なら停止する</param>
+        /// <example>通常時と食いつき待ちで同じ遊泳処理を使う</example>
+        private void Swim(float deltaTime)
+        {
+            if (_shadow == null || !_shadow.gameObject.activeInHierarchy || deltaTime <= 0f) return;
+
+            Vector3 target = transform.TransformPoint(_movementTarget) + Vector3.up * _surfaceOffset;
+            Vector3 direction = target - _shadow.transform.position;
+            direction.y = 0f;
+            _shadow.FaceDirection(direction, _turnSpeed * deltaTime);
+            float speed = Mathf.Max(0.05f, _areaSize.magnitude * 2f / Mathf.Max(0.1f, _movementPeriod));
+            MoveShadow(Vector3.MoveTowards(_shadow.transform.position, target, speed * deltaTime), deltaTime);
+
+            if ((_shadow.transform.position - target).sqrMagnitude > 0.0001f) return;
+            if (_returningToCenter) _returningToCenter = false;
+            else _movementTarget = PickSwimTarget();
+        }
+
+        /// <summary>位置を反映し、実際に移動した距離に応じて波紋を出す</summary>
+        /// <param name="next">魚影ルートの次のワールド座標</param>
+        /// <param name="deltaTime">速度計算に使うゲーム時間</param>
+        /// <example>遊泳、浮きへの接近、突っつきで共用する</example>
+        private void MoveShadow(Vector3 next, float deltaTime)
+        {
             Vector3 displacement = next - _shadow.transform.position;
             _shadow.transform.position = next;
 
             // 海面上の実変位から速度を求め、停止や高さの変化だけで波紋を増やさない
             Vector2 planarDisplacement = new(displacement.x, displacement.z);
             float distance = planarDisplacement.magnitude;
-            if (distance <= 0f) return;
+            if (distance <= 0f || deltaTime <= 0f) return;
             _distanceSinceRipple += distance;
 
             // 発生間隔で待つ間も移動距離を保持し、登録後は余った距離だけを次へ引き継ぐ
@@ -99,6 +159,71 @@ namespace _Project.Scripts.Fishing
             {
                 _distanceSinceRipple %= rippleDistance;
             }
+        }
+
+        /// <summary>出現範囲全体から離れた目的地を選び、同じ短区間の往復を避ける</summary>
+        /// <returns>スポットのローカルX・Z範囲内の目的地</returns>
+        /// <example>魚影の準備時と目的地への到着時に呼ぶ</example>
+        private Vector3 PickSwimTarget()
+        {
+            Vector3 current = transform.InverseTransformPoint(_shadow.transform.position - Vector3.up * _surfaceOffset);
+            float desiredDistance = Mathf.Max(_movementDistance, _areaSize.magnitude * 0.5f);
+            Vector3 best = current;
+            float bestDistance = -1f;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector3 candidate = new(Random.Range(-0.5f, 0.5f) * Mathf.Abs(_areaSize.x), 0f,
+                    Random.Range(-0.5f, 0.5f) * Mathf.Abs(_areaSize.y));
+                float distance = (candidate - current).sqrMagnitude;
+                if (distance > bestDistance) { best = candidate; bestDistance = distance; }
+                if (distance >= desiredDistance * desiredDistance) break;
+            }
+            return best;
+        }
+
+        /// <summary>魚影を浮きへ向け、頭が接触する位置まで泳がせる</summary>
+        /// <param name="bobberPosition">着水先のワールド座標</param>
+        /// <param name="duration">接近にかけるゲーム時間</param>
+        /// <param name="cancellation">釣りの中断トークン</param>
+        /// <returns>頭が浮きの位置に到着するまでの待機</returns>
+        /// <example>await spot.ApproachBobberAsync(view.WaterPosition, settings.ApproachSeconds, token)</example>
+        public async UniTask ApproachBobberAsync(Vector3 bobberPosition, float duration, CancellationToken cancellation)
+        {
+            cancellation.ThrowIfCancellationRequested();
+            if (!_isReserved || _shadow == null) throw new System.InvalidOperationException("浮きへ近づく魚影が確保されていない");
+
+            Vector3 start = _shadow.transform.position;
+            _biteDirection = bobberPosition - _shadow.VisualCenter;
+            _biteDirection.y = 0f;
+            _biteDirection = _biteDirection.sqrMagnitude > 0.0001f ? _biteDirection.normalized : _shadow.HeadDirection;
+            float elapsed = 0f;
+            duration = Mathf.Max(0.1f, duration);
+            while (elapsed < duration)
+            {
+                await UniTask.Yield(PlayerLoopTiming.Update, cancellation);
+                if (_shadow == null || !_shadow.gameObject.activeInHierarchy)
+                    throw new System.InvalidOperationException("浮きへ近づく魚影が無効になった");
+                if (Time.deltaTime <= 0f) continue;
+                elapsed += Time.deltaTime;
+
+                // 最後までに必ず頭が浮きへ向き、中心ではなく頭の座標が一致するよう補正する
+                _shadow.FaceDirection(_biteDirection, 180f * Time.deltaTime / duration);
+                Vector3 target = _shadow.RootPositionForHead(bobberPosition);
+                MoveShadow(Vector3.Lerp(start, target, Mathf.SmoothStep(0f, 1f, elapsed / duration)), Time.deltaTime);
+            }
+            PokeBobber(bobberPosition, 0f);
+        }
+
+        /// <summary>頭を浮きに合わせた位置と少し後退した位置を往復する</summary>
+        /// <param name="bobberPosition">着水先のワールド座標</param>
+        /// <param name="retreatDistance">浮きから頭を離す距離、0なら接触する</param>
+        /// <example>浮きの上下動と同じ位相でPokeBobber(position, distance)を呼ぶ</example>
+        public void PokeBobber(Vector3 bobberPosition, float retreatDistance)
+        {
+            if (!_isReserved || _shadow == null || !_shadow.gameObject.activeInHierarchy) return;
+            _shadow.FaceDirection(_biteDirection, 180f);
+            Vector3 head = bobberPosition - _biteDirection * Mathf.Max(0f, retreatDistance);
+            MoveShadow(_shadow.RootPositionForHead(head), Time.deltaTime);
         }
 
         /// <summary>参照を確認して出現サイクルを開始する</summary>
@@ -151,8 +276,12 @@ namespace _Project.Scripts.Fishing
                 else
                     await WaitAsync(_visibleDuration, 0.01f, cancellationToken);
 
+                // 釣り中は同じ魚影を維持し、別の魚へ入れ替えない
+                await UniTask.WaitUntil(() => !_isReserved, cancellationToken: cancellationToken);
+
                 // プロンプトを閉じながら魚影を薄くし、完了後にインスタンスを無効化する
                 _isMoving = false;
+                _returningToCenter = false;
                 if (_shadow != null)
                 {
                     _shadow.SetInteractionAvailable(false);
@@ -165,7 +294,7 @@ namespace _Project.Scripts.Fishing
             } while (isActiveAndEnabled);
         }
 
-        /// <summary>再利用する魚影の外観と範囲内の往復経路を準備する</summary>
+        /// <summary>再利用する魚影の外観と範囲内の遊泳経路を準備する</summary>
         /// <param name="fixedPosition">初回の魚をスポット中央へ固定する場合はtrue</param>
         /// <example>各出現サイクルのフェードイン前に呼ぶ</example>
         private void PrepareShadow(bool fixedPosition)
@@ -187,19 +316,15 @@ namespace _Project.Scripts.Fishing
                 Random.Range(-Mathf.Abs(_areaSize.y), Mathf.Abs(_areaSize.y)) * 0.5f);
             if (fixedPosition) localPoint = Vector3.zero;
 
-            // 出現位置の近くを移動先に選び、岸側の範囲外へ出ないよう制限する
-            Vector2 direction = Random.insideUnitCircle.normalized * Mathf.Max(0f, _movementDistance);
-            _movementStart = localPoint;
-            _movementTarget = new Vector3(
-                Mathf.Clamp(localPoint.x + direction.x, -Mathf.Abs(_areaSize.x) * 0.5f, Mathf.Abs(_areaSize.x) * 0.5f),
-                0f,
-                Mathf.Clamp(localPoint.z + direction.y, -Mathf.Abs(_areaSize.y) * 0.5f, Mathf.Abs(_areaSize.y) * 0.5f));
-            _movementTime = 0f;
+            // 全範囲を遊泳に使い、初回の魚だけキャストまで中央で待機する
+            _fixedPosition = fixedPosition;
+            _returningToCenter = false;
             _distanceSinceRipple = 0f;
             _shadow.transform.position = transform.TransformPoint(localPoint) + Vector3.up * _surfaceOffset;
             _shadow.Configure(isBig ? _bigSprite : _smallSprite,
                 isBig ? _bigWidth : _smallWidth, _aspectCorrection,
                 Random.Range(Mathf.Min(_headingRange.x, _headingRange.y), Mathf.Max(_headingRange.x, _headingRange.y)));
+            _movementTarget = PickSwimTarget();
         }
 
         /// <summary>抽選した秒数だけゲーム時間で待機する</summary>
@@ -238,6 +363,7 @@ namespace _Project.Scripts.Fishing
             _spawnCancellation = null;
 
             _isMoving = false;
+            _returningToCenter = false;
             if (_shadow != null) _shadow.gameObject.SetActive(false);
         }
 

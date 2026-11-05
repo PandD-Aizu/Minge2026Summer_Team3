@@ -12,13 +12,16 @@ public sealed class OceanCaptureParticles : IDisposable
     private readonly Material _bubbleMaterial;
     private readonly System.Random _random = new(731);
     private float _bubbleBudget;
+    private readonly bool _useUnscaledTime;
 
     /// <summary>演出のシーンに専用のパーティクルと材質を用意する</summary>
     /// <param name="shader">ビルドにも含める飛沫と気泡のシェーダー</param>
     /// <param name="scene">所有するシーン</param>
+    /// <param name="useUnscaledTime">trueならポーズ中も再生し、falseならゲーム時間に合わせる</param>
     /// <example>主観カメラの起動時に生成する</example>
-    public OceanCaptureParticles(Shader shader, Scene scene)
+    public OceanCaptureParticles(Shader shader, Scene scene, bool useUnscaledTime = true)
     {
+        _useUnscaledTime = useUnscaledTime;
         _root = new GameObject("Ocean Capture VFX");
         SceneManager.MoveGameObjectToScene(_root, scene);
         _sprayMaterial = new Material(shader) { name = "Capture Spray" };
@@ -45,7 +48,7 @@ public sealed class OceanCaptureParticles : IDisposable
         main.loop = true;
         main.startSize3D = gravity > 0f;
         main.simulationSpace = ParticleSystemSimulationSpace.World;
-        main.useUnscaledTime = true;
+        main.useUnscaledTime = _useUnscaledTime;
         main.maxParticles = limit;
         main.gravityModifier = gravity;
         var emission = particles.emission;
@@ -73,17 +76,20 @@ public sealed class OceanCaptureParticles : IDisposable
     /// <summary>水面に接触した位置から王冠状に飛沫を飛ばす</summary>
     /// <param name="position">水面上の衝突位置</param>
     /// <param name="burst">タコの出現時は粒子数と高さ、広がりを強める</param>
-    /// <example>入水フレームに一度だけ呼ぶ</example>
-    public void Splash(Vector3 position, bool burst = false)
+    /// <param name="scale">飛沫の範囲、大きさ、勢いの倍率</param>
+    /// <example>釣り上げ時はSplash(position, false, 0.7f)を一度呼ぶ</example>
+    public void Splash(Vector3 position, bool burst = false, float scale = 1f)
     {
-        var force = burst ? 1.65f : 1f;
+        if (scale <= 0f) return;
+        if (!_splash.isPlaying) _splash.Play();
+        var force = (burst ? 1.65f : 1f) * scale;
         for (var i = 0; i < (burst ? 280 : 140); i++)
         {
             var angle = Range(0f, Mathf.PI * 2f);
             var outward = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
             var particle = new ParticleSystem.EmitParams
             {
-                position = position + outward * Range(0.15f, burst ? 1.1f : 0.6f),
+                position = position + outward * Range(0.15f, burst ? 1.1f : 0.6f) * scale,
                 velocity = (outward * Range(0.6f, 2.7f) + Vector3.up * Range(1.4f, 4.2f)) * force,
                 startLifetime = Range(0.35f, 1.1f),
                 startSize3D = new Vector3(Range(0.025f, 0.09f) * force, Range(0.08f, 0.25f) * force, 1f),
@@ -124,6 +130,15 @@ public sealed class OceanCaptureParticles : IDisposable
     /// <param name="max">最大値</param>
     /// <returns>範囲内の乱数</returns>
     private float Range(float min, float max) => Mathf.Lerp(min, max, (float)_random.NextDouble());
+
+    /// <summary>すべての粒子を消し、次回の放出まで停止する</summary>
+    /// <example>釣りのキャンセル時にClearを呼ぶ</example>
+    public void Clear()
+    {
+        if (_splash != null) _splash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        if (_bubbles != null) _bubbles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        _bubbleBudget = 0f;
+    }
 
     /// <summary>帰還や中断時に粒子と専用材質を解放する</summary>
     /// <example>カメラ演出のDeactivateから呼ぶ</example>

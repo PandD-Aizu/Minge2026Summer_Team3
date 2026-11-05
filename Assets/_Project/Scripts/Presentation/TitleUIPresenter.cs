@@ -1,4 +1,5 @@
 using System;
+using Controller;
 using Cysharp.Threading.Tasks;
 using Input;
 using R3;
@@ -20,12 +21,17 @@ namespace Presentation
         /// <param name="sceneLoadService">Addressablesのシーン読み込みサービス</param>
         /// <param name="titleUIView">タイトル画面のボタン</param>
         /// <param name="inputMode">背後のゲーム操作を停止するサービス</param>
+        /// <param name="clockController">タイトル表示中の時計を停止する共有Controller</param>
         /// <example>TitleLifetimeScopeのEntryPointとして生成する</example>
-        public TitleUIPresenter(SceneLoadService sceneLoadService, TitleUIView titleUIView, InputModeService inputMode)
+        public TitleUIPresenter(SceneLoadService sceneLoadService, TitleUIView titleUIView, InputModeService inputMode,
+            ClockController clockController)
         {
             _sceneLoadService = sceneLoadService;
             _titleUIView = titleUIView;
             _inputMode = inputMode;
+
+            // シーンの寿命と停止要求をそろえ、遷移失敗時もタイトル中の停止を維持する
+            clockController.Pause().AddTo(_disposables);
         }
 
         /// <summary>初期表示を整え、各ボタンの操作を購読する</summary>
@@ -74,7 +80,7 @@ namespace Presentation
 #endif
         }
 
-        /// <summary>タイトルの破棄時にボタンの購読を解除する</summary>
+        /// <summary>タイトルの破棄時にボタンの購読と時計の停止要求を解除する</summary>
         /// <example>シーン遷移時にVContainerから呼ばれる</example>
         public void Dispose()
         {

@@ -10,7 +10,7 @@ public class FishingInteractPresenter : IDisposable, IInitializable
     private readonly PlayerInputReader _inputReader;
     private readonly FishingSpot _fishingSpot;
     private readonly FishingTargetProvider _targetProvider;
-    private readonly MiniGameFlowPresenter _miniGameFlowPresenter;
+    private readonly FishingFlowPresenter _fishingFlowPresenter;
 
     private readonly CompositeDisposable _disposables = new();
 
@@ -18,12 +18,12 @@ public class FishingInteractPresenter : IDisposable, IInitializable
         PlayerInputReader inputReader,
         FishingSpot fishingSpot,
         FishingTargetProvider targetProvider,
-        MiniGameFlowPresenter miniGameFlowPresenter)
+        FishingFlowPresenter fishingFlowPresenter)
     {
         _inputReader = inputReader;
         _fishingSpot = fishingSpot;
         _targetProvider = targetProvider;
-        _miniGameFlowPresenter = miniGameFlowPresenter;
+        _fishingFlowPresenter = fishingFlowPresenter;
     }
 
     public void Initialize()
@@ -34,7 +34,7 @@ public class FishingInteractPresenter : IDisposable, IInitializable
             {
                 // 釣り開始直前に他のスポットの釣果も反映して重複を避ける
                 var fish = _targetProvider.GetFishForCatch();
-                if (fish != null) _miniGameFlowPresenter.StartMiniGame(fish);
+                if (fish != null) _fishingFlowPresenter.StartFishing(fish, _fishingSpot);
             })
             .AddTo(_disposables);
     }

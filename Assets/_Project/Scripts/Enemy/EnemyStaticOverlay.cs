@@ -18,6 +18,8 @@ public sealed class EnemyStaticOverlay : IDisposable
     private float _intensity;
     private float _glitchStrength;
     private bool _fading;
+    private bool _fadingIn;
+    private float _targetIntensity;
     private float _fadeStart;
     private float _fadeElapsed;
     private float _fadeDuration;
@@ -76,11 +78,12 @@ public sealed class EnemyStaticOverlay : IDisposable
         Clear();
     }
 
-    /// <summary>発見中の濃さを反映し、フェード中なら追跡表示へ戻す</summary>
+    /// <summary>発見中の目標の濃さを更新し、表示開始時や再発見時はフェードインする</summary>
     /// <param name="intensity">0で非表示、1で完全に画面を覆う濃さ</param>
     /// <param name="glitchStrength">矩形ノイズの強さ、0で砂嵐だけを表示する</param>
+    /// <param name="fadeInDuration">目標の濃さになるまでのゲーム内秒数、0なら即座に表示</param>
     /// <example>追跡中にSetIntensity(0.3f)を呼ぶ</example>
-    public void SetIntensity(float intensity, float glitchStrength = 0.6f)
+    public void SetIntensity(float intensity, float glitchStrength = 0.6f, float fadeInDuration = 0.8f)
     {
         if (_root == null) return;
         intensity = Mathf.Clamp01(intensity);
@@ -90,8 +93,18 @@ public sealed class EnemyStaticOverlay : IDisposable
             return;
         }
 
+        // 毎フレームの目標更新ではフェードの開始時刻を変えない
+        if (!_root.activeSelf || _fading)
+        {
+            _fadeStart = _intensity;
+            _fadeElapsed = 0f;
+            _fadeDuration = Mathf.Max(0f, fadeInDuration);
+            _fadingIn = _fadeDuration > 0f;
+        }
+
         _fading = false;
-        _intensity = intensity;
+        _targetIntensity = intensity;
+        if (!_fadingIn) _intensity = _targetIntensity;
         _glitchStrength = Mathf.Clamp01(glitchStrength);
         _root.SetActive(true);
         _opacity.alpha = _intensity;
@@ -104,14 +117,15 @@ public sealed class EnemyStaticOverlay : IDisposable
     /// <example>敵のデスポーン時にBeginFadeOut(1.5f)を呼ぶ</example>
     public void BeginFadeOut(float duration)
     {
-        if (_fading || _intensity <= 0f) return;
-        if (duration <= 0f)
+        if (_fading) return;
+        if (duration <= 0f || _intensity <= 0f)
         {
             Clear();
             return;
         }
 
         _fading = true;
+        _fadingIn = false;
         _fadeStart = _intensity;
         _fadeElapsed = 0f;
         _fadeDuration = duration;
@@ -122,8 +136,18 @@ public sealed class EnemyStaticOverlay : IDisposable
     /// <example>敵ControllerのTick先頭で毎フレーム呼ぶ</example>
     public void Tick(float deltaTime)
     {
-        if (_root == null || _intensity <= 0f || deltaTime <= 0f) return;
+        if (_root == null || !_root.activeSelf || deltaTime <= 0f) return;
         _animationTime += deltaTime;
+        // 濃さが0の初回フレームから進め、距離に応じた最新の目標へ補間する
+        if (_fadingIn)
+        {
+            _fadeElapsed += deltaTime;
+            _intensity = Mathf.Lerp(_fadeStart, _targetIntensity,
+                Mathf.SmoothStep(0f, 1f, _fadeElapsed / _fadeDuration));
+            _opacity.alpha = _intensity;
+            if (_fadeElapsed >= _fadeDuration) _fadingIn = false;
+        }
+
         if (_fading)
         {
             _fadeElapsed += deltaTime;
@@ -195,7 +219,9 @@ public sealed class EnemyStaticOverlay : IDisposable
     {
         if (_root != null) _root.SetActive(false);
         _intensity = 0f;
+        _targetIntensity = 0f;
         _fading = false;
+        _fadingIn = false;
         if (_opacity != null) _opacity.alpha = 0f;
         foreach (var glitch in _glitches)
             if (glitch != null) glitch.enabled = false;
