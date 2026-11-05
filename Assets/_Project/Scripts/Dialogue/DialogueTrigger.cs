@@ -74,6 +74,25 @@ namespace Dialogue
             return -1;
         }
 
+        /// <summary>未消化で条件を満たすイベントがあり、この対象が会話を再生していないかを返す</summary>
+        public bool HasAvailableEvent => isActiveAndEnabled && _playCancellation == null
+            && FindAvailableEventIndex() >= 0;
+
+        /// <summary>会話開始と接近演出で共通のイベント条件を評価する</summary>
+        /// <returns>最初の再生可能なイベント番号、候補がなければ-1</returns>
+        private int FindAvailableEventIndex()
+        {
+            if (_tutorialController == null) return -1;
+            for (int i = 0; i < _eventDialogues.Length; i++)
+            {
+                var entry = _eventDialogues[i];
+                if (entry == null || entry.Dialogue == null || _completedEventIndices.Contains(i)) continue;
+                if (_tutorialController.CanPlayRadioDialogue(entry.RequiredTutorialStep, entry.RequiredStoryFlag))
+                    return i;
+            }
+            return -1;
+        }
+
         /// <summary>会話再生、チュートリアル判定、入力を接続する</summary>
         /// <param name="controller">会話と操作制限を担当するController</param>
         /// <param name="tutorialController">イベント条件とチュートリアル進行を担当するController</param>
