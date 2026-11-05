@@ -17,11 +17,13 @@ namespace ExchangePoint
         private readonly PlayerInputReader _inputReader;
         private readonly Input.MenuInputService _menuInput;
         private readonly TutorialController _tutorialController;
+        private readonly ClockController _clockController;
         private readonly bool _connectorInitiallyEnabled;
         private readonly FMODSEService _se;
 
         private readonly CompositeDisposable _disposables = new();
         private readonly SerialDisposable _movementBlock = new();
+        private readonly SerialDisposable _clockPause = new();
 
         /// <summary>集荷場の表示、接近判定、入力の依存関係を受け取る</summary>
         /// <param name="view">交換UI</param>
@@ -30,15 +32,18 @@ namespace ExchangePoint
         /// <param name="menuInput">メニュー同士の入力を排他制御するサービス</param>
         /// <param name="tutorialController">交換画面を開ける進行段階か判断するController</param>
         /// <param name="se">画面を開く音を再生するサービス</param>
+        /// <param name="clockController">ショップ表示中の時計を停止する共有Controller</param>
         /// <example>VContainerのEntryPoint登録から生成する</example>
         public ExchangePointPresenter(ExchangePointView view, InteractableConnector connector, PlayerInputReader inputReader,
-            Input.MenuInputService menuInput, TutorialController tutorialController, FMODSEService se)
+            Input.MenuInputService menuInput, TutorialController tutorialController, FMODSEService se,
+            ClockController clockController)
         {
             _view = view;
             _connector = connector;
             _inputReader = inputReader;
             _menuInput = menuInput;
             _tutorialController = tutorialController;
+            _clockController = clockController;
             _se = se;
             _connectorInitiallyEnabled = connector.enabled;
         }
@@ -58,6 +63,7 @@ namespace ExchangePoint
 
             // ReactivePropertyの初回通知で現在の表示状態も同期する
             _movementBlock.AddTo(_disposables);
+            _clockPause.AddTo(_disposables);
             _view.OnVisibilityChanged
                 .Subscribe(HandleVisibilityChanged)
                 .AddTo(_disposables);
@@ -126,16 +132,18 @@ namespace ExchangePoint
             _view.Navigate(_inputReader.NavigationInput);
         }
 
-        /// <summary>ショップの表示中だけ歩行を止め、閉じたら入力所有権を解除する</summary>
+        /// <summary>ショップの表示中は歩行と時計を止め、閉じたら自分の停止と入力所有権を解除する</summary>
         /// <param name="visible">ショップが表示されていればtrue</param>
         /// <example>キャンセルやViewの無効化でも歩行停止を解除する</example>
         private void HandleVisibilityChanged(bool visible)
         {
+            // 非表示・無効化・Scope破棄のいずれでも、このショップの停止だけを解除する
+            _clockPause.Disposable = visible ? _clockController.Pause() : null;
             _movementBlock.Disposable = visible ? _inputReader.BlockMovement() : null;
             if (!visible) _menuInput.Release(this);
         }
 
-        /// <summary>購読と、このショップが保持する歩行停止を解除する</summary>
+        /// <summary>購読と、このショップが保持する歩行停止と時計停止を解除する</summary>
         /// <example>集荷場のLifetimeScope破棄時に呼ばれる</example>
         public void Dispose()
         {

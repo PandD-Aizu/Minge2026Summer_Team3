@@ -35,7 +35,11 @@ namespace LifetimeScopes
 
             // チュートリアル進行
             builder.Register<GameProgress>(Lifetime.Singleton);
+            builder.Register<ClockController>(Lifetime.Singleton);
             builder.Register<TutorialController>(Lifetime.Singleton);
+
+            // ゲーム内時計をすすめる
+            builder.RegisterEntryPoint<GameClock>();
 
             // 設定画面がなくても保存済みの音量を適用する
             builder.RegisterEntryPoint<FMODAudioInitializer>().AsSelf();
@@ -54,6 +58,8 @@ namespace LifetimeScopes
             builder.Register<InventoryData.Inventory>(Lifetime.Singleton);
             builder.RegisterInstance(_itemCatalog);
             builder.RegisterComponentInNewPrefab(_gameOverPrefab, Lifetime.Singleton).UnderTransform(transform);
+
+
         }
     }
 }
