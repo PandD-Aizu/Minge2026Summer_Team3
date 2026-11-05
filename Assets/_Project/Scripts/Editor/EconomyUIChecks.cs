@@ -98,7 +98,7 @@ public static class EconomyUIChecks
                 _detail.GetComponentInChildren<Canvas>().sortingOrder = 20;
                 _detail.SetActive(false);
                 _navigation = root.GetComponent<ItemMenuNavigation>();
-                _binding = new TradePanelBinding(root, _navigation, service, new TutorialController(new GameProgress()), () => { });
+                _binding = new TradePanelBinding(root, _navigation, service, new TutorialController(new GameProgress(), new ClockController()), () => { });
                 _navigation.SelectFirst();
             }
             else if (_stage == 1)
