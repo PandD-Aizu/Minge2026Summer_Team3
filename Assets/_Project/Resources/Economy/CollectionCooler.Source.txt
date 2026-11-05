@@ -1,0 +1,5 @@
+Source: Assets/_Project/Scenes/CampStage.unity, Shop/shop mesh
+Material: Assets/_Project/Graphics/G_Texture/Materials/box.mat
+Texture: Assets/_Project/Graphics/G_Texture/box.png
+Captured from the existing Unity model in an isolated preview scene, 512x384 RGBA, orthographic camera, transparent background
+No generated building image is used

@@ -36,3 +36,4 @@ MonoBehaviour:
     - {fileID: 11400000, guid: a65b3356a987646418c5fb1987d3386e, type: 2}
   _difficulty: 0
   _gimmickType: 0
+  _sellPrice: 100

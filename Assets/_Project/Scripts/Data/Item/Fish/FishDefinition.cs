@@ -1,4 +1,4 @@
-﻿using _Project.Scripts.Data.Enum;
+using _Project.Scripts.Data.Enum;
 using _Project.Scripts.Data.Item;
 using _Project.Scripts.MiniGame;
 using MiniGame;
@@ -32,6 +32,9 @@ namespace _Project.Scripts.Data.Fish
 
         [SerializeField]
         private FishingGimmickType _gimmickType;
+
+        [SerializeField, Min(0)] private int _sellPrice = 100;
+        public int SellPrice => _sellPrice;
 
         public override ItemType ItemType => ItemType.Fish;
         public override Sprite ItemImage => _fishImage;

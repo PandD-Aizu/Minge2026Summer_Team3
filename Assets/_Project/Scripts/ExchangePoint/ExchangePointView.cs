@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using R3;
@@ -34,6 +34,16 @@ namespace ExchangePoint
         private AsyncOperationHandle<GameObject> _popupHandle;
         private bool _isPopupOpen;
         private bool _isPopupLoading;
+        private TradePanelBinding _trading;
+        private ExchangePointService _tradeService;
+        private Controller.TutorialController _tutorial;
+
+        /// <summary>取引処理と成功通知先を接続する</summary>
+        /// <param name="service">共有取引サービス</param><param name="tutorial">進行通知先</param>
+        /// <example>VContainerが初期化前に呼ぶ</example>
+        [VContainer.Inject]
+        public void Construct(ExchangePointService service, Controller.TutorialController tutorial)
+        { _tradeService = service; _tutorial = tutorial; }
 
         public bool IsVisible => _visibility.Value;
         /// <summary>詳細パネルの表示中、または表示を要求してロード中ならtrue</summary>
@@ -53,6 +63,8 @@ namespace ExchangePoint
 
                 _canvasGroup = _collectionPointUIInstance.GetComponent<CanvasGroup>();
                 _itemCursor = _collectionPointUIInstance.GetComponent<ItemMenuNavigation>();
+                _trading = new TradePanelBinding(_collectionPointUIInstance, _itemCursor, _tradeService, _tutorial,
+                    () => SetPopupVisible(true));
                 HideImmediately();
                 _collectionPointUIInstance.SetActive(true);
             }
@@ -118,6 +130,7 @@ namespace ExchangePoint
             if (_canvasGroup != null) _canvasGroup.interactable = IsVisible && !visible;
             if (_popupUIInstance != null)
             {
+                if (visible) _trading.BindDetail(_popupUIInstance);
                 _popupUIInstance.SetActive(visible);
                 return;
             }
@@ -135,6 +148,7 @@ namespace ExchangePoint
             {
                 (_popupUIInstance, _popupHandle) =
                     await LoadPanelAsync(_exchangePopupUIRef, _sortingOrder + 1, CancellationToken.None);
+                _trading.BindDetail(_popupUIInstance);
                 _popupUIInstance.SetActive(_isPopupOpen && IsVisible && isActiveAndEnabled);
             }
             catch (OperationCanceledException)
@@ -175,7 +189,7 @@ namespace ExchangePoint
             _canvasGroup.blocksRaycasts = visible;
 
             // 表示を整えてから通知し、歩行停止とカーソル入力を同期する
-            if (visible) _itemCursor?.SelectFirst();
+            if (visible) { _trading?.Refresh(); _itemCursor?.SelectFirst(); }
             else _itemCursor?.ClearSelection();
             _visibility.Value = visible;
 
@@ -217,6 +231,7 @@ namespace ExchangePoint
         /// <example>PresenterのTickからNavigationInputを渡す</example>
         public void Navigate(Vector2 input)
         {
+            if (IsVisible && _isPopupOpen) _trading?.NavigateQuantity(input);
             if (IsVisible && !_isPopupOpen) _itemCursor?.Navigate(input);
             else _itemCursor?.ResetRepeat();
         }
@@ -225,8 +240,13 @@ namespace ExchangePoint
         /// <example>一覧表示中にJが押されたときPresenterから呼ぶ</example>
         public void ConfirmSelection()
         {
-            if (IsVisible && !_isPopupOpen && _itemCursor != null && _itemCursor.ConfirmSelection())
+            if (!IsVisible) return;
+            if (_isPopupOpen) { if (!_isPopupLoading) _trading?.Execute(); return; }
+            if (_itemCursor != null && _itemCursor.ConfirmSelection())
+            {
+                _trading.Select(_itemCursor.SelectedItem);
                 SetPopupVisible(true);
+            }
         }
 
         /// <summary>無効化時に表示と入力を直ちに止める</summary>
