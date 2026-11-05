@@ -31,6 +31,7 @@ namespace Dialogue
             public bool AdvanceTutorialOnComplete => _advanceTutorialOnComplete;
             public StoryFlag? StoryFlagOnComplete => _storyFlagOnComplete == StoryFlag.None
                 ? null : _storyFlagOnComplete;
+
         }
 
         [SerializeField, Tooltip("条件を満たしたときに優先して再生する会話。上から順に確認")]
@@ -52,6 +53,7 @@ namespace Dialogue
         private readonly HashSet<int> _skippedRandomIndices = new();
         private int _lastRandomIndex = -1;
         private bool _legacyCompleted;
+        private TutorialGuideController _tutorialGuideController;
 
         /// <summary>未消化で条件を満たすイベントがあり、この対象が会話を再生していないかを返す</summary>
         public bool HasAvailableEvent => isActiveAndEnabled && _playCancellation == null
@@ -76,17 +78,23 @@ namespace Dialogue
         /// <param name="controller">会話と操作制限を担当するController</param>
         /// <param name="tutorialController">イベント条件とチュートリアル進行を担当するController</param>
         /// <param name="input">このシーンの主人公入力</param>
+        /// <param name="resolver">任意の操作案内を取得する、このシーンの依存解決先</param>
         /// <example>GameplayDialogueLifetimeScopeのTriggersに登録する</example>
         [Inject]
-        public void Construct(GameplayDialogueController controller, TutorialController tutorialController,
-            PlayerInputReader input)
+        public void Construct(GameplayDialogueController controller, TutorialController tutorialController, PlayerInputReader input, IObjectResolver resolver)
         {
             _controller = controller;
             _tutorialController = tutorialController;
+            // 操作案内を配置しない通常シーンでは未登録を許容する
+            resolver.TryResolve(out _tutorialGuideController);
+
             _subscription?.Dispose();
+
             _subscription = input.OnInteractPressed
-                .Where(_ => isActiveAndEnabled && _connector != null && _connector.IsPlayerNearby
-                    && input.CanStartGameplayAction)
+                .Where(_ => isActiveAndEnabled &&
+                            _connector != null &&
+                            _connector.IsPlayerNearby &&
+                            input.CanStartGameplayAction)
                 .Subscribe(_ => PlayAsync().Forget());
         }
 
@@ -177,20 +185,37 @@ namespace Dialogue
         private async UniTask<DialogueResult> PlayDialogueAsync(DialogueData data, CancellationToken cancellationToken)
         {
             var zoomStarted = false;
+
             try
             {
-                // 会話が開始できた場合だけ、この対象に設定されたカメラへ切り替える
-                return await _controller.PlayAsync(data, cancellationToken, () =>
-                {
-                    if (_conversationCamera == null || !_conversationCamera.isActiveAndEnabled) return;
-                    zoomStarted = true;
-                    _conversationCamera.SetZoom(true);
-                });
+                return await _controller.PlayAsync(
+                    data,
+                    cancellationToken,
+                    () =>
+                    {
+                        // 初回ラジオ会話が実際に始まったら操作案内を終了
+                        if (_tutorialController.CurrentStep == TutorialStep.TalkToRadioFirst)
+                        {
+                            _tutorialGuideController?.EndGuide();
+                        }
+
+                        // 既存のカメラ切り替え処理
+                        if (_conversationCamera == null ||
+                            !_conversationCamera.isActiveAndEnabled)
+                        {
+                            return;
+                        }
+
+                        zoomStarted = true;
+                        _conversationCamera.SetZoom(true);
+                    });
             }
             finally
             {
-                // 正常終了、中断、例外のいずれでも通常表示へ戻す
-                if (zoomStarted && _conversationCamera != null) _conversationCamera.SetZoom(false);
+                if (zoomStarted && _conversationCamera != null)
+                {
+                    _conversationCamera.SetZoom(false);
+                }
             }
         }
 

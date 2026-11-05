@@ -856,6 +856,32 @@ commit・push・独立レビューは実施していない
 
 GameTimeChecks.csと対応するmetaは新規であり、その他の分析済みファイルは今回変更していない
 
+#### 9-2e. PR #134のmain取り込みと競合解消
+
+2026-11-05 JST、操作案内ブランチへorigin/main（97098ccac68c802e3cca899d1d63bee638d40d4c）を取り込んだ
+GameplayDialogueLifetimeScope末尾の競合はmainのHasRadioEventを保持して解消し、操作案内登録・開始カメラ設定・ConfigureSignalの接続を残した
+DialogueTriggerの自動マージでも操作案内終了処理とイベント候補の共通判定が残ることを確認した
+静的照合を実施し、Unityコンパイル・Play確認は未確認（CLIはEditor起動中で未準備、MCPは接続なし）とする
+残る確認はコンパイルとCampStageForTutorialの開始案内・ラジオ会話・接近演出のPlay確認である
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| Assets/_Project/Scripts/Dialogue/DialogueTrigger.cs | 1e8f6e5d2501028f29e98603ed1486110192a79db8032ca18b63228be20ede9b | 2026-11-05 JST | 両ブランチの会話・操作案内・ラジオ接続を静的に照合 | 改修済 |
+| Assets/_Project/Scripts/LifetimeScopes/GameplayDialogueLifetimeScope.cs | 687bc4c4ec7259b60f175b949d4a64683cc75e954c3cc05cb1b65aa9464a6dc9 | 2026-11-05 JST | 両ブランチの会話・操作案内・ラジオ接続を静的に照合 | 改修済 |
+
+#### 9-2f. 会話の重複定義と操作案内の未登録エラー修正
+
+2026-11-05 JST、DialogueTriggerの同一内容のHasAvailableEventとFindAvailableEventIndexの重複19行を削除し、各定義を1つにした
+再コンパイル後のPlayでTutorialGuideController未登録のVContainerExceptionを確認したため、会話開始処理と会話対象ではシーンのIObjectResolver.TryResolveで任意の操作案内を取得するよう変更した
+登録された操作案内は従来どおり使用し、未登録時は案内の開始・終了を呼ばない
+Unity 6000.6.0f1の対象プロジェクトで再コンパイル完了、Consoleエラー0件、Play開始後のConsoleエラー0件を確認した
+操作案内の全工程・チュートリアル専用シーンの通し操作・ビルドは未確認、commit・pushは未実施とする
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| Assets/_Project/Scripts/Dialogue/DialogueTrigger.cs | f16765ac30c891b16c4f7d0e3bdb342092dd6923b2466469f978f8a39c02834a | 2026-11-05 JST | 重複定義除去・任意の操作案内の依存解決を確認 | 改修済 |
+| Assets/_Project/Scripts/Dialogue/GameplayDialogueStartup.cs | fa173abb8bdfa632b1913bd6077993edc7b281b9ea1e4fa686eb7dd50456f39e | 2026-11-05 JST | 重複定義除去・任意の操作案内の依存解決を確認 | 改修済 |
+
 ### 9-3. 未解決所見・検証限界
 
 | ID | 分類 | 根拠・影響 | 確定手段 |
