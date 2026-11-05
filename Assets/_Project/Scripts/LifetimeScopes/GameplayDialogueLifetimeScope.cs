@@ -1,3 +1,5 @@
+
+using Controller;
 using Dialogue;
 using UnityEngine;
 using VContainer;
@@ -10,19 +12,26 @@ namespace LifetimeScopes
     {
         [SerializeField] private DialogueUIView _dialogueView;
         [SerializeField] private PlayerInputReader _playerInputReader;
+
         [SerializeField, Tooltip("設定した場合、シーン開始時に自動再生する会話")]
         private DialogueData _startupDialogue;
+
         [SerializeField, Tooltip("敵に捕まってCampStageへ戻ったときの独り言")]
         private DialogueData _captureReturnDialogue;
-        [SerializeField] private DialogueTrigger[] _triggers = System.Array.Empty<DialogueTrigger>();
 
-        //RadioMoveの為に追加
+        [SerializeField]
+        private DialogueTrigger[] _triggers =
+            System.Array.Empty<DialogueTrigger>();
+
         [SerializeField] private RadioTalkingAnimation _radioTalkingAnimation;
 
+        [SerializeField, Tooltip("開始時の会話で使用するラジオ用カメラ切り替え")]
+        private CameraZoom _startupCamera;
 
-        /// <summary>会話単体と本編用Controllerを同じScopeへ登録する</summary>
-        /// <param name="builder">このシーンの登録先</param>
-        /// <example>親にGameLifetimeScopeを指定し、UI、主人公、TriggersをInspectorで設定する</example>
+        [Header("Tutorial")]
+        [SerializeField, Tooltip("操作案内を制御するTutorialGuideController")]
+        private TutorialGuideController _tutorialGuideController;
+
         protected override void Configure(IContainerBuilder builder)
         {
             builder.RegisterDialogue(_dialogueView, _radioTalkingAnimation);
@@ -30,12 +39,21 @@ namespace LifetimeScopes
 
             builder.Register<GameplayDialogueController>(Lifetime.Scoped);
 
+            // 操作案内のControllerを登録
+            if (_tutorialGuideController != null)
+            {
+                builder.RegisterComponent(_tutorialGuideController);
+            }
+
             // 自動再生は呼び出し側に置き、会話単体のサービスから分離する
             if (_startupDialogue != null)
             {
                 builder.RegisterInstance(_startupDialogue);
-                builder.RegisterInstance(new CaptureReturnDialogue(_captureReturnDialogue));
-                builder.RegisterEntryPoint<GameplayDialogueStartup>();
+                builder.RegisterInstance(
+                    new CaptureReturnDialogue(_captureReturnDialogue));
+
+                builder.RegisterEntryPoint<GameplayDialogueStartup>()
+                    .WithParameter(typeof(CameraZoom), (object)_startupCamera);
             }
 
             // 配置した対象を同じ会話サービスへ接続する
@@ -43,10 +61,10 @@ namespace LifetimeScopes
             {
                 foreach (var trigger in _triggers)
                 {
-                    if (trigger != null) container.Inject(trigger);
+                    if (trigger != null)
+                        container.Inject(trigger);
                 }
             });
         }
-
     }
 }
