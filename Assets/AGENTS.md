@@ -411,7 +411,7 @@ Assets/AGENTS.mdの0-1で境界と正本を確認する
 | SAVE-01 | 部分確定 | 新しい進行データを既存の音量・会話履歴と共存させる　保存時点と再開位置はTBD-05で確定する |
 | TIME-01 | 条件付き | 現行の時間方式を変更しない作業では9-5aの換算と初期値を保つ　時間仕様の変更は別途明示する |
 | TIME-02 | 確定 | 日付・週は累積ゲーム時間から計算し、24時間循環後の時刻から計算しない |
-| TIME-03 | 部分確定 | 時間を飛ばす更新と表示だけの時間帯変更を区別する　同時間帯・同時刻・翌日指定の契約はTBD-09で確定する |
+| TIME-03 | 確定 | 時刻・日付・週・時間帯は累積秒を正本とし、確認用ボタンも時計の時刻を変更する　指定時刻が同じ時間帯でも進め、完全な同時刻なら変更せず、過ぎた時刻は翌日とする　翌日を明示した場合は必ず翌日の指定時刻を選ぶ　経過時間指定と到達時刻指定を別APIにする |
 | TIME-04 | 確定 | タイトル・会話・買い物中は時計の自動進行を止める　チュートリアルは釣り・移動を含む全段階で自動進行を停止し、出来事に応じて時刻を進める　完了時にチュートリアルの停止要求を解除し、他の停止要求もすべて解除されたら再開する |
 | TIME-05 | 部分確定 | 日付は0時に更新し、朝の開始処理とは分ける　朝の開始時刻7:00は提案段階で未確定　今回のClockController追加に朝の通知・掟更新は含めない |
 
@@ -419,6 +419,9 @@ TIME-04・TIME-05の出所は2026-10-29 JSTの本チャットでの提案採用�
 TIME-04のチュートリアル部分は、同日JSTの「自然進行を止め、出来事で時刻を進める」提案へのユーザーの採用回答で更新した
 時計停止は自動進行への制限とし、進行イベントによる明示的な時間更新を妨げない
 ポーズでは既存のTime.timeScale=0とTime.deltaTimeによる停止を維持する
+TIME-03の具体的なAPI契約は2026-11-04 JSTの作業続行依頼に基づく実装上の判断として採用した
+早送り時の時間帯通知は最終状態が変わった場合に1回とし、飛ばした中間の時間帯を順に通知する契約にはしない
+日ごとの朝の業務処理や期限判定をTimeOfDayChangedだけに依存させず、朝の開始条件とともに別途接続する
 
 ### 8-3. チュートリアル
 
@@ -544,7 +547,7 @@ SRC-008の厳密TDD・全ソース台帳・既存資料統合の原則は、こ�
 | TBD-06 | 未確定 | 正式製品名、リリース先、対象端末、入力、解像度、言語、性能予算　チーム方針を確認する |
 | TBD-07 | 未確定 | 数値調整データの配置と正本　既存データ資産との接続を調べて決める |
 | TBD-08 | 未確定 | commit文の言語、配送・リリースの恒久手順　配送依頼時に確認する |
-| TBD-09 | 部分確定 | 自動進行の停止条件と0時の日付更新はTIME-04・TIME-05で採用済み　同時間帯・同時刻・翌日指定、朝の開始時刻、掟選択中とその他メニューの停止条件は依存する実装前に確定する |
+| TBD-09 | 部分確定 | 同時間帯・同時刻・翌日指定はTIME-03、自動進行の停止条件と0時の日付更新はTIME-04・TIME-05で採用済み　朝の開始時刻、掟選択中とその他メニューの停止条件は依存する実装前に確定する |
 
 未決の製品仕様は本書整備だけのために決めず、依存する実装へ着手する際に確認する
 
@@ -580,6 +583,7 @@ SRC-008の厳密TDD・全ソース台帳・既存資料統合の原則は、こ�
 
 9-0・9-1・9-1a・9-2aのハッシュと件数は規約再構成時の固定証拠であり、後続改修後のファイルへ流用しない
 ClockController追加後の対象とハッシュは9-2b、チュートリアル時間制御の後続改修は9-2cを正本とする
+時計の更新口統一と早送りAPIの後続改修は9-2dを正本とする
 同じファイルを後続小節で改修した場合、前の小節のハッシュは当時の固定証拠として保持する
 
 ### 9-0. 対象と検証境界
@@ -784,14 +788,82 @@ commit・push・独立レビューは実施していない
 | Assets/_Project/Scripts/Controller/TutorialController.cs | 264fe3d3e5992d88bef38280cf33fa6091f95bf77be291247c441c7414580721 |
 | Assets/_Project/Scripts/Editor/ClockControllerChecks.cs | 2641bcd854c3692e635796d9ae966f928675fa4e2e3141a24161cb50d55eddd2 |
 
+#### 9-2d. 時計の更新口統一・早送りAPI・日時境界の検証（TIME-03・AC-05）
+
+【事実】2026-11-04 JST、作業続行依頼に基づき、同時間帯の別時刻に進まない早期returnを削除した
+AdvanceGameTimeHours(int)の呼出しを維持し、同時刻は変更なし、過ぎた時刻は翌日とした
+AdvanceGameTimeHours(int, bool)で翌日の明示指定、AdvanceGameTimeByHours(float)で現在からの経過時間指定を追加した
+AdvanceToTimeOfDayを追加し、既存のStartDay・StartEvening・StartNight・StartDawnも時計の更新へ委譲する
+キャンプ・釣り場のInspector確認ボタンも同じ更新口に変更し、到達時刻と翌日に進む条件を表示する
+
+【所有と通知】GameSecondsをReadOnlyReactivePropertyとして公開し、外部からの値の直接代入を防ぐ
+読み取りはCurrentValueを使用し、既存の時計の表示購読は維持する　ClockControllerChecksもこの読み取り方法へ追従させた
+時間帯は時計の値から求め、照明や敵への時間帯通知は日付・週の派生値の更新後に行う
+負数・非有限値・日付のint上限超過を更新前に拒否し、0秒の更新では通知しない
+破棄時は時刻だけでなく日付・週の派生購読も解放し、二重Disposeを許容しつつ破棄後の更新を拒否する
+
+【テスト先行】GameTimeChecksを追加し、改修前に「同じ昼の7時から8時へ進まない」という失敗を再現した
+取込直後の未認識と、読取専用化に伴う検証コードのValue参照の追従漏れは修正し、最終コンパイルと検証で照合する
+シーン往復テストは当初ファイル名をAddressablesキーに使って失敗したため、既存のSceneReferenceと同じAssetDatabase由来のGUIDで参照するよう修正した
+Addressablesの既存アドレス・シーンファイル・Prefabは変更していない
+
+【検証環境】Unity 6000.6.0f1、Application.dataPathで対象プロジェクトを照合したUnity CLI 1.0.0-beta.14のPipeline接続を使用した
+サンドボックス内ではEditorが到達不可に見えたが、通常のホスト側CLIで既存Editorへの接続を確認できた
+CLIの新版beta.15とセットアップ案内が通知されたが、環境・依存の更新は行っていない
+
+| 検証 | 結果・限界 |
+| --- | --- |
+| Unityコンパイル | 最終コンパイル合格　読取専用化後の検証コードはCurrentValueへ追従済み |
+| GameTimeChecks.Run | 合格　同時間帯の別時刻、同時刻、過ぎた時刻、翌日の明示指定、1.5時間の経過指定、23:59:59→0時、7日目→8日目、複数日、負数・NaN・Infinity・上限超過、時間帯と通知時の日時一致、二重Disposeと破棄後更新の拒否を確認 |
+| ClockControllerChecks.Run | 合格　既存の停止所有権・全チュートリアル段階の固定・出来事による時刻更新・完了後再開を回帰確認 |
+| 実フレーム | ClockControllerChecksのPlay検証が合格　frameCount 610→1521で進行を確認し、60倍速、停止・再開、チュートリアル固定、timeScale=0を検証した |
+| 実シーン往復 | GameTimeChecks.StartSceneRoundTripが合格　本番と同じSceneLoadServiceを通してCampStage→FishingStage→CampStageへ移動し、同一GameProgressと689400秒・8日目・2週目・23:30・Nightを保持した |
+| Inspectorと表示 | 実シーンのEditorボタンの共通処理を呼び、翌4時→7時→17時→19時と進めた　時計の針255度・Day.9・Week.2・時刻19時が一致した　マウスクリックの操作試験ではない |
+| Console | 検証終了時のEditor実状態はcompilationFailed=false・compiling=false・consoleErrors=0だった　Pipelineの履歴には修正前の参照エラーと検証コードの無効なAddressablesキーのログが残り、現行エラーとは区別した |
+| シーンと既存変更 | Playを終了し、開始前と同じCampStage・dirty=falseへ戻した　作業前からあるCampStage.unityのディスク上の変更はSHA-256一致を確認し、保存・上書きしていない |
+
+【検証の境界】モデル検証は実セーブを使わず、シーン往復ではゲーム本来の初期化処理を含むPlay上の公開APIを使用した
+ゲーム全行程の入力操作や、保存済み進行の復元確認を実施した扱いにしない
+
+【残作業】焚火を識別する既存の操作用スクリプト・配置対象を今回の対象シーンと自作コードでは確認できなかったため、02-7の実操作接続は未実施とする
+朝の開始時刻・日次処理、保存時点と復元範囲、ノルマ・掟の未確定条件、02-8の日ごとの時間帯境界は今回固定していない
+01-4・01-5、朝の掟更新や期限切れ、進行セーブ全体、ゲーム全行程の入力操作、実機ビルドは未実装または未検証として残す
+commit・push・独立レビューは実施していない
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| Assets/_Project/Scripts/Core/GameProgress.cs | 48d3506bb808c33a90160002a7548200132946a5823c1901a068bc5c856ed346 | 2026-11-04 17:24:38 JST | 時計更新の統一・早送り・入力検証・派生購読の解放 | 改修済 |
+| Assets/_Project/Scripts/Editor/FishingSceneLifetimeScopeEditor.cs | 6cc4ce129dc79fd92c955635f6e23dd13c155cc0a49feafd36f9b88cd8959156 | 2026-11-04 17:24:38 JST | 確認ボタンを時計の更新へ統一し到達時刻を表示 | 改修済 |
+| Assets/_Project/Scripts/Editor/ClockControllerChecks.cs | a7bb5d56b1d49da480ee6e3c0a067cc0014165d9badc58ddc18c13237b21fa66 | 2026-11-04 17:24:38 JST | 読取専用のGameSeconds.CurrentValueへ追従し既存回帰合格 | 改修済 |
+| Assets/_Project/Scripts/Editor/GameTimeChecks.cs | 8228fb2c5cdd5d89294fdf3c562af45100026f76209e9470e834c27d01de9153 | 2026-11-04 17:24:38 JST | 時刻と日時の境界・失敗経路・実シーン往復の検証を追加 | 改修済 |
+| Assets/_Project/Scripts/Editor/GameTimeChecks.cs.meta | 29a5aff207a1f59f6268a6dff66875db71e119f4d9fa355497cd14e966852896 | 2026-11-04 17:24:38 JST | Unityが生成したGUIDを保持 | 改修済 |
+| Assets/_Project/Scripts/Core/GameClock.cs | 77139a2fbbe2bb3f82969f4056414cc19d12cbde42fb24e9a8d82e0c1bf5c220 | 2026-11-04 17:24:38 JST | 60倍速と停止の実フレーム検証 変更なし | 分析済 |
+| Assets/_Project/Scripts/Controller/TutorialController.cs | c80ee47f5147b1276a450fa72fccd994a992d5f12d7c7e87cd210de5cb223ff4 | 2026-11-04 17:24:38 JST | 既存の固定と出来事による時刻更新の回帰 変更なし | 分析済 |
+| Assets/_Project/Scripts/LifetimeScopes/GameLifetimeScope.cs | 06502a3875b9b32cb499566f9865676604b5f5016edab71f4e9022e50a0f8e98 | 2026-11-04 17:24:38 JST | Rootの共有状態と時計の登録を確認 変更なし | 分析済 |
+| Assets/_Project/Scripts/SceneLoadServices/SceneLoadService.cs | d1ac3b2cb78bb01d8a3a9b71e983ddaf44bcca39fe73aa83c31d932824b50d8d | 2026-11-04 17:24:38 JST | GUIDでの実シーン往復を確認 変更なし | 分析済 |
+| Assets/_Project/Scripts/SceneLoadServices/SceneReference.cs | 2fba57262e459c8600294501ff5cb13f3ef2a6b0e8ed326a46b9c0d8f068a36e | 2026-11-04 17:24:38 JST | 本番のGUID参照方式を確認 変更なし | 分析済 |
+| Assets/_Project/Scripts/View/GameTimeView.cs | 90ab9221cb52ec2a6333168a6c7114bc63904e9a00fc1474cb1bb2f1e80a1843 | 2026-11-04 17:24:38 JST | 針・日付・週の実表示を確認 変更なし | 分析済 |
+| Assets/_Project/Scenes/CampStage.unity | 38c3e9bdbc65296db6fccfcd9d2273841b085bb9709a9d303d9c84953d2ec8bd | 2026-11-04 17:24:38 JST | 作業前からのディスク上の変更を保持しSHA一致を確認 | 分析済 |
+| Assets/_Project/Scenes/FishingStage.unity | 63d36f2b146bd115795b83580742f3a2844ab041f90a95eeb21adaea5b9a006b | 2026-11-04 17:24:38 JST | 実際のロードとRootの共有を確認 保存・編集なし | 分析済 |
+
+今回の対象集合は上記13ファイルで、集合SHA-256は 5bb59d8a835d7442d25128e4f05efb40b35a63600ca60fd50bc51ad37cd23b58 である
+
+| 相対パス | 今回の変更前SHA-256 |
+| --- | --- |
+| Assets/_Project/Scripts/Core/GameProgress.cs | 0a4a23233e92f1153363cf069648663978f60a5d7cb07cd2f4367a57da037a7b |
+| Assets/_Project/Scripts/Editor/FishingSceneLifetimeScopeEditor.cs | 5e378fed6bb32ade484de01a7df0ac10f7ec3c2327b45dc0ddc0b3ae32090208 |
+| Assets/_Project/Scripts/Editor/ClockControllerChecks.cs | 41a7d15df64042728aea5df2c80eef98d37839cbd4992af1b78209b45a412802 |
+
+GameTimeChecks.csと対応するmetaは新規であり、その他の分析済みファイルは今回変更していない
+
 ### 9-3. 未解決所見・検証限界
 
 | ID | 分類 | 根拠・影響 | 確定手段 |
 | --- | --- | --- | --- |
 | R-01 | 仕様差 | TutorialControllerは上位存在を見た後CatchNightFishへ進み、交換が初夜出発前にある　TUT-01と一致しない | 初回撤退・再出発の遷移と呼び出し元を実装時に照合し、AC-01・AC-02で確認する |
-| R-02 | 時間の契約 | AdvanceGameTimeHoursは同じ時間帯なら早期returnする　同時間帯の別時刻へは進まない | TBD-09を決めて呼び出し元と境界テストを確認する |
-| R-03 | 状態差・一部対応済み | チュートリアルの夜釣り帰還は9-2cで時計も翌4時へ進めるよう対応した　StartDawn等を直接呼ぶEditor確認ボタンには時間帯だけを変える経路が残る | 残る更新口をTIME-03に従って統一し、AC-05全体を確認する |
-| R-04 | 寿命の確認 | GameProgress.Disposeには_currentDay・_currentWeekの明示的Disposeがない　追加した派生購読の所有と解放を確認する必要がある | R3の利用版の寿命仕様とScope破棄を確認する |
+| R-02 | 対応済み | 9-2dで同時間帯の別時刻・同時刻・過ぎた時刻・翌日指定の契約を実装した | GameTimeChecksの境界検証と9-2dの結果を参照する |
+| R-03 | 対応済み | 9-2cのチュートリアルに続き、9-2dでEditor確認ボタンとStart系APIも時計の更新へ統一した | GameTimeChecksの時刻・時間帯・通知の整合確認と9-2dの結果を参照する |
+| R-04 | 対応済み | 9-2dで_currentDay・_currentWeekを含む派生購読と通知をDisposeし、破棄後の更新を拒否するよう変更した | GameTimeChecksの破棄後更新と二重Disposeの確認を参照する |
 | R-05 | 入力の確認 | Inventory.Add・Has・Removeに正数量の検証がなく、負のRemoveは数量増加に使えてしまう | 取引の境界で正数量を保証し、関連呼び出し元とAC-07を確認する |
 | R-06 | 永続化の差 | GameDataの現行項目は音量・会話履歴で、新しい進行状態の復元を示すものではない | TBD-05を決め、SAVE-01とAC-10を確認する |
 | R-07 | 証拠の限界 | 既存資料にMCPが計画のみという古い記述と、接続確認済みという新しい状況資料がある | SRC-007と実接続で判断し、関連資料を次の更新時に整合させる |
@@ -811,7 +883,7 @@ commit・push・独立レビューは実施していない
 
 | 責務 | 現行の所有者・境界 |
 | --- | --- |
-| 経過秒・時刻・日付・週 | GameProgressが所有　初期7×3600秒、時刻は整数時間%24、日付は累積日数+1、週は累積7日単位+1 |
+| 経過秒・時刻・日付・週 | GameProgressが所有　初期7×3600秒、時刻は一日内の秒から算出、日付は累積日数+1、週は累積7日単位+1　GameSecondsは読取専用で公開する |
 | 時間の加算 | RootのGameClock.TickがClockControllerの停止要求がない場合だけTime.deltaTime×60を加算　timeScaleの影響を受けるため、常に実時間へ追従する保証ではない |
 | 自動進行の停止 | RootのClockControllerがPauseごとの解除権を管理し、タイトル・会話・買い物・チュートリアルが自分の要求だけを所有する |
 | 時間帯 | GameProgressで19〜翌4時を夜、17〜19時を夕、7〜17時を昼、4〜7時を明け方として判定 |
@@ -823,8 +895,8 @@ commit・push・独立レビューは実施していない
 
 #### 9-5b. テストの重複・検出力
 
-【未確認】独自テストの配置を確認できておらず、重複や検出力の監査は実施していない
-追加時は2-4の失敗条件を検出できるかで判断する
+【事実】ClockControllerChecksとGameTimeChecksをEditorのTools/Clockから実行できる
+停止所有権・チュートリアルの固定・時刻と日付の境界・実フレーム・実シーン往復を対象とし、全ゲームのテスト監査とは扱わない
 
 ### 9-6. 既存の実装と仕様の差分
 
@@ -832,7 +904,7 @@ commit・push・独立レビューは実施していない
 | --- | --- | --- |
 | 初夜の遭遇と完了 | TUT-01・TUT-05 | 遭遇→夜釣り→帰還→ラジオで完了する制御がある　再出発時の区切りへの接続が必要 |
 | ノルマ・夜の掟・強化 | TUT-03・RULE-01・UPG-01 | 読んだTutorialControllerにこの順序の接続はない　別モジュールを含む全実装状況は未確認 |
-| 時間・日付 | TIME-01〜TIME-03 | 累積秒から日・週を算出するが、時間帯だけを切り替える経路が残る |
+| 時間・日付 | TIME-01〜TIME-03 | 9-2dで累積秒からの時刻・日・週・時間帯の更新口を統一　朝の業務処理と保存は残作業 |
 | 状態の共有 | STATE-01 | GameProgressとInventoryのRoot登録あり　通貨・取引の一体更新は今回監査していない |
 | 保存 | SAVE-01 | GameDataは音量と会話履歴　進行データの追加が必要 |
 
@@ -878,3 +950,6 @@ MicrosoftのXMLコメント記法とUnity 6000.6の.NET対応の公式ページ�
 
 【チュートリアル時間制御変更後の文書QA】2026-10-29 23:45:28 JST、9-2cの5ファイルと集合のSHA-256、本文ハッシュ、表の列数、ローカルリンクを照合し合格　対象差分のgit diff --checkも合格
 9-8より前のチュートリアル時間制御変更後本文SHA-256: 30944dbb1ed06909f3e35c933d1de805f1744fb08bc0cf60309316f912ba89f1
+
+【時計更新口統一後の文書QA】2026-11-04 17:24:38 JST、9-2dの13ファイルと集合のSHA-256、本文ハッシュ、表の列数、ローカルリンクを照合し合格　対象差分のgit diff --checkも合格
+9-8より前の時計更新口統一後本文SHA-256: 40ecec79d4bb1686c9e90e8cd4ea354c89a401882a260bbe30023c1b508bbb7d

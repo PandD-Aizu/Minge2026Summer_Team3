@@ -72,38 +72,38 @@ public static class ClockControllerChecks
             tutorial.NotifyRadioInteracted();
             Check(clock.IsPaused, "釣り開始で他の停止要求を解除した");
         }
-        Check(clock.IsPaused && progress.GameSeconds.Value == 7f * 3600f,
+        Check(clock.IsPaused && progress.GameSeconds.CurrentValue == 7f * 3600f,
             "昼釣り中の時計が7時で固定されていない");
         tutorial.NotifyFishCaught();
         Check(clock.IsPaused && progress.GameHours.CurrentValue == 17
             && progress.CurrentTimeOfDay == TimeOfDay.Evening, "昼釣り完了後の時刻が17時で固定されていない");
-        float eveningSeconds = progress.GameSeconds.Value;
-        Check(!tutorial.NotifyFishCaught() && progress.GameSeconds.Value == eveningSeconds,
+        float eveningSeconds = progress.GameSeconds.CurrentValue;
+        Check(!tutorial.NotifyFishCaught() && progress.GameSeconds.CurrentValue == eveningSeconds,
             "昼釣り完了の重複通知で時刻が変わった");
         tutorial.NotifyReturnedToCollection();
-        float nightSeconds = progress.GameSeconds.Value;
+        float nightSeconds = progress.GameSeconds.CurrentValue;
         Check(clock.IsPaused && nightSeconds == 19f * 3600f
             && progress.CurrentTimeOfDay == TimeOfDay.Night, "昼釣り帰還後の時刻が19時で固定されていない");
-        Check(!tutorial.NotifyReturnedToCollection() && progress.GameSeconds.Value == nightSeconds,
+        Check(!tutorial.NotifyReturnedToCollection() && progress.GameSeconds.CurrentValue == nightSeconds,
             "昼釣り帰還の重複通知で時刻が変わった");
         tutorial.NotifyRadioInteracted();
-        Check(clock.IsPaused && progress.GameSeconds.Value == nightSeconds, "交換案内中に時刻が変わった");
+        Check(clock.IsPaused && progress.GameSeconds.CurrentValue == nightSeconds, "交換案内中に時刻が変わった");
         tutorial.NotifyExchangeCompleted();
-        Check(clock.IsPaused && progress.GameSeconds.Value == nightSeconds, "交換後の案内待ちで時刻が変わった");
+        Check(clock.IsPaused && progress.GameSeconds.CurrentValue == nightSeconds, "交換後の案内待ちで時刻が変わった");
         tutorial.NotifyRadioInteracted();
-        Check(clock.IsPaused && progress.GameSeconds.Value == nightSeconds, "夜釣りへの移動中に時刻が変わった");
+        Check(clock.IsPaused && progress.GameSeconds.CurrentValue == nightSeconds, "夜釣りへの移動中に時刻が変わった");
         tutorial.NotifyEnteredFishingStage();
-        Check(clock.IsPaused && progress.GameSeconds.Value == nightSeconds, "初回遭遇中に時刻が変わった");
+        Check(clock.IsPaused && progress.GameSeconds.CurrentValue == nightSeconds, "初回遭遇中に時刻が変わった");
         tutorial.NotifyUpperBeingSeen();
-        Check(clock.IsPaused && progress.GameSeconds.Value == nightSeconds, "夜釣り中に時刻が変わった");
+        Check(clock.IsPaused && progress.GameSeconds.CurrentValue == nightSeconds, "夜釣り中に時刻が変わった");
         tutorial.NotifyFishCaught();
-        Check(clock.IsPaused && progress.GameSeconds.Value == nightSeconds, "夜釣り後の帰還中に時刻が変わった");
+        Check(clock.IsPaused && progress.GameSeconds.CurrentValue == nightSeconds, "夜釣り後の帰還中に時刻が変わった");
         tutorial.NotifyReturnedToCollection();
-        float dawnSeconds = progress.GameSeconds.Value;
+        float dawnSeconds = progress.GameSeconds.CurrentValue;
         Check(clock.IsPaused && dawnSeconds == 28f * 3600f && progress.CurrentDay.CurrentValue == 2
             && progress.GameHours.CurrentValue == 4 && progress.CurrentTimeOfDay == TimeOfDay.Dawn,
             "夜釣り帰還後の時計・日付・時間帯が翌4時で一致していない");
-        Check(!tutorial.NotifyReturnedToCollection() && progress.GameSeconds.Value == dawnSeconds,
+        Check(!tutorial.NotifyReturnedToCollection() && progress.GameSeconds.CurrentValue == dawnSeconds,
             "夜釣り帰還の重複通知で時刻が変わった");
 
         // 完了時も、会話やショップなど別の所有者による停止を勝手に解除しない
@@ -113,7 +113,7 @@ public static class ClockControllerChecks
             Check(tutorial.IsCompleted && clock.IsPaused, "完了時に外部の停止要求を解除した");
         }
         Check(tutorial.IsCompleted && !clock.IsPaused, "完了後もチュートリアルの停止が残る");
-        Check(!tutorial.NotifyRadioInteracted() && progress.GameSeconds.Value == dawnSeconds,
+        Check(!tutorial.NotifyRadioInteracted() && progress.GameSeconds.CurrentValue == dawnSeconds,
             "完了の重複通知で時刻が変わった");
 
         // Root終了時に残る案内用の停止を解放し、他の所有者の停止は保つ
@@ -152,30 +152,30 @@ public static class ClockControllerChecks
             int firstFrame = Time.frameCount;
             await UniTask.NextFrame();
             Check(Time.frameCount > firstFrame && Time.deltaTime > 0f, "Play中のフレームが進んでいない");
-            float before = progress.GameSeconds.Value;
+            float before = progress.GameSeconds.CurrentValue;
             float deltaTime = Time.deltaTime;
             ticker.Tick();
-            Check(Mathf.Abs(progress.GameSeconds.Value - before - deltaTime * 60f) < 0.01f,
+            Check(Mathf.Abs(progress.GameSeconds.CurrentValue - before - deltaTime * 60f) < 0.01f,
                 "時計がdeltaTimeの60倍で進まない");
 
-            before = progress.GameSeconds.Value;
+            before = progress.GameSeconds.CurrentValue;
             using (clock.Pause())
             {
                 await UniTask.NextFrame();
                 ticker.Tick();
-                Check(progress.GameSeconds.Value == before, "停止要求中に時計が進んだ");
+                Check(progress.GameSeconds.CurrentValue == before, "停止要求中に時計が進んだ");
             }
             await UniTask.NextFrame();
             ticker.Tick();
-            Check(progress.GameSeconds.Value > before, "停止解除後に時計が再開しない");
+            Check(progress.GameSeconds.CurrentValue > before, "停止解除後に時計が再開しない");
 
             await ValidateFrozenTutorialAsync();
 
             Time.timeScale = 0f;
             await UniTask.NextFrame();
-            before = progress.GameSeconds.Value;
+            before = progress.GameSeconds.CurrentValue;
             ticker.Tick();
-            Check(Time.deltaTime == 0f && progress.GameSeconds.Value == before, "ポーズ中に時計が進んだ");
+            Check(Time.deltaTime == 0f && progress.GameSeconds.CurrentValue == before, "ポーズ中に時計が進んだ");
             PlayResult = "PASS: 実フレーム進行、60倍速、チュートリアル中の時刻固定、完了後再開、timeScale=0で停止";
         }
         finally
@@ -200,7 +200,7 @@ public static class ClockControllerChecks
         {
             await UniTask.NextFrame();
             ticker.Tick();
-            Check(progress.GameSeconds.Value == 7f * 3600f, "昼釣り中に自然進行で時刻が変わった");
+            Check(progress.GameSeconds.CurrentValue == 7f * 3600f, "昼釣り中に自然進行で時刻が変わった");
         }
 
         tutorial.NotifyFishCaught();
@@ -216,16 +216,16 @@ public static class ClockControllerChecks
         using (clock.Pause())
         {
             tutorial.NotifyRadioInteracted();
-            float before = progress.GameSeconds.Value;
+            float before = progress.GameSeconds.CurrentValue;
             await UniTask.NextFrame();
             ticker.Tick();
-            Check(progress.GameSeconds.Value == before, "チュートリアル完了で会話側の停止が無効になった");
+            Check(progress.GameSeconds.CurrentValue == before, "チュートリアル完了で会話側の停止が無効になった");
         }
 
-        float completedSeconds = progress.GameSeconds.Value;
+        float completedSeconds = progress.GameSeconds.CurrentValue;
         await UniTask.NextFrame();
         ticker.Tick();
-        Check(progress.GameSeconds.Value > completedSeconds, "チュートリアル完了後に自然進行が再開しない");
+        Check(progress.GameSeconds.CurrentValue > completedSeconds, "チュートリアル完了後に自然進行が再開しない");
     }
 
     /// <summary>条件を満たさない場合に検証を失敗させる</summary>

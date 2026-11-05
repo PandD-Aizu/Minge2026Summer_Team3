@@ -23,17 +23,19 @@ public class FishingSceneLifetimeScopeEditor : UnityEditor.Editor
 
         using (new EditorGUI.DisabledScope(!available))
         {
-            if (GUILayout.Button("朝に切り替える")) SetTimeOfDay(scope, TimeOfDay.Day);
-            if (GUILayout.Button("夕方に切り替える")) SetTimeOfDay(scope, TimeOfDay.Evening);
-            if (GUILayout.Button("夜に切り替える")) SetTimeOfDay(scope, TimeOfDay.Night);
-            if (GUILayout.Button("明け方に切り替える")) SetTimeOfDay(scope, TimeOfDay.Dawn);
+            if (GUILayout.Button("朝7:00まで進める")) SetTimeOfDay(scope, TimeOfDay.Day);
+            if (GUILayout.Button("夕方17:00まで進める")) SetTimeOfDay(scope, TimeOfDay.Evening);
+            if (GUILayout.Button("夜19:00まで進める")) SetTimeOfDay(scope, TimeOfDay.Night);
+            if (GUILayout.Button("明け方4:00まで進める")) SetTimeOfDay(scope, TimeOfDay.Dawn);
         }
 
         if (!Application.isPlaying)
             EditorGUILayout.HelpBox("時間帯の切り替えはPlay中のみ有効", MessageType.Info);
+        else
+            EditorGUILayout.HelpBox("時計も指定時刻まで進む 過ぎた時刻は翌日、同時刻は変更なし", MessageType.Info);
     }
 
-    /// <summary>共有の進行状態を更新し、購読中の画面と敵へ通知する</summary>
+    /// <summary>共有の時計を指定時間帯の開始時刻まで進め、表示と敵の時間帯を一致させる</summary>
     /// <param name="scope">FishingStageのLifetimeScope</param>
     /// <param name="timeOfDay">切り替え先の時間帯</param>
     /// <example>Inspectorの朝・夕方・夜・明け方ボタンから呼ぶ</example>
@@ -41,10 +43,7 @@ public class FishingSceneLifetimeScopeEditor : UnityEditor.Editor
     {
         if (!scope.Container.TryResolve<GameProgress>(out var progress)) return;
 
-        if (timeOfDay == TimeOfDay.Night) progress.StartNight();
-        else if (timeOfDay == TimeOfDay.Evening) progress.StartEvening();
-        else if (timeOfDay == TimeOfDay.Dawn) progress.StartDawn();
-        else progress.StartDay();
+        progress.AdvanceToTimeOfDay(timeOfDay);
     }
 }
 
