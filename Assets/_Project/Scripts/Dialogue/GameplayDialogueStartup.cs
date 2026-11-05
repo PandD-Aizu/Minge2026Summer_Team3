@@ -5,6 +5,7 @@ using Controller;
 using Cysharp.Threading.Tasks;
 using GameOver;
 using UnityEngine;
+using VContainer;
 using VContainer.Unity;
 
 namespace Dialogue
@@ -35,7 +36,7 @@ namespace Dialogue
             GameOverView fade,
             CameraZoom cameraZoom,
             TutorialController tutorialController,
-            TutorialGuideController tutorialGuideController)
+            IObjectResolver resolver)
         {
             _controller = controller;
             _dialogue = dialogue;
@@ -44,7 +45,8 @@ namespace Dialogue
             _fade = fade;
             _cameraZoom = cameraZoom;
             _tutorialController = tutorialController;
-            _tutorialGuideController = tutorialGuideController;
+            // 操作案内を配置しない通常シーンでは未登録を許容する
+            resolver.TryResolve(out _tutorialGuideController);
         }
 
         public async UniTask StartAsync(
@@ -106,7 +108,7 @@ namespace Dialogue
                  result == DialogueResult.Skipped) &&
                 _tutorialController.CurrentStep == TutorialStep.TalkToRadioFirst)
             {
-                _tutorialGuideController.BeginGuide();
+                _tutorialGuideController?.BeginGuide();
             }
         }
     }
