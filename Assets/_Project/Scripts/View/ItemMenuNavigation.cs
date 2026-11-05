@@ -10,6 +10,7 @@ namespace ItemMenus
         [SerializeField] private UnityEngine.UI.ScrollRect[] _pages;
 
         private ItemMenuCursor _cursor;
+        private bool _monochrome;
         private int _activeTab;
         private int _focusedTab = -1;
         private Vector2Int _heldDirection;
@@ -19,6 +20,34 @@ namespace ItemMenus
         public Observable<int> OnTabSelected => _tabSelected;
         public RectTransform SelectedItem => _focusedTab < 0 ? _cursor?.SelectedItem : null;
         public int ActiveTab => _activeTab;
+        public UnityEngine.UI.ScrollRect[] Pages => _pages;
+
+        /// <summary>既存の購入画面を売却、購入、交換の3タブへ拡張する</summary>
+        /// <example>集荷場のロード後に一度呼ぶ</example>
+        public void ConfigureTradingTabs()
+        {
+            _monochrome = true;
+            if (_tabs.Length != 2 || _pages.Length != 2) return;
+            var tab = Instantiate(_tabs[1], _tabs[1].transform.parent);
+            var page = Instantiate(_pages[1], _pages[1].transform.parent);
+            _tabs = new[] { _tabs[0], _tabs[1], tab };
+            _pages = new[] { _pages[0], _pages[1], page };
+            tab.onClick.RemoveAllListeners();
+            tab.OnClickAsObservable().Subscribe(_ => SelectTab(2)).AddTo(this);
+            string[] labels = { "売却", "購入", "直接交換" };
+            for (int i = 0; i < 3; i++)
+            {
+                var label = _tabs[i].GetComponentInChildren<TMPro.TMP_Text>();
+                label.font = Resources.Load<TMPro.TMP_FontAsset>("Economy/TradeFont");
+                label.text = labels[i];
+                var rect = (RectTransform)_tabs[i].transform;
+                rect.anchorMin = new Vector2(i * 0.8f / 3f, rect.anchorMin.y);
+                rect.anchorMax = new Vector2((i + 1) * 0.8f / 3f, rect.anchorMax.y);
+                rect.offsetMin = new Vector2(8, rect.offsetMin.y);
+                rect.offsetMax = new Vector2(-8, rect.offsetMax.y);
+            }
+            SelectTab(0);
+        }
 
         /// <summary>マウスからもキーボードと同じタブ切り替えを呼べるようにする</summary>
         /// <example>Prefabの生成時にUnityが呼ぶ</example>
@@ -44,7 +73,7 @@ namespace ItemMenus
             _cursor?.Dispose();
             _activeTab = index;
             for (int i = 0; i < _pages.Length; i++) _pages[i].gameObject.SetActive(i == index);
-            _cursor = new ItemMenuCursor(_pages[index]);
+            _cursor = new ItemMenuCursor(_pages[index], _monochrome);
             FocusTab(index);
             _tabSelected.OnNext(index);
         }

@@ -11,6 +11,7 @@ namespace ItemMenus
         private readonly List<Vector2> _positions = new();
         private UnityEngine.UI.Graphic _selectedGraphic;
         private Color _originalColor;
+        private readonly bool _monochrome;
         private int _selectedIndex = -1;
         private RectTransform _selectionFrame;
 
@@ -18,10 +19,12 @@ namespace ItemMenus
 
         /// <summary>商品一覧のスクロール領域を保持する</summary>
         /// <param name="scrollRect">商品枠をContent直下に持つScrollRect</param>
+        /// <param name="monochrome">trueなら背景色を変えず黒枠だけで強調する</param>
         /// <example>交換UIのPrefabを生成した直後に渡す</example>
-        public ItemMenuCursor(UnityEngine.UI.ScrollRect scrollRect)
+        public ItemMenuCursor(UnityEngine.UI.ScrollRect scrollRect, bool monochrome = false)
         {
             _scrollRect = scrollRect;
+            _monochrome = monochrome;
         }
 
         /// <summary>現在のレイアウトを確定し、先頭の有効な商品枠を選択する</summary>
@@ -147,7 +150,7 @@ namespace ItemMenus
             if (_selectedGraphic != null)
             {
                 _originalColor = _selectedGraphic.color;
-                _selectedGraphic.color = Color.red;
+                _selectedGraphic.color = _monochrome ? _originalColor : Color.red;
             }
 
             ShowSelectionFrame(target);
@@ -201,7 +204,7 @@ namespace ItemMenus
             rect.offsetMin = offsetMin;
             rect.offsetMax = offsetMax;
             var image = edge.GetComponent<UnityEngine.UI.Image>();
-            image.color = Color.red;
+            image.color = _monochrome ? Color.black : Color.red;
             image.raycastTarget = false;
         }
     }

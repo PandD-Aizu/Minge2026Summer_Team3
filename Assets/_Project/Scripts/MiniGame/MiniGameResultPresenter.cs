@@ -36,9 +36,11 @@ public class MiniGameResultPresenter
     /// <param name="result">ゲームの成績</param>
     /// <param name="fish">キャスト時に確定した魚</param>
     /// <param name="cancellation">釣り全体の中断トークン</param>
+    /// <param name="retrieve">獲得確定後に実行する引き上げ演出、省略時は従来の結果表示だけを行う</param>
     /// <returns>所持品へ魚を追加した場合はtrue</returns>
     /// <example>await presenter.PlayResultAsync(result, fish, token)</example>
-    public async UniTask<bool> PlayResultAsync(MiniGameResult result, FishDefinition fish, CancellationToken cancellation)
+    public async UniTask<bool> PlayResultAsync(MiniGameResult result, FishDefinition fish, CancellationToken cancellation,
+        Func<CancellationToken, UniTask> retrieve = null)
     {
         bool fishAdded = false;
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellation, _view.GetCancellationTokenOnDestroy());
@@ -74,12 +76,15 @@ public class MiniGameResultPresenter
                 fishAdded = true;
             }
 
+            // 獲得済みの魚を演出中のキャンセルで失わないよう、このtry内で待機する
+            if (retrieve != null) await retrieve(linked.Token);
             await UniTask.Delay(delay, cancellationToken: linked.Token);
             _view.HideResult();
             if (fishAdded && !_input.IsGameplayInputBlocked)
                 await _view.ShowFishAsync(fish, _player.PlayerPosition, linked.Token);
         }
         catch (OperationCanceledException) { }
+        catch (Exception exception) { Debug.LogException(exception); }
         finally { if (_view != null) _view.HideResult(); }
         return fishAdded;
     }

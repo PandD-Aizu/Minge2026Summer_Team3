@@ -105,9 +105,9 @@ namespace _Project.Scripts.Fishing
 
                 token.ThrowIfCancellationRequested();
                 State = FishingState.Result;
-                _cast.Hide();
                 // ゲームのUIはPlayAsyncのfinallyで閉じられている Escだけは結果中も受け付ける
-                fishAdded = await _results.PlayResultAsync(result, fish, token);
+                fishAdded = await _results.PlayResultAsync(result, fish, token,
+                    retrieveToken => _cast.PlayRetrieveAsync(result == MiniGameResult.Miss ? null : fish.ItemImage, retrieveToken));
             }
             catch (OperationCanceledException) { }
             catch (Exception exception) { Debug.LogException(exception); }
