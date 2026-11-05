@@ -76,7 +76,7 @@ public static class FirstCatchReturnNavigationSetup
         // 同じPresenterを使い、釣果通知後とキャンプ再入場後の案内を検証する
         var service = new NavigationArrowService(initial, initial.position, guideFirstFish: fishing != null,
             firstCatchReturnPosition: target.position);
-        var tutorial = new TutorialController(new _Project.Scripts.Core.GameProgress());
+        using var tutorial = new TutorialController(new _Project.Scripts.Core.GameProgress(), new Controller.ClockController());
         tutorial.NotifyRadioInteracted();
         tutorial.NotifyFishCaught();
         if (fishing == null) tutorial.NotifyReturnedToCollection();
