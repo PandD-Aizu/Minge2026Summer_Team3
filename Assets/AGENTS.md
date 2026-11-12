@@ -882,6 +882,32 @@ Unity 6000.6.0f1の対象プロジェクトで再コンパイル完了、Console
 | Assets/_Project/Scripts/Dialogue/DialogueTrigger.cs | f16765ac30c891b16c4f7d0e3bdb342092dd6923b2466469f978f8a39c02834a | 2026-11-05 JST | 重複定義除去・任意の操作案内の依存解決を確認 | 改修済 |
 | Assets/_Project/Scripts/Dialogue/GameplayDialogueStartup.cs | fa173abb8bdfa632b1913bd6077993edc7b281b9ea1e4fa686eb7dd50456f39e | 2026-11-05 JST | 重複定義除去・任意の操作案内の依存解決を確認 | 改修済 |
 
+#### 9-2g. 夜の練習ノルマ発表と進捗表示
+
+2026-11-11 JST、開いているQuotaシーンと保存済みアセットにNorumaPannelが見つからなかったため、同名の発表パネルと常設進捗パネルをQuotaCanvasに追加した
+夜釣りへ出発する段階で魚1匹と今夜0:00を表示し、発表は4.5秒で閉じる
+RootのPresenterが釣果確定通知を購読し、所持品に追加された魚を集計する
+Unity Playで夜開始時の両パネル表示、昼の釣果の除外、夜の釣果で0/1から1/1へ更新、発表後のHUD維持とチュートリアル完了時の非表示を確認した
+確認は進行と釣果の公開メソッドを呼ぶ方法で行い、釣りの入力操作は未確認
+タイトル等の表示抑制を追加した後のコンパイルは合格、シーン切り替えの再確認はUnity接続のタイムアウトにより未確認
+期限判定・週ノルマの発行・セーブ・GameOverは後続の作業とする
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| Assets/_Project/Prefab/Canvas/QuotaCanvas.prefab | e685a7a672c349ac353deffed4e55714250212659bf95cf71067afbb4fe48a59 | 2026-11-11 JST | ノルマ表示・接続・アセット参照 | 改修済 |
+| Assets/_Project/Prefab/Canvas/QuotaCanvas.prefab.meta | 03343fe0c2872539158dc068dc59e1019a5619abd3b5d46c6f0b0eda530d915d | 2026-11-11 JST | ノルマ表示・接続・アセット参照 | 改修済 |
+| Assets/_Project/Prefab/GameLifetimeScope.prefab | a041083b11e4edb6274e9986ec3b7c6378585aca28c176245a6aac264eb98c86 | 2026-11-11 JST | ノルマ表示・接続・アセット参照 | 改修済 |
+| Assets/_Project/Scenes/Develop/Quota.unity | 27e8ec52fb71d3c571e3d0e3848855c9db992d01724d07f918fe267c3540478c | 2026-11-11 JST | ノルマ表示・接続・アセット参照 | 改修済 |
+| Assets/_Project/Scenes/Develop/Quota.unity.meta | 03eeffd647b41d7e34effd43061de1952d139e9044a02242e2afa24196ed96cc | 2026-11-11 JST | ノルマ表示・接続・アセット参照 | 改修済 |
+| Assets/_Project/Scripts/Core/GameProgress.cs | a828dd4fbb3a53941c2b2d1d92adaf8d2dd6699237ae4e59730b89ddecb85351 | 2026-11-11 JST | ノルマ表示・接続・アセット参照 | 改修済 |
+| Assets/_Project/Scripts/LifetimeScopes/GameLifetimeScope.cs | 05da80e79831944b03e3a19e900a34ce6635a7ebc81fdce61fb663f54ea3639b | 2026-11-11 JST | ノルマ表示・接続・アセット参照 | 改修済 |
+| Assets/_Project/Scripts/View/QuotaPresenter.cs | da51d7c59382928b6b38045c5bde212bd51a8330089ae75d33d4de55078287d0 | 2026-11-11 JST | ノルマ表示・接続・アセット参照 | 改修済 |
+| Assets/_Project/Scripts/View/QuotaPresenter.cs.meta | 54ae6cb3889f7bf3ec242bede0d233b5fd5ed758a2249d534393b2daeb9e87a1 | 2026-11-11 JST | ノルマ表示・接続・アセット参照 | 改修済 |
+| Assets/_Project/Scripts/View/QuotaView.cs | 556fd48db19c2e1281984164661635e7ede5a31e22413b869b89eb6d535ee16d | 2026-11-11 JST | ノルマ表示・接続・アセット参照 | 改修済 |
+| Assets/_Project/Scripts/View/QuotaView.cs.meta | fa5c5af80d1ffb94c251d1a374c9cd0d60335a282376c728f75734f3feccbc91 | 2026-11-11 JST | ノルマ表示・接続・アセット参照 | 改修済 |
+
+対象集合は上記11ファイル、SHA-256は a0ecd83491b14aa5da8e31bf53bb3ae99354fe8a6e50995fd99359d60694c087
+
 ### 9-3. 未解決所見・検証限界
 
 | ID | 分類 | 根拠・影響 | 確定手段 |

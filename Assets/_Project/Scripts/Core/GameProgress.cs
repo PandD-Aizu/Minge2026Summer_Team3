@@ -22,6 +22,8 @@ namespace _Project.Scripts.Core
 
         private bool _isDisposed;
         public int? LastCaughtFishId { get; private set; }
+        private readonly Subject<int> _fishCaught = new();
+        public Observable<int> OnFishCaught => _fishCaught;
 
         /// <summary>1日目7時の時計と、累積秒から求める時刻・日付・週の購読を作成する</summary>
         /// <example>GameLifetimeScopeでSingleton登録して生成する</example>
@@ -41,7 +43,11 @@ namespace _Project.Scripts.Core
         /// <summary>最後に釣り成功した魚を全釣り場で共有する 戻り値はなし</summary>
         /// <param name="fishId">インベントリへ追加した魚のItemId</param>
         /// <example>魚の追加に成功した直後にRecordFishCaught(fish.ItemId)を呼ぶ</example>
-        public void RecordFishCaught(int fishId) => LastCaughtFishId = fishId;
+        public void RecordFishCaught(int fishId)
+        {
+            LastCaughtFishId = fishId;
+            _fishCaught.OnNext(fishId);
+        }
 
         private readonly Subject<TimeOfDay> _timeOfDayChanged = new();
         public Observable<TimeOfDay> TimeOfDayChanged => _timeOfDayChanged;
@@ -203,6 +209,7 @@ namespace _Project.Scripts.Core
             _isDisposed = true;
 
             _timeOfDayChanged.Dispose();
+            _fishCaught.Dispose();
             _currentWeek.Dispose();
             _currentDay.Dispose();
             _gameHours.Dispose();

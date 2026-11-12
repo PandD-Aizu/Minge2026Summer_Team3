@@ -10,6 +10,7 @@ using SceneLoadServices;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
+using _Project.Scripts.View;
 
 namespace LifetimeScopes
 {
@@ -18,6 +19,7 @@ namespace LifetimeScopes
         [SerializeField] private InventoryView _inventoryPrefab;
         [SerializeField] private ItemCatalog _itemCatalog;
         [SerializeField] private GameOverView _gameOverPrefab;
+        [SerializeField] private QuotaView _quotaPrefab;
 
         /// <summary>音声・入力・インベントリなどアプリ全体で共有する依存関係を登録する</summary>
         /// <param name="builder">Rootコンテナの登録先</param>
@@ -37,6 +39,13 @@ namespace LifetimeScopes
             builder.Register<GameProgress>(Lifetime.Singleton);
             builder.Register<ClockController>(Lifetime.Singleton);
             builder.Register<TutorialController>(Lifetime.Singleton);
+
+            // ノルマの表示と進捗を釣り場と拠点で共有する
+            if (_quotaPrefab != null)
+            {
+                builder.RegisterComponentInNewPrefab(_quotaPrefab, Lifetime.Singleton).UnderTransform(transform);
+                builder.RegisterEntryPoint<QuotaPresenter>();
+            }
 
             // ゲーム内時計をすすめる
             builder.RegisterEntryPoint<GameClock>();
