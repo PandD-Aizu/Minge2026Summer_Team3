@@ -40,6 +40,7 @@ public sealed class PlayerAnimation : MonoBehaviour
     private bool _isMirrored;
     private float _frameElapsed;
     private int _frameIndex;
+    private bool _forceFacingRight;
 
     /// <summary>Playerが配置されたステージに対応する足音を取得する</summary>
     /// <example>CampStageではWalkSand、FishingStageではWalkConcを使用する</example>
@@ -92,6 +93,20 @@ public sealed class PlayerAnimation : MonoBehaviour
         Vector3 movement = _characterController.velocity;
         movement.y = 0f;
         bool moving = movement.sqrMagnitude > _minimumMoveSpeed * _minimumMoveSpeed;
+
+        // 会話中など、右向きに固定されている場合
+        if (_forceFacingRight && !moving)
+        {
+            _facing = Facing.Right;
+            ShowTexture(GetIdleTexture(Facing.Right), false);
+            return;
+        }
+
+        // 再び移動を始めたら通常の向き判定に戻す
+        if (moving)
+        {
+            _forceFacingRight = false;
+        }
 
         if (!moving)
         {
@@ -253,5 +268,20 @@ public sealed class PlayerAnimation : MonoBehaviour
         _material.SetTextureScale(BaseMapName, scale);
         _material.SetTextureOffset(BaseMapName, offset);
         _isMirrored = mirror;
+    }
+    /// <summary>
+    /// プレイヤーを右向きの待機画像に切り替える
+    /// </summary>
+    public void FaceRight()
+    {
+        _facing = Facing.Right;
+        _forceFacingRight = true;
+
+        _wasMoving = false;
+        _frameElapsed = 0f;
+        _frameIndex = 0;
+
+        // 右向きなので左右反転しない
+        ShowTexture(GetIdleTexture(Facing.Right), false);
     }
 }
