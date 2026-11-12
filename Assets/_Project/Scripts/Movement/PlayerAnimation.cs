@@ -284,4 +284,18 @@ public sealed class PlayerAnimation : MonoBehaviour
         // 右向きなので左右反転しない
         ShowTexture(GetIdleTexture(Facing.Right), false);
     }
+
+    /// <summary>
+    /// プレイヤーを右向きの待機画像に切り替える
+    /// </summary>
+    public void FaceBack()
+    {
+        _facing = Facing.Back;
+
+        _wasMoving = false;
+        _frameElapsed = 0f;
+        _frameIndex = 0;
+
+        ShowTexture(GetIdleTexture(Facing.Back), false);
+    }
 }

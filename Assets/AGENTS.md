@@ -882,6 +882,34 @@ Unity 6000.6.0f1の対象プロジェクトで再コンパイル完了、Console
 | Assets/_Project/Scripts/Dialogue/DialogueTrigger.cs | f16765ac30c891b16c4f7d0e3bdb342092dd6923b2466469f978f8a39c02834a | 2026-11-05 JST | 重複定義除去・任意の操作案内の依存解決を確認 | 改修済 |
 | Assets/_Project/Scripts/Dialogue/GameplayDialogueStartup.cs | fa173abb8bdfa632b1913bd6077993edc7b281b9ea1e4fa686eb7dd50456f39e | 2026-11-05 JST | 重複定義除去・任意の操作案内の依存解決を確認 | 改修済 |
 
+#### 9-2g. CampStageのラジオ会話時の立ち位置
+
+2026-11-12 JST、検証シーンのTalkPositionとDialogueTriggerの立ち位置・PlayerMovement参照をCampStageへ移した
+配置と参照をUnityで照合し、ShopInteractionの表示アンカーと反応範囲が検証シーンと一致することを確認した
+Play中に移動・向きの処理を直接呼び、指定座標への移動と右向き、Consoleエラー0件を確認した
+ラジオ操作から会話終了までの通し確認は未実施
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| Assets/_Project/Prefab/InteractionPrompt.prefab | 7e2a113773a2829e1459a5091c87bdbd69aaf63a6c4e817b88b2252933cc7aa9 | 2026-11-12 JST | 移植元または共有Prefabの参照と配置を照合 | 分析済 |
+| Assets/_Project/Scenes/CampStage.unity | e6bb52858aa49633b6e81c592dcf08d7bda084c4ec2827bec83df5a261eae4e7 | 2026-11-12 JST | ラジオの立ち位置とPlayerMovement参照を反映 | 改修済 |
+| Assets/_Project/Scenes/CampStageForPlayerPositionInRadioConversation.unity | 9d50d92db32e4966ca7dd635b24310c3c66b2cfcbafeecfcfe64679fcfb7c9f7 | 2026-11-12 JST | 移植元または共有Prefabの参照と配置を照合 | 分析済 |
+
+対象集合は上記3ファイル、SHA-256は 55900c67f9ecd1781e5311a7e9fd631f5d7b8aff03b32b31dbbc72ab703eb577
+
+#### 9-2h. CampStageの移動・ラジオ操作案内
+
+2026-11-12 JST、CampStageForTutorialの操作案内CanvasをCampStageへ移し、既存のラジオ接近判定と導入会話カメラを接続した
+Play中に案内の開始・接近通知・終了を直接呼び、移動案内からラジオ案内への切り替え、非表示、DIの解決、Consoleエラー0件を確認した
+導入会話から操作入力によるラジオ会話までの通し確認は未実施
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| Assets/_Project/Scenes/CampStage.unity | 584cfbd3054637c61d120c559b779681639461db01116b6e22c0f47d489965f1 | 2026-11-12 JST | 操作案内と導入カメラを接続 | 改修済 |
+| Assets/_Project/Scenes/CampStageForTutorial.unity | aa1760b459b4da08af6d91bf35f1257d18846ab2a9573524928996b1787063a0 | 2026-11-12 JST | 操作案内の移植元を照合 | 分析済 |
+
+対象集合は上記2ファイル、SHA-256は 0dbb58c0ae6296f3c2522bf6b95e43abb6817ea0c69d281252d0d409b544f992
+
 ### 9-3. 未解決所見・検証限界
 
 | ID | 分類 | 根拠・影響 | 確定手段 |

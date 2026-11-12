@@ -106,4 +106,16 @@ public class PlayerMovement : MonoBehaviour , IPlayerPosition
             Debug.LogWarning("PlayerAnimationが見つかりません");
         }
     }
+
+    public void FaceBack()
+    {
+        if (_playerAnimation != null)
+        {
+            _playerAnimation.FaceBack();
+        }
+        else
+        {
+            Debug.Log("PlayerAnimationが見つかりません");
+        }
+    }
 }

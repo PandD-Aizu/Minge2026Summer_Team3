@@ -237,8 +237,8 @@ namespace Dialogue
                             // プレイヤーを指定位置に移動
                             _playerMovement.TeleportTo(_talkPosition);
 
-                            // 立ち絵を右向きに変更
-                            _playerMovement.FaceRight();
+                            // 立ち絵を後ろ向きに変更
+                            _playerMovement.FaceBack();
                         }
                         else
                         {
