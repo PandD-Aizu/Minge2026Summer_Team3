@@ -8,6 +8,7 @@ using Cysharp.Threading.Tasks;
 using R3;
 using UnityEngine;
 using VContainer;
+using GameOver;
 
 namespace Dialogue
 {
@@ -44,6 +45,15 @@ namespace Dialogue
 
         [SerializeField, Tooltip("この対象との会話中に使うカメラ 未設定なら切り替えない")]
         private CameraZoom _conversationCamera;
+
+        [Header("会話開始時のプレイヤー位置調整")]
+        [SerializeField, Tooltip("会話時にプレイヤーが立つ位置と向き")]
+        private Transform _talkPosition;
+
+        [SerializeField, Tooltip("位置調整するプレイヤー")]
+        private PlayerMovement _playerMovement;
+
+        private GameOverView _fade;
 
         private GameplayDialogueController _controller;
         private TutorialController _tutorialController;
@@ -96,6 +106,8 @@ namespace Dialogue
                             _connector.IsPlayerNearby &&
                             input.CanStartGameplayAction)
                 .Subscribe(_ => PlayAsync().Forget());
+
+            resolver.TryResolve(out _fade);
         }
 
         /// <summary>イベント会話、通常会話、旧形式の会話の順に再生候補を探す</summary>
@@ -182,42 +194,92 @@ namespace Dialogue
         /// <param name="cancellationToken">対象の無効化に伴う中断トークン</param>
         /// <returns>会話の終了結果</returns>
         /// <example>イベント会話とランダム会話の両方から呼ぶ</example>
-        private async UniTask<DialogueResult> PlayDialogueAsync(DialogueData data, CancellationToken cancellationToken)
+
+        /// <summary>位置調整、カメラ切り替え、会話再生を行う</summary>
+        private async UniTask<DialogueResult> PlayDialogueAsync(
+            DialogueData data,
+            CancellationToken cancellationToken)
         {
             var zoomStarted = false;
+            var fadeStarted = false;
 
             try
             {
                 return await _controller.PlayAsync(
                     data,
                     cancellationToken,
-                    () =>
+
+                    // 会話が実際に始まったときの処理
+                    onStarted: () =>
                     {
-                        // 初回ラジオ会話が実際に始まったら操作案内を終了
+                        // 初回ラジオ会話が始まったら操作案内を終了
                         if (_tutorialController.CurrentStep == TutorialStep.TalkToRadioFirst)
                         {
                             _tutorialGuideController?.EndGuide();
                         }
+                    },
 
-                        // 既存のカメラ切り替え処理
-                        if (_conversationCamera == null ||
-                            !_conversationCamera.isActiveAndEnabled)
+                    // 会話開始前の演出
+                    beforeStarted: async token =>
+                    {
+                        // 画面を暗転
+                        if (_fade != null)
                         {
-                            return;
+                            fadeStarted = true;
+                            await _fade.FadeToBlackAsync(token);
                         }
 
-                        zoomStarted = true;
-                        _conversationCamera.SetZoom(true);
-                    });
+                        token.ThrowIfCancellationRequested();
+
+                        // プレイヤーの位置と向きを調整
+                        if (_talkPosition != null && _playerMovement != null)
+                        {
+                            // プレイヤーを指定位置に移動
+                            _playerMovement.TeleportTo(_talkPosition);
+
+                            // 立ち絵を右向きに変更
+                            _playerMovement.FaceRight();
+                        }
+                        else
+                        {
+                            Debug.LogWarning(
+                                "ラジオのTalkPositionまたはPlayerMovementが未設定です");
+                        }
+
+                        token.ThrowIfCancellationRequested();
+
+                        // カメラ切り替え
+                        if (_conversationCamera != null &&
+                            _conversationCamera.isActiveAndEnabled)
+                        {
+                            _conversationCamera.SetZoom(true);
+                            zoomStarted = true;
+                        }
+
+                        // 画面を明るく戻す
+                        if (_fade != null)
+                        {
+                            await _fade.FadeToWhiteAsync(token);
+                        }
+                    }
+                );
             }
             finally
             {
+                // カメラを通常状態に戻す
                 if (zoomStarted && _conversationCamera != null)
                 {
                     _conversationCamera.SetZoom(false);
                 }
+
+                // 中断時も暗転状態を残さない
+                if (fadeStarted && _fade != null)
+                {
+                    _fade.ClearImmediately();
+                }
             }
         }
+
 
         /// <summary>対象が無効になったら、その対象が開始した会話を中断する</summary>
         /// <example>イベント対象を非表示にした場合にUnityが呼ぶ</example>

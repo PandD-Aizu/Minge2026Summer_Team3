@@ -11,6 +11,7 @@ public class PlayerMovement : MonoBehaviour , IPlayerPosition
     private PlayerInputReader _inputReader;
     private float _verticalVelocity;
     private const float GroundedVerticalVelocity = -2f;
+    private PlayerAnimation _playerAnimation;
 
     public Transform PlayerPosition => transform;
 
@@ -25,6 +26,8 @@ public class PlayerMovement : MonoBehaviour , IPlayerPosition
         {
             _inputReader = GetComponent<PlayerInputReader>();
         }
+
+        _playerAnimation = GetComponentInChildren<PlayerAnimation>();
 
     }
 
@@ -57,5 +60,50 @@ public class PlayerMovement : MonoBehaviour , IPlayerPosition
         _characterController.Move(velocity * Time.deltaTime);
 
 
+    }
+
+    /// 会話演出などでプレイヤーの位置と向きを変更する
+    /// CharacterControllerの物理状態もリセットする
+    public void TeleportTo(Transform target)
+    {
+        if (target == null) return;
+
+        bool wasEnabled = _characterController.enabled;
+
+        try
+        {
+            // CharacterControllerを一時停止
+            _characterController.enabled = false;
+
+            // 位置と向きを変更
+            transform.SetPositionAndRotation(
+                target.position,
+                target.rotation
+            );
+
+            // 落下速度をリセット
+            _verticalVelocity = 0f;
+
+            Physics.SyncTransforms();
+        }
+        finally
+        {
+            // 元の有効状態に戻す
+            _characterController.enabled = wasEnabled;
+        }
+    }
+    /// <summary>
+    /// プレイヤーの立ち絵を右向きにする
+    /// </summary>
+    public void FaceRight()
+    {
+        if (_playerAnimation != null)
+        {
+            _playerAnimation.FaceRight();
+        }
+        else
+        {
+            Debug.LogWarning("PlayerAnimationが見つかりません");
+        }
     }
 }
