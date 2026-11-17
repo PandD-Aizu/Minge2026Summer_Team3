@@ -279,6 +279,9 @@ MonoBehaviour:
   _connector: {fileID: 8081095138367460404}
   _dialogue: {fileID: 0}
   _playOnce: 0
+  _conversationCamera: {fileID: 0}
+  _talkPosition: {fileID: 0}
+  _playerMovement: {fileID: 0}
 --- !u!1 &5219397406097788292
 GameObject:
   m_ObjectHideFlags: 0

@@ -44,7 +44,7 @@ namespace Dialogue
         /// <param name="onStarted">会話が実際に開始した場合の処理 省略可能</param>
         /// <returns>正常終了、中断、開始拒否、またはセーブで表示済みの場合のSkipped</returns>
         /// <example>if (await controller.PlayAsync(data, token) == DialogueResult.Completed) イベントを進める</example>
-        public async UniTask<DialogueResult> PlayAsync(DialogueData data, CancellationToken cancellationToken = default, Action onStarted = null)
+        public async UniTask<DialogueResult> PlayAsync(DialogueData data, CancellationToken cancellationToken = default,Action onStarted = null, Func<CancellationToken, UniTask> beforeStarted = null)
         {
             if (_disposed || cancellationToken.IsCancellationRequested) return DialogueResult.Canceled;
             if (data != null && data.PlayOncePerSave)
@@ -65,10 +65,20 @@ namespace Dialogue
                 // 歩行だけでなく、背後の釣り・交換・インベントリ入力も止める
                 _clockPause = _clockController.Pause();
                 _inputBlock = _input.BlockGameplayInput();
+                // 会話開始前の演出
+                if (beforeStarted != null)
+                {
+                    await beforeStarted(cancellation.Token);
+                }
+
+                // 会話開始
                 var playback = _dialogue.PlayAsync(data, cancellation.Token);
 
-                // 開始拒否やスキップではカメラの開始演出を実行しない
-                if (_dialogue.IsPlaying) onStarted?.Invoke();
+                // 会話が実際に開始した場合のみ通知
+                if (_dialogue.IsPlaying)
+                {
+                    onStarted?.Invoke();
+                }
 
                 // 開始拒否や表示できないUIは記録せず、表示が始まった会話だけ保存する
                 if (_dialogue.IsPlaying && data.PlayOncePerSave && !_save.MarkDialogueShown(data.SaveId))
