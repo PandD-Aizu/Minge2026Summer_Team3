@@ -18,7 +18,7 @@ namespace _Project.Scripts.View
         private int _caught;
 
         /// <summary>ノルマの表示先とゲーム進行を受け取る</summary>
-        /// <param name="view">発表と進捗の表示先</param>
+        /// <param name="view">現在のノルマと進捗の表示先</param>
         /// <param name="tutorial">夜パートの開始を通知するController</param>
         /// <param name="progress">確定した釣果の通知元</param>
         /// <example>GameLifetimeScopeのエントリーポイントとして登録する</example>
@@ -38,7 +38,7 @@ namespace _Project.Scripts.View
             OnStepChanged(_tutorial.CurrentStep);
         }
 
-        /// <summary>夜の釣りへ出発する時点で練習ノルマを発表する</summary>
+        /// <summary>夜の釣りへの出発時に練習ノルマを表示し、チュートリアル完了時に閉じる</summary>
         /// <param name="step">変更後のチュートリアル段階</param>
         /// <example>夜釣り前のラジオ会話が終わるとGoNightFishingを受け取る</example>
         private void OnStepChanged(TutorialStep step)

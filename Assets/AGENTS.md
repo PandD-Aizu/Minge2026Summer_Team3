@@ -907,7 +907,8 @@ Unity Playで夜開始時の両パネル表示、昼の釣果の除外、夜の�
 | Assets/_Project/Scripts/View/QuotaView.cs.meta | fa5c5af80d1ffb94c251d1a374c9cd0d60335a282376c728f75734f3feccbc91 | 2026-11-11 JST | ノルマ表示・接続・アセット参照 | 改修済 |
 
 対象集合は上記11ファイル、SHA-256は a0ecd83491b14aa5da8e31bf53bb3ae99354fe8a6e50995fd99359d60694c087
-#### 9-2g. CampStageのラジオ会話時の立ち位置
+
+#### 9-2h. CampStageのラジオ会話時の立ち位置
 
 2026-11-12 JST、検証シーンのTalkPositionとDialogueTriggerの立ち位置・PlayerMovement参照をCampStageへ移した
 配置と参照をUnityで照合し、ShopInteractionの表示アンカーと反応範囲が検証シーンと一致することを確認した
@@ -922,7 +923,7 @@ Play中に移動・向きの処理を直接呼び、指定座標への移動と�
 
 対象集合は上記3ファイル、SHA-256は 55900c67f9ecd1781e5311a7e9fd631f5d7b8aff03b32b31dbbc72ab703eb577
 
-#### 9-2h. CampStageの移動・ラジオ操作案内
+#### 9-2i. CampStageの移動・ラジオ操作案内
 
 2026-11-12 JST、CampStageForTutorialの操作案内CanvasをCampStageへ移し、既存のラジオ接近判定と導入会話カメラを接続した
 Play中に案内の開始・接近通知・終了を直接呼び、移動案内からラジオ案内への切り替え、非表示、DIの解決、Consoleエラー0件を確認した
@@ -934,6 +935,23 @@ Play中に案内の開始・接近通知・終了を直接呼び、移動案内�
 | Assets/_Project/Scenes/CampStageForTutorial.unity | aa1760b459b4da08af6d91bf35f1257d18846ab2a9573524928996b1787063a0 | 2026-11-12 JST | 操作案内の移植元を照合 | 分析済 |
 
 対象集合は上記2ファイル、SHA-256は 0dbb58c0ae6296f3c2522bf6b95e43abb6817ea0c69d281252d0d409b544f992
+
+#### 9-2j. 現在のノルマ表示の共通化
+
+2026-11-17 JST、Quotaシーンで調整した背景・文字・進捗バーの見た目をQuotaCanvasへ反映し、大きい発表パネルを削除した
+夜釣り開始時の目標・期限・進捗は現在のノルマパネルだけに表示する
+UnityのEdit ModeでシーンとPrefabの見た目の設定およびGameLifetimeScopeの参照を照合し、Prefabの表示・進捗更新・非表示を直接確認した
+Play Modeでのチュートリアル通し確認は未実施
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| Assets/_Project/Prefab/Canvas/QuotaCanvas.prefab | bada254fc1f1df0b85b55a6c78e30174fa5ebc4477b2a0ccf7d0696f6b7d5b75 | 2026-11-17 JST | 背景・配色を共通化し大きい発表パネルを削除 | 改修済 |
+| Assets/_Project/Prefab/GameLifetimeScope.prefab | 1d43099403c100649a365f33d2aa60bf2dd07ccda59ec6defc9e659600a43e84 | 2026-11-17 JST | ゲーム側が共通Prefabを参照することをUnityで確認 | 分析済 |
+| Assets/_Project/Scenes/Develop/Quota.unity | 0964b7ebd489714f337ae204468da8fd434de0686bdbb2a2f2715c43a6f3027c | 2026-11-17 JST | 見た目の上書きを共通Prefabへ移し、シーン内の配置を維持 | 改修済 |
+| Assets/_Project/Scripts/View/QuotaPresenter.cs | 2785a415bbaae5971ac73339e42093f8edc6f6a7bb62196c7d183941e1dd4064 | 2026-11-17 JST | 表示処理のコメントを更新 | 改修済 |
+| Assets/_Project/Scripts/View/QuotaView.cs | 46a9769d7d6f656204260788cf0b56a021bffe4414b2993c61403f8018f24649 | 2026-11-17 JST | 現在のノルマ表示へ集約 | 改修済 |
+
+対象集合は上記5ファイル、SHA-256は 18de43d485ba6e9846e0bb3d0eff2876e05ef270544963d1f9e8e6f00d997481
 
 ### 9-3. 未解決所見・検証限界
 
@@ -1032,3 +1050,9 @@ MicrosoftのXMLコメント記法とUnity 6000.6の.NET対応の公式ページ�
 
 【時計更新口統一後の文書QA】2026-11-04 17:24:38 JST、9-2dの13ファイルと集合のSHA-256、本文ハッシュ、表の列数、ローカルリンクを照合し合格　対象差分のgit diff --checkも合格
 9-8より前の時計更新口統一後本文SHA-256: 40ecec79d4bb1686c9e90e8cd4ea354c89a401882a260bbe30023c1b508bbb7d
+
+【節番号修正後の文書QA】2026-11-17 JST、重複していた9-2gを修正し、見出し番号の一意性と9-2a〜9-2iの連続性を確認した
+9-8より前の節番号修正後本文SHA-256: 8531d71021ffb23d54a457c94786719c957728fec7644d023e02f9ddb8d0cda0
+
+【ノルマ表示共通化後の文書QA】2026-11-17 JST、9-2jの対象集合と本文のSHA-256を記録した
+9-8より前のノルマ表示共通化後本文SHA-256: 33f17e0713a40557fb3591ec2dd3d8c76e3b45b7b5521425e5658d11fc019492

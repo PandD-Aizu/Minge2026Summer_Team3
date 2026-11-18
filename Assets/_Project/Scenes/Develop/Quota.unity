@@ -17493,6 +17493,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: QuotaCanvas
       objectReference: {fileID: 0}
+    - target: {fileID: 1902289171516217513, guid: 819e3576c8e6f5e428fd5a7744b336d9, type: 3}
+      propertyPath: _fill
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 2832256780762952073, guid: 819e3576c8e6f5e428fd5a7744b336d9, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2832256780762952073, guid: 819e3576c8e6f5e428fd5a7744b336d9, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
