@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05755dc3e5b24082b0cb614d2f0bb0fc, type: 3}
+  m_Name: Exchange_Aji_StealthPotion
+  m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Data.ExchangeRecipeDefinition
+  costFish: {fileID: 11400000, guid: 1ccb6ed2e8ad32840be777f7317c75c1, type: 2}
+  costAmount: 1
+  rewardItem: {fileID: 11400000, guid: 1de14dfe455470b4ea7480a2c9d58e05, type: 2}
+  rewardAmount: 1

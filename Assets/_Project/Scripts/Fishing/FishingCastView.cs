@@ -1,6 +1,8 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace _Project.Scripts.Fishing
 {
@@ -48,6 +50,7 @@ namespace _Project.Scripts.Fishing
         private LineRenderer _hook;
         private SpriteRenderer _caughtFish;
         private readonly Vector3[] _hookPoints = new Vector3[12];
+        private AsyncOperationHandle<Material> _splashMaterial;
         private Camera _retrieveCamera;
         private bool _isRetrieving;
         private float _retrieveElapsed;
@@ -196,6 +199,25 @@ namespace _Project.Scripts.Fishing
             {
                 linked.Token.ThrowIfCancellationRequested();
                 if (!IsConfigured || !_isFishing) return;
+
+                // 初回の成功時だけ材質を読み込み、引き上げの開始前に演出を準備する
+                if (fishSprite != null && _catchSplash == null)
+                {
+                    if (!_splashMaterial.IsValid())
+                        _splashMaterial = Addressables.LoadAssetAsync<Material>("FishingCatchSplash");
+                    // 演出素材だけが欠けても魚の獲得処理は続ける
+                    await UniTask.WaitUntil(() => _splashMaterial.IsDone, cancellationToken: linked.Token);
+                    linked.Token.ThrowIfCancellationRequested();
+                    if (!IsConfigured || !_isFishing) return;
+                    if (_splashMaterial.Status == AsyncOperationStatus.Succeeded)
+                        _catchSplash = new OceanCaptureParticles(_splashMaterial.Result.shader, gameObject.scene, useUnscaledTime: false);
+                    else
+                    {
+                        Addressables.Release(_splashMaterial);
+                        _splashMaterial = default;
+                    }
+                }
+
                 EnsureRetrieveVisuals();
                 SetBiting(false);
                 _retrieveCamera = Camera.main;
@@ -209,14 +231,6 @@ namespace _Project.Scripts.Fishing
                 _splashPending = fishSprite != null;
                 if (fishSprite != null)
                 {
-                    // Resourcesの材質参照でビルドにも水しぶきのシェーダーを含める
-                    if (_catchSplash == null)
-                    {
-                        var material = Resources.Load<Material>("FishingCatchSplash");
-                        if (material != null)
-                            _catchSplash = new OceanCaptureParticles(material.shader, gameObject.scene, useUnscaledTime: false);
-                    }
-
                     // 魚ごとに画像の解像度が違っても、演出中の最大寸法は揃える
                     float extent = Mathf.Max(fishSprite.bounds.size.x, fishSprite.bounds.size.y);
                     _caughtFish.transform.localScale = Vector3.one * (_caughtFishSize / Mathf.Max(0.001f, extent));
@@ -349,6 +363,7 @@ namespace _Project.Scripts.Fishing
         {
             _catchSplash?.Dispose();
             _catchSplash = null;
+            if (_splashMaterial.IsValid()) Addressables.Release(_splashMaterial);
         }
     }
 }

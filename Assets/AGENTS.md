@@ -286,6 +286,8 @@ XMLコメントの記法はMicrosoft公式資料を参照し、どの関数へ�
 【事実】調査時のUnityは `6000.6.0f1`、主な仕組みはuGUI／VContainer／R3／UniTask／Input System／URP／FMODである
 版の正本は `ProjectSettings/ProjectVersion.txt`、依存の参照は `Packages/manifest.json`、解決結果は `Packages/packages-lock.json` とする
 
+自作ゲームアセットを動的に読み込む場合はAddressablesへ登録するか、登録済みアセットの依存として参照する
+
 依存は必要最小限とし、追加・更新時に版・入手元・許諾・通信・権限を確認する
 依頼にないmajor更新やパッケージ再解決を行わない
 MCP利用時は対象プロジェクト・Editorを確認し、接続状況を古い文書名だけで判断しない
@@ -446,11 +448,34 @@ TIME-03の具体的なAPI契約は2026-11-04 JSTの作業続行依頼に基づ�
 | --- | --- | --- |
 | ECON-01 | 確定 | お金と物の購入・売却を区別し、画面と処理が同じ残高・所持数を参照する |
 | ECON-02 | 確定 | 残高不足・材料不足・無効数量・連続決定で片側だけ更新しない |
-| UPG-01 | 部分確定 | お金を消費する自己強化を用意する　項目・上限・価格・実効果はTBD-03 |
-| ALC-01 | 確定 | 強化画面から魚を直接消費してポーションと交換する要素を用意する |
+| UPG-01 | 確定 | 交換所で移動速度・釣りゲージ増加速度を各5回まで購入し即反映する　段階別の価格・追加割合をSOで定義する　数値は8-5aの仮値 |
+| ALC-01 | 確定 | 交換所でアジ1匹を直接消費し、気配消しのポーション1本を所持品へ追加する |
 | ALC-02 | 部分確定 | ポーション使用で敵に見つかりにくくなる　反映先・量・期間・重ねがけはTBD-04 |
 | QUOTA-01 | 部分確定 | TUT-03の時点でノルマを提示する　数量・期限・納品方法・未達成時の結果はTBD-01 |
 | QUOTA-02 | 暫定 | 売却・調合とノルマ納品は別操作とする　納品契約を確定するまでは売買成功通知でノルマを達成させない |
+
+#### 8-5a. 強化と調合の実装契約（2026-11-12 JST）
+
+【確定】本チャットのユーザー回答と実装依頼に基づき、強化はアイテムを経由せず、購入済み段階を所持数とは分離して保持する
+価格と効果量は `Assets/_Project/AddressableAssets/Economy/Upgrades/` の2つのSOで段階別に編集する
+未強化はLv0、最大はLv5とし、効果は「元の値 × (1 + 購入済み段階の追加割合の合計)」で計算する
+移動は水平方向の速度、釣りはゲージ式ミニゲームで魚がバー内にいる間の増加速度へ反映する
+購入は1段階ずつ確定し、残高・強化段階を同時に保存する　シーン移動・翌日・再起動で保持する
+旧セーブに強化段階がなければ未強化として扱い、既存の音量と会話履歴を保持する
+調合は既存の魚とアイテムの交換処理を再利用し、支払い・材料・保存の失敗で一部だけを更新しない
+【対象外】今回のポーション実装は作成・所持・保存までとし、使用・発見判定への効果・持続時間・重ねがけは含めない
+
+| 購入段階 | 価格（両強化共通の初期値） | 移動速度の追加割合 | 釣りゲージ増加速度の追加割合 |
+| --- | --- | --- | --- |
+| 1 | 100 | 5% | 10% |
+| 2 | 200 | 5% | 10% |
+| 3 | 300 | 10% | 15% |
+| 4 | 500 | 10% | 15% |
+| 5 | 800 | 15% | 20% |
+
+【暫定】上記はユーザーが採用した調整用の仮値であり、最終バランスではない　最大倍率は移動1.45倍、釣り1.70倍となる
+TBD-03の強化項目・上限・反映方法、TBD-04のこの調合材料・個数、TBD-05のこの取引の保存時点、TBD-07の強化調整値の置き場所は本節で確定する
+各TBDのその他の未決事項は維持する
 
 ### 8-6. 画面・入力・表現とモックの境界
 
@@ -882,6 +907,228 @@ Unity 6000.6.0f1の対象プロジェクトで再コンパイル完了、Console
 | Assets/_Project/Scripts/Dialogue/DialogueTrigger.cs | f16765ac30c891b16c4f7d0e3bdb342092dd6923b2466469f978f8a39c02834a | 2026-11-05 JST | 重複定義除去・任意の操作案内の依存解決を確認 | 改修済 |
 | Assets/_Project/Scripts/Dialogue/GameplayDialogueStartup.cs | fa173abb8bdfa632b1913bd6077993edc7b281b9ea1e4fa686eb7dd50456f39e | 2026-11-05 JST | 重複定義除去・任意の操作案内の依存解決を確認 | 改修済 |
 
+#### 9-2g. 交換所の即時強化とアジの調合（UPG-01・ALC-01）
+
+【出所】2026-11-12 JSTの本チャットで、実装計画と段階別仮値の採用をユーザーが明示した
+作業開始時はbranch `main`、HEAD `3280115e95ddc1a2e9044c38959323b8bcc1d1f4`、既存差分なし
+【実装】強化SO2件、Root共有サービス、アイテム所持数とは別の強化段階、残高との同時保存、移動とゲージへの倍率反映、交換所4タブ、アジから薬へのレシピを追加した
+薬は既存のTool分類と所持欄を利用し、購入価格0の調合専用として登録した　アイコンはこの作業で生成した簡素な薬瓶を使用する
+購入段階はSOへ書き込まずセーブに保持する　SOは名前・説明・上限・段階別価格・段階別追加割合を定義し、今回の2件の上限は5とする
+
+| 検証 | 結果・範囲 |
+| --- | --- |
+| 変更前 | EconomyChecks.Run合格、Unity 6000.6.0f1 |
+| コンパイル・初期アセット | UpgradeSetup.Run合格、強化2件・薬・レシピ・ItemCatalogの参照を生成 |
+| 取引・保存 | EconomyChecks.RunとUpgradeChecks.Run合格　段階別価格、累積45%/70%、最大5回、古い段階の再送、残高不足、材料不足、無効数量、薬の保存復元、旧セーブ、不正な段階、音量・会話保持を確認 |
+| 保存失敗 | 一時保存先に書き込みできない条件を作り、残高・強化・魚・薬・保存済みファイルを保持することを確認　ログ内の2件のUnauthorizedAccessExceptionは意図した失敗条件 |
+| 能力反映 | PlayerMovementの速度計算とGaugeMiniGameModelの同一乱数・同一時間で比較し合格　既存FishingMiniGameChecks.Runも合格 |
+| Play ModeのUI | EconomyUIChecks.Run合格　実Prefabの売却・購入・交換・強化タブ、購入、同一フレーム二重決定、残高不足、上限、調合、薬の所持欄表示を確認　フレーム進行も確認 |
+| 実シーン | UpgradeSceneChecks.Run合格　CampStageで購入→FishingStage→CampStageで同じ強化を共有し、速度への反映と保存復元を確認　Rootの保存先だけ一時ファイルに差し替えて実施 |
+| 検証コードの修正 | 実シーン検証の初回は保存先差し替えがRoot生成に間に合わず停止　次回はVContainerの同一実装型登録が競合したため、Root生成前に別実装型のテスト保存先を登録する方法へ修正　最終実行で合格 |
+| 表示 | Library/UpgradeAfter.png、UpgradeMaximum.png、AlchemyBefore.png、PotionInventory.pngを1920x1080で取得し主要画面を目視確認　1280x720は詳細の画像取得のみで、全解像度の一覧表示保証には使わない |
+| 既存警告 | DOTweenの旧PluginImporter、Cinemachineの既存警告などを変更前から確認　既存依存を更新・警告抑制していない |
+| 差分 | 検証で更新されたTradeFontとLiberationSansの動的キャッシュを開始時へ復元し対象外にした　git diff --check合格 |
+| 限界 | 入力を接続したUIメソッドからの自動操作であり、人のキーボード・マウス操作の通しQA、チュートリアル全体、敵遭遇、最終バランス、配布ビルドは未確認　ポーション使用と効果は今回対象外 |
+
+【独立レビュー】未実施　メイン担当の差分確認とUnityの複数の検証手段で照合した
+【配送】コミット・pushは依頼されておらず未実施
+
+確認日時: 2026-11-12 18:08:09 JST
+対象集合: 41ファイル、SHA-256 `861d4f71f96e73a200cd65eac971420f1da3b877b8abf02669996a304fa0e5dc`
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| `Assets/_Project/Resources/Economy/Exchange_Aji_StealthPotion.asset` | 3a0b839279f89f22989b20e9e84ef6c8923096210995eee37f21ca48781d32b2 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Resources/Economy/Exchange_Aji_StealthPotion.asset.meta` | ecf10dc098b8de7046ecb1524cba45e84c79873205732f56ca40208e81ae4da4 | 2026-11-12 18:08:09 JST | 新規アセットとスクリプトのGUID、Unity生成結果を保持 | 改修済 |
+| `Assets/_Project/Resources/Economy/StealthPotion.asset` | a07fe07b1c4dc1618b754844702cdd5f84f2b40dac869cf0a497439542d1566b | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Resources/Economy/StealthPotion.asset.meta` | 42e309dea7d9b08527f7f871dd416cade69bdcb72b7e9cbf085f0ea6c7a57468 | 2026-11-12 18:08:09 JST | 新規アセットとスクリプトのGUID、Unity生成結果を保持 | 改修済 |
+| `Assets/_Project/Resources/Economy/StealthPotion.png` | a9f49029f6e752adcb7078dcda42fc465fb714b29d23067ef8c2d5c0594bea33 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Resources/Economy/StealthPotion.png.meta` | 0b046ea8ecc9d251f9c850081e66848d03ae56bdeabc995c5a887f3b9085f6a0 | 2026-11-12 18:08:09 JST | 新規アセットとスクリプトのGUID、Unity生成結果を保持 | 改修済 |
+| `Assets/_Project/Resources/Economy/Upgrades.meta` | ef538782f10f34b3e6baf623bf15ba294ce474f24834691f68b98dcdc750ff02 | 2026-11-12 18:08:09 JST | 新規アセットとスクリプトのGUID、Unity生成結果を保持 | 改修済 |
+| `Assets/_Project/Resources/Economy/Upgrades/FishingGain.asset` | 1a383769a6df3e19a0ccd04d547dcc7e04826c21f33a2836fd33569f409169b2 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Resources/Economy/Upgrades/FishingGain.asset.meta` | 4b5366416819614776675c00dbf8dad12c603b1975a6509a76f36dfc1772e235 | 2026-11-12 18:08:09 JST | 新規アセットとスクリプトのGUID、Unity生成結果を保持 | 改修済 |
+| `Assets/_Project/Resources/Economy/Upgrades/MoveSpeed.asset` | 22a3b5ad328817d180362517a4b6daaebc341a028ead7288154c24385bad1aae | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Resources/Economy/Upgrades/MoveSpeed.asset.meta` | c8bcd7349997246fdca86e459be3a4310a4f2bae44f29922f98f404c1e302171 | 2026-11-12 18:08:09 JST | 新規アセットとスクリプトのGUID、Unity生成結果を保持 | 改修済 |
+| `Assets/_Project/SO/Item/ItemCatalog.asset` | d1c69f28facafcb9c8ca1bd03beed1be59a7885bc8033cb570c7a942d30b6bb3 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/Data/Exchange/ExchangeRecipeDefinition.cs` | 8e62627bd9b1e9eb380dbcd7cd3d0391a4b5affce97ad29b60f15f7f5aa1b672 | 2026-11-12 18:08:09 JST | 既存の取引・保存・表示・DIとの接続を確認 | 分析済 |
+| `Assets/_Project/Scripts/Data/UpgradeDefinition.cs` | 406d1b8f8e760a26d06d767d3e144b287d4f53d7b7c2d9e129cd61d3a073c392 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/Data/UpgradeDefinition.cs.meta` | 8ec94277998869624bef3ba522b2b79d8e444d764fd933d73108efd469d77df1 | 2026-11-12 18:08:09 JST | 新規アセットとスクリプトのGUID、Unity生成結果を保持 | 改修済 |
+| `Assets/_Project/Scripts/Editor/EconomyChecks.cs` | e1f8bd9558786d293d808b75db7fb17bd8ca9c543b03774f42bfa153c9e47977 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/Editor/EconomyUIChecks.cs` | b1b3dfd123e251cc761af5dc76fe534b748bcb3301d8b137acb624dc749146de | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/Editor/FishingMiniGameChecks.cs` | 891ab018cb6c679e70f9aaafd16700448d58db4bc939b3de7e538bc433a9d421 | 2026-11-12 18:08:09 JST | 既存の取引・保存・表示・DIとの接続を確認 | 分析済 |
+| `Assets/_Project/Scripts/Editor/UpgradeChecks.cs` | 3447ed259c735806fce547ec74e95e10d65190102422d78882499b0bff66b188 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/Editor/UpgradeChecks.cs.meta` | af9a74c8021ed6c8232148eb8b7dacc35b52d978f27cd60edf358f509964b50a | 2026-11-12 18:08:09 JST | 新規アセットとスクリプトのGUID、Unity生成結果を保持 | 改修済 |
+| `Assets/_Project/Scripts/Editor/UpgradeSceneChecks.cs` | 8ba373dd63f03d19d7df110d6d1d22f1ba9fa85f96be22f23f11348d85940452 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/Editor/UpgradeSceneChecks.cs.meta` | e0ba57fe5219aa748948ceb82af3709d24bad32ba89890d22daaff82710b15de | 2026-11-12 18:08:09 JST | 新規アセットとスクリプトのGUID、Unity生成結果を保持 | 改修済 |
+| `Assets/_Project/Scripts/Editor/UpgradeSetup.cs` | c8421f1634690497a60181be3b6b5720de6929f0fc97018a730e8264953d2887 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/Editor/UpgradeSetup.cs.meta` | 97d874abef349c87908a5b53ea6f9b1211823962adba4f0ffd1d34314d201a51 | 2026-11-12 18:08:09 JST | 新規アセットとスクリプトのGUID、Unity生成結果を保持 | 改修済 |
+| `Assets/_Project/Scripts/ExchangePoint/ExchangePointService.cs` | f8ea2cacc71dbfd8e962e952934d366409afbd979aedd2f3a20145ba409da3a4 | 2026-11-12 18:08:09 JST | 既存の取引・保存・表示・DIとの接続を確認 | 分析済 |
+| `Assets/_Project/Scripts/ExchangePoint/ExchangePointView.cs` | 3e2e9e295cb4914add9346a53b9d9c78f6dcf3c4cb6b4934d9e43dd509f27551 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/ExchangePoint/TradePanelBinding.cs` | f1355e657c25639ced69cca789cd3e5de22f2942a57bd85becc4818f4fefd0b3 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/ExchangePoint/UpgradeService.cs` | ca30a69cf0b12dd93cc9e501558431dae065c0377562de56a9391dc40e48fbb8 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/ExchangePoint/UpgradeService.cs.meta` | 83726b862a8fb6c7d59f9b4fe6aab6b0e1be7e0e9cebc0d22a4a3e151f7d33f5 | 2026-11-12 18:08:09 JST | 新規アセットとスクリプトのGUID、Unity生成結果を保持 | 改修済 |
+| `Assets/_Project/Scripts/Inventory/Inventory.cs` | 442952476f14308ac05e5505089221cdad283fec52d11a50c90ffe735de60fdc | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/Inventory/InventoryPresenter.cs` | ff9a7c037e595f989ad910100d125afe9f4397df7efd9b9a9298967dd9a6745d | 2026-11-12 18:08:09 JST | 既存の取引・保存・表示・DIとの接続を確認 | 分析済 |
+| `Assets/_Project/Scripts/Inventory/Inventoryview.cs` | 8f72c9c64a03ecad1aa81583902229cad35daa4b51c039da007527c0eba6c863 | 2026-11-12 18:08:09 JST | 既存の取引・保存・表示・DIとの接続を確認 | 分析済 |
+| `Assets/_Project/Scripts/LifetimeScopes/CampStageLifetimeScope.cs` | d43ac40d7d337b498fb1d40f8f90bd559db59f3ae93e5b14372135e9fe1d7ce7 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/LifetimeScopes/FishingSceneLifetimeScope.cs` | 98875e5dff2fe3d42f7526acccb7d4ca6097fde7905a152663343a01ba3466d0 | 2026-11-12 18:08:09 JST | 既存の取引・保存・表示・DIとの接続を確認 | 分析済 |
+| `Assets/_Project/Scripts/LifetimeScopes/GameLifetimeScope.cs` | e2b38d1dcec99dc3ebc2dea6810c836ef504f26444fefbf09a3cf47528369226 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/MiniGame/Gauge/GaugeMiniGameController.cs` | 7d6e0842829a24db25c6a7cf7cb01c420edc963e3794469d3d3daf92e0e3350f | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/MiniGame/Gauge/GaugeMiniGameModel.cs` | c62c91773329c308cbef81063a4c3159ae90f7c160cb3b887b666134d8daea5d | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/Movement/PlayerMovement.cs` | dc2bcc2e8d292da87556dea6f1b1e0265ba4f1dd518c6b3aa19c5ff98d482267 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/SaveSettings/GameData.cs` | 60264f42d8baa07289f2d02ff1b174cdb977e9a1d69f688e48d84c8518813d81 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+| `Assets/_Project/Scripts/SaveSettings/SaveService.cs` | 665435ffc11aa2e14835be547e636401fef98dfe076633bf5ed4f5ff85324044 | 2026-11-12 18:08:09 JST | 既存の取引・保存・表示・DIとの接続を確認 | 分析済 |
+| `Assets/_Project/Scripts/View/ItemMenuNavigation.cs` | d76b69cf48e4015a7b55a1119fa12037211eaeb5897b212c8e36a893b7c24d94 | 2026-11-12 18:08:09 JST | 購入・能力反映・調合・UI・保存・検証の今回対象 | 改修済 |
+
+ローカルの固定検証ログ（生成物のため共有差分には含めない）
+
+| 相対パス | SHA-256 |
+| --- | --- |
+| `Library/UpgradeBaseline.log` | 552400b3067da169c649fed558d2005025e53e4fb9bd4e4f5c449c3c1abffa95 |
+| `Library/UpgradeSetupFinal.log` | 67c1a6b18cf1e2512f34991b07f22588d4eb202c179ee16d75c79f3b83f45b38 |
+| `Library/UpgradeUIFinal.log` | 294bfd9915caa97117a76303f91c128b783e84b1d2af8eb0ff06ff2535f3e1e4 |
+| `Library/UpgradeScenesVerified.log` | 51cb124de83e20c16c0cd9b58a71efa41b0e8a0c47bc08b01b73c75c8ae4fdfe |
+
+#### 9-2h. ポーション画像をユーザー提供素材へ差し替え
+
+【出所】2026-11-12 JST、本チャットで提供されたpotion.pngをポーション画像として使う依頼
+【変更】StealthPotion.pngを提供画像の原寸・透過を維持して差し替えた　9-2gの自動生成アイコンを置き換える
+【検証】提供画像とのバイト一致、既存metaのGUID、SOのSprite参照、Single Spriteと透過設定を静的確認した
+交換所と所持欄は同じItemDefinitionの画像を参照するため、両方で差し替え後の素材を使用する
+【未確認】差し替え後のUnity再インポート・Play表示は未実行　取引・効果・保存のコード変更はない
+9-2gのハッシュと画面検証は差し替え前の固定記録として保持する
+
+対象集合: 3ファイル、SHA-256 `20479b85b5df56f098444799a156ad9924cb3d215290ecf871966ce4ddf0b523`
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| `Assets/_Project/Resources/Economy/StealthPotion.asset` | a07fe07b1c4dc1618b754844702cdd5f84f2b40dac869cf0a497439542d1566b | 2026-11-12 19:02:59 JST | 既存GUID・Sprite参照・透過設定を維持 | 分析済 |
+| `Assets/_Project/Resources/Economy/StealthPotion.png` | 846e253df899972fefbaace7e0e179cd628b86989fb18a021514f1e4859a4a3f | 2026-11-12 19:02:59 JST | ユーザー提供画像へ差し替え、元画像とバイト一致 | 改修済 |
+| `Assets\_Project\Resources\Economy\StealthPotion.png.meta` | 0b046ea8ecc9d251f9c850081e66848d03ae56bdeabc995c5a887f3b9085f6a0 | 2026-11-12 19:02:59 JST | 既存GUID・Sprite参照・透過設定を維持 | 分析済 |
+
+#### 9-2i. 自作ResourcesのAddressables移行
+
+経済アセットは `EconomyAssets` からカタログ・強化・レシピ・表示素材をまとめて取得する　レシピ追加時はその参照を一覧に登録する
+水しぶき材質は `FishingCatchSplash` で初回の釣り成功時にロードする　各ハンドルはRootと釣りViewがそれぞれ解放する
+外部パッケージが配置を要求するResourcesは対象外
+
+【合格】Unity 6000.6.0f1で経済・強化検証、キャンプと釣り場の往復、交換所UI検証、Windows向けAddressablesビルドを実行した
+既存ビルドを使うPlay Modeでも交換・調合・強化UI検証が合格し、水しぶき材質からProject/OceanCaptureParticlesシェーダーを取得できた
+【未確認】単体Playerでの起動、実釣り中の水しぶきの目視
+
+対象集合は46ファイル、SHA-256 `0f33f82de678408046ccc617241a08668237a913cd9be3ddec20e472f54da73b`
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| `Assets/AddressableAssetsData/AssetGroups/Default Local Group.asset` | 45e9711e92a38d9f0c6714948a8be892ab6b2af6d9a2f2afd6d3be55701f03c5 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets.meta` | 089e30ed495a2d395453abbd34a605c9cf72dc415196cf6937d4e19a2ebb84d2 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy.meta` | 6694d77f146fd3df8ddea77a83d09f4c97e84bbc0e23b7669b22bea3f220fe6a | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/CollectionCooler.Source.txt` | 4108fac750cbe2a6770c516273490a1e757757f789e5ddc1ea797885774a5eaa | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/CollectionCooler.Source.txt.meta` | 3fb6ec951140edaeed9f7651e5b36e6d663ca40a48c9b6fcb33150224acdcaef | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/CollectionCooler.png` | 3932c8718ef1ec06f5eb31c78c3bbbc33bddb2447cc38e03a234b5dd6eee8934 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/CollectionCooler.png.meta` | 238954a58d846085d7ad64baca5ed7eb872c7427a38248b3de203380e25b0260 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/EconomyAssets.asset` | a2474da72023454e2dbd0faa1af28387bcde9d735781feb79ec834e78d76f70a | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/EconomyAssets.asset.meta` | 8e65b4147fb9946fd8eb1c734e319668a976be76ed6a803f51b71d95c80fc30d | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/Exchange_Aji_SO_Gear_2000_Lure.asset` | c048ccedab151574ee2b057a18a90f54480a9c113d3e515b4f58ea58bf346fbb | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/Exchange_Aji_SO_Gear_2000_Lure.asset.meta` | 4a4d8487382acb1e56c80f84f139d1593ba20c7851c7b91040d477e72fcc9d9d | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/Exchange_Aji_SO_Material_4000_Taimatsu.asset` | 5e56d1814e788e2bc21a1c9252d879bb5c50cb9a0b8110e508553d83f6c930ec | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/Exchange_Aji_SO_Material_4000_Taimatsu.asset.meta` | 5dee574790b17b088261309e58ad21621b8fc8e786b03ac16068c3a5f96608c3 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/Exchange_Aji_StealthPotion.asset` | 3a0b839279f89f22989b20e9e84ef6c8923096210995eee37f21ca48781d32b2 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/Exchange_Aji_StealthPotion.asset.meta` | ecf10dc098b8de7046ecb1524cba45e84c79873205732f56ca40208e81ae4da4 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/ShellCurrency.Source.txt` | ce50779cd82e50f66ba0c00ed69c3572f0149823d7b30c0934894b9620bfe344 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/ShellCurrency.Source.txt.meta` | 2e6beae08ed8bcb83045d12faa7e387940b0f9c0d7bb83b5d7275cbb93d102f8 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/ShellCurrency.png` | 9b39550531c3a56490ae093d0cea2f8216faa163161ca6f6472a28384724b4ca | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/ShellCurrency.png.meta` | 42770a95c6cc9eb2cb0c26d91acad77c2bdbacf52242aa6dc9f176edb2fd0c33 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/StealthPotion.asset` | a07fe07b1c4dc1618b754844702cdd5f84f2b40dac869cf0a497439542d1566b | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/StealthPotion.asset.meta` | 42e309dea7d9b08527f7f871dd416cade69bdcb72b7e9cbf085f0ea6c7a57468 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/StealthPotion.png` | 846e253df899972fefbaace7e0e179cd628b86989fb18a021514f1e4859a4a3f | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/StealthPotion.png.meta` | 0b046ea8ecc9d251f9c850081e66848d03ae56bdeabc995c5a887f3b9085f6a0 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/TradeFont.asset` | 4768109a1b1514f052d2c4f2a544bb3d606ff9d8885023f1c630fec3f0cd7ce8 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/TradeFont.asset.meta` | 90d617bf72c45470041caa54a56e9c6609611230faedc71a47d58ef3d5d63682 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/Upgrades.meta` | ef538782f10f34b3e6baf623bf15ba294ce474f24834691f68b98dcdc750ff02 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/Upgrades/FishingGain.asset` | 1a383769a6df3e19a0ccd04d547dcc7e04826c21f33a2836fd33569f409169b2 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/Upgrades/FishingGain.asset.meta` | 4b5366416819614776675c00dbf8dad12c603b1975a6509a76f36dfc1772e235 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/Upgrades/MoveSpeed.asset` | 22a3b5ad328817d180362517a4b6daaebc341a028ead7288154c24385bad1aae | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/Economy/Upgrades/MoveSpeed.asset.meta` | c8bcd7349997246fdca86e459be3a4310a4f2bae44f29922f98f404c1e302171 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/FishingCatchSplash.mat` | 65d7857441c8009665145def5601f8b91bd1f616e9441e98b20df57dfeaee799 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/AddressableAssets/FishingCatchSplash.mat.meta` | fe09b75f942190035f525317acef98f6156990bcafaa87abf50778a35e4b9c00 | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/Prefab/GameLifetimeScope.prefab` | 59c895cb82ef9443210ffd0ff01ac2ec0e5753959788d5e22e82f3110fa7084c | 2026-11-19 10:12:33 JST | GUIDと移行先の照合 | 改修済 |
+| `Assets/_Project/Scripts/Data/EconomyAssets.cs` | 6d899adaff3b8611c3e1f0a9a4485e6ead254dfa336a16aa7f926adfc3c79ec4 | 2026-11-19 10:12:33 JST | ロード元・所有者・検証の更新 | 改修済 |
+| `Assets/_Project/Scripts/Data/EconomyAssets.cs.meta` | c97ccbfc52bb1e8adf304bdf4e1b6ddbd98f0628f2996569ac9d5e2df1d0cbfa | 2026-11-19 10:12:33 JST | ロード元・所有者・検証の更新 | 改修済 |
+| `Assets/_Project/Scripts/Editor/EconomyChecks.cs` | 509a99dd4e023e7f8eb0a9995454d79cb86831463ba253f9d0ca277c99edd8ea | 2026-11-19 10:12:33 JST | ロード元・所有者・検証の更新 | 改修済 |
+| `Assets/_Project/Scripts/Editor/EconomyUIChecks.cs` | 7328dbc96afd4a7953d4ce5c6cf61dde4b70659c1a8e92b91aaf1d4d0b705323 | 2026-11-19 10:12:33 JST | ロード元・所有者・検証の更新 | 改修済 |
+| `Assets/_Project/Scripts/Editor/UpgradeChecks.cs` | d92cee52e68fb310bfaa4d136196df4fb9b847d8c4fe8a43cc1a38d7ce915daa | 2026-11-19 10:12:33 JST | ロード元・所有者・検証の更新 | 改修済 |
+| `Assets/_Project/Scripts/Editor/UpgradeSceneChecks.cs` | 5e8fb8817518ca63902207ca1137697254028a1d72aee6d78f3e0e2bf1079024 | 2026-11-19 10:12:33 JST | ロード元・所有者・検証の更新 | 改修済 |
+| `Assets/_Project/Scripts/Editor/UpgradeSetup.cs` | e89b0912ec4d41e8eafc257be9c94e8570d2aa3f9eab2a0aaf54c0302fcc79a0 | 2026-11-19 10:12:33 JST | ロード元・所有者・検証の更新 | 改修済 |
+| `Assets/_Project/Scripts/ExchangePoint/ExchangePointView.cs` | 9532c05292d3c0ef4f15720c22f49df46014166de3095badb7c47317b502c83e | 2026-11-19 10:12:33 JST | ロード元・所有者・検証の更新 | 改修済 |
+| `Assets/_Project/Scripts/ExchangePoint/TradePanelBinding.cs` | 7ea101021d81bc226cc8a0e7eeb10db50f586301f5edaa77b51c5a7037423138 | 2026-11-19 10:12:33 JST | ロード元・所有者・検証の更新 | 改修済 |
+| `Assets/_Project/Scripts/ExchangePoint/UpgradeService.cs` | e0704c6ecaf2f1652ab350150ef1820d6e2e775ce85a6137651a3f3230453c93 | 2026-11-19 10:12:33 JST | ロード元・所有者・検証の更新 | 改修済 |
+| `Assets/_Project/Scripts/Fishing/FishingCastView.cs` | 6202788d818716294a577df28dcb1fdfdd9856c86a09e9e319b497710e745a0c | 2026-11-19 10:12:33 JST | ロード元・所有者・検証の更新 | 改修済 |
+| `Assets/_Project/Scripts/LifetimeScopes/GameLifetimeScope.cs` | 892be6d0de998645d27fe2294264be570b403a3e5cf1107e4e1248469ff72960 | 2026-11-19 10:12:33 JST | ロード元・所有者・検証の更新 | 改修済 |
+| `Assets/_Project/Scripts/View/ItemMenuNavigation.cs` | 4057db550596d9436cda05a92af0fca032727814f3075a4d5ce54697d20b6ba9 | 2026-11-19 10:12:33 JST | ロード元・所有者・検証の更新 | 改修済 |
+
+#### 9-2j. 松明と気配消しの使用（ALC-01）
+
+【実装】既存IDの所持品を1個消費して発動する　効果中は同じアイテムを追加消費しない
+松明の点灯時間は暫定60秒、気配消しは次のゲーム内4時までとした　気配消しは発見・追跡へ適用し、接触捕獲は従来どおり
+炎は冷却に伴う浮力と発散のない渦速度場で粒子を移流する　迷彩は歩行画像を32本の帯に分けて透過と横ずれを描画する
+
+【合格】Unity Editorのキャンプで一時所持品を使い、選択枠の決定処理で松明、ボタンのクリック処理で薬を使用し、所持数・重複拒否・画面閉鎖を確認した
+カメラ出力と生成シェーダーを確認した　釣り場への効果の持ち越し、検知範囲内での追跡解除、明け方の通常表示への復帰をPlay Modeで確認した
+【未確認】スタンドアロンビルドと実機での描画・性能
+
+対象22ファイルの集合SHA-256は `cc1eba5e641360aa6bb1b10bfb94e66d9cb732635855b007fac4d115ec85501d`
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| `Assets/_Project/AddressableAssets/Economy/StealthPotion.asset` | a6708a9e5e44f15748c2144137a51f2a6090fdce0168649a8c9a197a8b62df92 | 2026-11-19 10:42:02 JST | アイテムの発動・表示・解除 | 改修済 |
+| `Assets/_Project/Prefab/Player.prefab` | 2737ca48bd21ed503795292bf6c7ebc6861f39c7104c03b878cd54e5ab43bb75 | 2026-11-19 10:42:02 JST | アイテムの発動・表示・解除 | 改修済 |
+| `Assets/_Project/SO/Item/Material/SO_Material_4000_Taimatsu.asset` | 85a022deadcd4a71659473074158cbc21d0360822b7dfc47f1eac37436d8bdd7 | 2026-11-19 10:42:02 JST | アイテムの発動・表示・解除 | 改修済 |
+| `Assets/_Project/Scripts/Editor/UpgradeSetup.cs` | fd1e6ac900b6ce9514db3710937cb980c1e1af257a81bb321c95356b7831f2f1 | 2026-11-19 10:42:02 JST | アイテムの発動・表示・解除 | 改修済 |
+| `Assets/_Project/Scripts/Enemy/VisionEnemyController.cs` | 4de7f07a64677f72dbec481797750a34253095e33dabc9e87c6e6498a082f19f | 2026-11-19 10:42:02 JST | アイテムの発動・表示・解除 | 改修済 |
+| `Assets/_Project/Scripts/Inventory/ConsumableEffects.cs` | 4ffc314e7ecc257807bb323e6cf675f6612f938af50b8f9bfa5e7ad1a5e1d983 | 2026-11-19 10:42:02 JST | アイテムの発動・表示・解除 | 改修済 |
+| `Assets/_Project/Scripts/Inventory/ConsumableEffects.cs.meta` | 235098cacf33a13378e93921876daa049c96bc8eeb90ff2d1338989850f6103b | 2026-11-19 10:42:02 JST | VFXの依存・参照 | 改修済 |
+| `Assets/_Project/Scripts/Inventory/InventoryPresenter.cs` | cb05553ec922d35709cc938684d0fad3b763ee06a1f5665a07e6abab17c52f63 | 2026-11-19 10:42:02 JST | アイテムの発動・表示・解除 | 改修済 |
+| `Assets/_Project/Scripts/Inventory/PlayerItemEffects.cs` | 8a150de19c982951a55a6c169973eeeaac01d804710e8c388003d0452f978f72 | 2026-11-19 10:42:02 JST | アイテムの発動・表示・解除 | 改修済 |
+| `Assets/_Project/Scripts/Inventory/PlayerItemEffects.cs.meta` | 2e0a8f0472d457c19cfe671e760391c2a628d5c0b09aeda47e99562ccd560b74 | 2026-11-19 10:42:02 JST | VFXの依存・参照 | 改修済 |
+| `Assets/_Project/Scripts/LifetimeScopes/GameLifetimeScope.cs` | 993169fc91bca7893a79a1aae262eddc5381d8a93c1db629a6eabda31490fb08 | 2026-11-19 10:42:02 JST | アイテムの発動・表示・解除 | 改修済 |
+| `Assets/_Project/Scripts/Movement/PlayerMovement.cs` | 90cf2e61d1ab97540d7adbc2348c2a1243e50b32ce184bb715f4615f9a8171cc | 2026-11-19 10:42:02 JST | アイテムの発動・表示・解除 | 改修済 |
+| `Assets/_Project/VFX.meta` | 90ac0c5e908cb06a6c75b498fb2f1b1590172ec4606767c339209a22af0e2761 | 2026-11-19 10:42:02 JST | VFXの依存・参照 | 改修済 |
+| `Assets/_Project/VFX/OpticalCamouflage.vfx` | 7f7eb2f521766a08300d0f814483e6fd429ede0776b208eb5d3beee5d45b74a9 | 2026-11-19 10:42:02 JST | アイテムの発動・表示・解除 | 改修済 |
+| `Assets/_Project/VFX/OpticalCamouflage.vfx.meta` | 988898285a4de21bdb67ad7c4d4bed01d30d8b5824e5da398b2294ebbb6bab3a | 2026-11-19 10:42:02 JST | VFXの依存・参照 | 改修済 |
+| `Assets/_Project/VFX/TorchPlume.vfx` | c180dbb18ce4325724708a38e2888d2badda5098089095cd26f07f120fe62e8d | 2026-11-19 10:42:02 JST | アイテムの発動・表示・解除 | 改修済 |
+| `Assets/_Project/VFX/TorchPlume.vfx.meta` | 7961aa275b8080aaa463e341aa53b38edecd58e49217d5123d553aed101112a7 | 2026-11-19 10:42:02 JST | VFXの依存・参照 | 改修済 |
+| `Assets/_Project/VFX/TorchWood.mat` | 7a0f671812c32a77fac8259be10d5f1f31df925281f8fb6f91013bf30482d6c9 | 2026-11-19 10:42:02 JST | VFXの依存・参照 | 改修済 |
+| `Assets/_Project/VFX/TorchWood.mat.meta` | 6a4f788564c9e4196a0372b4dfb55ea112ce6cdabaf8ea2175bfe7bdba074938 | 2026-11-19 10:42:02 JST | VFXの依存・参照 | 改修済 |
+| `Packages/manifest.json` | 22079eeaf537b36e70369319e5404d643cc630506c934731cf30cdd0ef95ebee | 2026-11-19 10:42:02 JST | VFXの依存・参照 | 改修済 |
+| `Packages/packages-lock.json` | d7548ef0488eb40b7617ce980baab942bade91e9ef62e7dd6eac401957141a17 | 2026-11-19 10:42:02 JST | VFXの依存・参照 | 改修済 |
+| `ProjectSettings/VFXManager.asset` | 028f4dc405631249154ec31ea792a12f96884b4007bfd1276d5082eff0c658df | 2026-11-19 10:42:02 JST | VFXの依存・参照 | 改修済 |
+
+#### 9-2k. 手持ち松明の接地とステージごとの復元
+
+【実装】点火中のフィールド決定操作で足元へ移し、設置後はゲームセッション中灯り続ける　手持ちと設置物が同じPrefabを参照する
+【拡張】IHeldPlaceableは現在の設置用Prefabと設置成功時の装備解除を提供する　StagePlacementsはシーンパス、Prefab、ワールド姿勢を保持する
+
+【Play確認・合格】釣り場でFから素材タブの松明を選び、最初のJで手持ち、次のJで接地することを確認した　一時所持品で装備時だけ1本減り、空中のJでは手持ちを維持した
+釣り場に1m離して2本、キャンプに1本を設置し、両ステージを往復した　復元後の各座標と本数が一致し、すべての灯りと炎の粒子を確認した
+キャンプの設置操作は検証中だけ開始会話の入力制限を一時解除して実行した　会話中に設置入力が抑止されることも別途確認した
+【範囲】ゲーム終了後の保存は対象外　スタンドアロンビルドでの実機検証は未実施
+
+対象10ファイルの集合SHA-256は `982a8666f5e0d85a391333f2c291350e0eba414ed7b5fc2ff386e1c6803ef689`
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| `Assets/_Project/Prefab/GroundTorch.prefab` | 8c701c040841d6e3f7adcdb17ac53fce52d7e68e6c60ee1004b33310de39d906 | 2026-11-19 10:52:29 JST | 松明の設置・復元経路 | 改修済 |
+| `Assets/_Project/Prefab/GroundTorch.prefab.meta` | dc2be6523288d0641cf324a81b1cb9aa1d6974aee63699f91b9f51f40d2f3385 | 2026-11-19 10:52:29 JST | 松明の設置・復元経路 | 改修済 |
+| `Assets/_Project/Prefab/Player.prefab` | cdd3d12718e52dc7df1499bbfaf54728319c491a1023e62fc9e5bdbdb1580779 | 2026-11-19 10:52:29 JST | 松明の設置・復元経路 | 改修済 |
+| `Assets/_Project/SO/Item/Material/SO_Material_4000_Taimatsu.asset` | f195da6cf989d794c63d8fa07a32497c24bc3ce32ef179a364d50819431937f6 | 2026-11-19 10:52:29 JST | 松明の設置・復元経路 | 改修済 |
+| `Assets/_Project/Scripts/Input/PlayerInputReader.cs` | e8723eb2d19c3299516b1f498ec4000ed89c594d3d6258a1651fe65957a53b8d | 2026-11-19 10:52:29 JST | 松明の設置・復元経路 | 改修済 |
+| `Assets/_Project/Scripts/Inventory/ConsumableEffects.cs` | a836c975b7339b1b01288bf7782eefbd2c857c1f38161e90312e1719e49627c2 | 2026-11-19 10:52:29 JST | 松明の設置・復元経路 | 改修済 |
+| `Assets/_Project/Scripts/Inventory/PlayerItemEffects.cs` | c0bcace27cc861e772eda6589df7072cd5842ed3a769386217eb3c551eb89762 | 2026-11-19 10:52:29 JST | 松明の設置・復元経路 | 改修済 |
+| `Assets/_Project/Scripts/Inventory/StagePlacements.cs` | 9598bf40e3c8667b367f311304c6879c89ccfc4c0750fc4aa4e81fc4c6fcb624 | 2026-11-19 10:52:29 JST | 松明の設置・復元経路 | 改修済 |
+| `Assets/_Project/Scripts/Inventory/StagePlacements.cs.meta` | f0eaf0aaf249547fa2f107be2819db22af2e0fd4b567ed7e9ec3da31e66534a4 | 2026-11-19 10:52:29 JST | 松明の設置・復元経路 | 改修済 |
+| `Assets/_Project/Scripts/LifetimeScopes/GameLifetimeScope.cs` | 9e4dbfa0561af3ce77deefea20a9b8955968e95315747452f2699bb1a18cc713 | 2026-11-19 10:52:29 JST | 松明の設置・復元経路 | 改修済 |
+
 ### 9-3. 未解決所見・検証限界
 
 | ID | 分類 | 根拠・影響 | 確定手段 |
@@ -979,3 +1226,18 @@ MicrosoftのXMLコメント記法とUnity 6000.6の.NET対応の公式ページ�
 
 【時計更新口統一後の文書QA】2026-11-04 17:24:38 JST、9-2dの13ファイルと集合のSHA-256、本文ハッシュ、表の列数、ローカルリンクを照合し合格　対象差分のgit diff --checkも合格
 9-8より前の時計更新口統一後本文SHA-256: 40ecec79d4bb1686c9e90e8cd4ea354c89a401882a260bbe30023c1b508bbb7d
+
+【交換所強化・調合追加後の文書QA】2026-11-12 18:08:09 JST、9-2gの対象41ファイルのハッシュと集合ハッシュを照合し、仕様と仮値、実行結果と未確認範囲を区別した
+9-8より前の改修後本文SHA-256: `e2f742fd6941850cc98718029232f5cdccc413d3e7617c979887bab9a463948e`
+
+【ポーション画像差し替え後の文書QA】2026-11-12 19:02:59 JST、9-2hの3ファイルと集合のSHA-256を照合した
+9-8より前の改修後本文SHA-256: `efba9f25ce323e267fadccd829aaf715a4588cf288f84f672ce492357b8e8ea9`
+
+【Addressables移行後の文書QA】2026-11-19 10:12:33 JST、9-2iのファイルと集合のSHA-256を照合した
+9-8より前の改修後本文SHA-256: `d505ddacec027ef431115fb4910b62853df6cdbae7390843cb3d46cb1d7a601c`
+
+【松明・気配消し追加後の文書QA】2026-11-19 10:42:02 JST、9-2jの対象ファイルのSHA-256と集合ハッシュを計算した
+9-8より前の改修後本文SHA-256: `bbff4c8da336e924648d1cf01ff15a5813924392f6a804fe4b6c9d856858755f`
+
+【松明設置後の文書QA】2026-11-19 10:52:29 JST、9-2kの対象ファイルのSHA-256と集合ハッシュを照合した
+9-8より前の改修後本文SHA-256: `e2f03986fffc4f8c3248f77eff676215355ad074d7dab550fe571d1e308cf6a2`

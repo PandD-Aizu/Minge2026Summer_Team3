@@ -10,6 +10,7 @@ namespace MiniGame
         private readonly GaugeMiniGameSettings _settings;
         private readonly System.Random _random;
         private readonly float _timeLimit;
+        private readonly float _gainMultiplier;
         private float _accumulator, _elapsed, _barVelocity, _fishVelocity, _target, _changeTime, _dartTime;
         private int _elapsedSteps;
         public float BarPosition { get; private set; }
@@ -26,9 +27,13 @@ namespace MiniGame
         /// <summary>魚とバーを重ねて開始し、乱数の種を固定できるようにする</summary>
         /// <param name="settings">魚ごとの読み取り専用設定</param>
         /// <param name="random">動きに使用する乱数</param>
+        /// <param name="gainMultiplier">成功ゲージの増加倍率、未強化なら1</param>
         /// <example>new GaugeMiniGameModel(settings, new System.Random(seed))</example>
-        public GaugeMiniGameModel(GaugeMiniGameSettings settings, System.Random random)
+        public GaugeMiniGameModel(GaugeMiniGameSettings settings, System.Random random, float gainMultiplier = 1f)
         {
+            if (gainMultiplier < 1f || float.IsNaN(gainMultiplier) || float.IsInfinity(gainMultiplier))
+                throw new ArgumentOutOfRangeException(nameof(gainMultiplier));
+            _gainMultiplier = gainMultiplier;
             _settings = settings;
             _random = random;
             _timeLimit = Mathf.Max(0.1f, settings.TimeLimitSeconds);
@@ -82,7 +87,7 @@ namespace MiniGame
 
             // 開始猶予中は捕獲ゲージだけを止め、赤い時間ゲージは進める
             if (_elapsed < _settings.GraceSeconds) return;
-            Progress = Mathf.Clamp01(Progress + (IsInside ? _settings.GainPerSecond : -_settings.LossPerSecond) * Step);
+            Progress = Mathf.Clamp01(Progress + (IsInside ? _settings.GainPerSecond * _gainMultiplier : -_settings.LossPerSecond) * Step);
             IsFinished = Progress <= 0f || Progress >= 1f;
         }
 

@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5c4775e5f6f40f2a095ad3050b6119d, type: 3}
+  m_Name: EconomyAssets
+  m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Data.EconomyAssets
+  _items: {fileID: 11400000, guid: 8bfa6e0811b02884dbf1d61962132414, type: 2}
+  _recipes:
+  - {fileID: 11400000, guid: de752a3b1e2642d8b9e9f70558d286d3, type: 2}
+  - {fileID: 11400000, guid: f5868b7060b3427b8e2b0c84e935e433, type: 2}
+  - {fileID: 11400000, guid: acfb5ec5cca401743aaac60459d9e149, type: 2}
+  _upgrades:
+  - {fileID: 11400000, guid: ae39f28130c947d48ae0c3f52fcc0b6b, type: 2}
+  - {fileID: 11400000, guid: 317afb26a87e959488acf6b44ed95b24, type: 2}
+  _font: {fileID: 11400000, guid: 098a83154fed1ad45ae1d17df567b56b, type: 2}
+  _shell: {fileID: 21300000, guid: 9239ceb7ad9649b2beeca781318da6c0, type: 3}
+  _cooler: {fileID: 21300000, guid: 8f3156457b9b0d345aeb77da8efb570e, type: 3}

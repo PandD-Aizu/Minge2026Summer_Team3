@@ -22,6 +22,7 @@ namespace _Project.Scripts.Inventory
         private readonly InventoryData.Inventory _inventory;
         private readonly ItemCatalog _itemCatalog;
         private readonly FMODSEService _se;
+        private readonly InventoryData.ConsumableEffects _effects;
 
         /// <summary>共通入力とインベントリ用Prefabを受け取る</summary>
         /// <param name="input">ゲーム全体の入力アクション</param>
@@ -30,9 +31,10 @@ namespace _Project.Scripts.Inventory
         /// <param name="inventory">所持アイテムの一覧</param>
         /// <param name="itemCatalog">アイテムの表示情報</param>
         /// <param name="se">画面を開く音を再生するサービス</param>
+        /// <param name="effects">消耗品の使用を確定する共有状態</param>
         /// <example>GameLifetimeScopeのEntryPointとして登録する</example>
         public InventoryPresenter(PlayerInputAction input, MenuInputService menuInput, Func<InventoryView> viewFactory,
-            InventoryData.Inventory inventory, ItemCatalog itemCatalog, FMODSEService se)
+            InventoryData.Inventory inventory, ItemCatalog itemCatalog, FMODSEService se, InventoryData.ConsumableEffects effects)
         {
             _input = input;
             _menuInput = menuInput;
@@ -40,6 +42,7 @@ namespace _Project.Scripts.Inventory
             _inventory = inventory;
             _itemCatalog = itemCatalog;
             _se = se;
+            _effects = effects;
         }
 
         /// <summary>開閉・決定キーとシーン終了の通知を購読する</summary>
@@ -82,6 +85,7 @@ namespace _Project.Scripts.Inventory
                 if (_view == null)
                 {
                     _view = _viewFactory();
+                    _view.OnItemSelected.Subscribe(UseItem).AddTo(_subscriptions);
                     _view.OnCloseClicked.Subscribe(_ => Close()).AddTo(_subscriptions);
                 }
 
@@ -121,13 +125,18 @@ namespace _Project.Scripts.Inventory
         private void Confirm()
         {
             if (_view != null && _view.gameObject.activeSelf && _view.Navigation.ConfirmSelection())
-                UseSelectedItem();
+                _view.Navigation.SelectedItem.GetComponent<UnityEngine.UI.Button>()?.onClick.Invoke();
         }
 
-        /// <summary>選択中のアイテムを使用するための拡張箇所</summary>
-        /// <example>今後、Navigation.SelectedItemに対応するアイテムの効果を実装する</example>
-        private void UseSelectedItem()
+        /// <summary>決定またはクリックした消耗品を使用してフィールドへ戻る</summary>
+        /// <param name="id">選択枠に対応するアイテムID</param>
+        /// <example>素材タブで松明を選択したときに呼ぶ</example>
+        private void UseItem(int id)
         {
+            if (id != InventoryData.ConsumableEffects.TorchId && id != InventoryData.ConsumableEffects.PotionId) return;
+            var player = GameObject.FindWithTag("Player");
+            if (player != null && player.TryGetComponent<PlayerItemEffects>(out var view)
+                && view.Ready && _effects.TryUse(id)) Close();
         }
 
         /// <summary>表示中の選択枠を動かし、通常操作が終わったら閉じる</summary>

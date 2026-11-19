@@ -22,27 +22,32 @@ namespace ItemMenus
         public int ActiveTab => _activeTab;
         public UnityEngine.UI.ScrollRect[] Pages => _pages;
 
-        /// <summary>既存の購入画面を売却、購入、交換の3タブへ拡張する</summary>
+        /// <summary>既存の購入画面を売却、購入、交換・調合、強化の4タブへ拡張する</summary>
+        /// <param name="font">取引タブで使用するフォント</param>
         /// <example>集荷場のロード後に一度呼ぶ</example>
-        public void ConfigureTradingTabs()
+        public void ConfigureTradingTabs(TMPro.TMP_FontAsset font)
         {
             _monochrome = true;
             if (_tabs.Length != 2 || _pages.Length != 2) return;
             var tab = Instantiate(_tabs[1], _tabs[1].transform.parent);
             var page = Instantiate(_pages[1], _pages[1].transform.parent);
-            _tabs = new[] { _tabs[0], _tabs[1], tab };
-            _pages = new[] { _pages[0], _pages[1], page };
+            var upgradeTab = Instantiate(_tabs[1], _tabs[1].transform.parent);
+            var upgradePage = Instantiate(_pages[1], _pages[1].transform.parent);
+            _tabs = new[] { _tabs[0], _tabs[1], tab, upgradeTab };
+            _pages = new[] { _pages[0], _pages[1], page, upgradePage };
             tab.onClick.RemoveAllListeners();
             tab.OnClickAsObservable().Subscribe(_ => SelectTab(2)).AddTo(this);
-            string[] labels = { "売却", "購入", "直接交換" };
-            for (int i = 0; i < 3; i++)
+            upgradeTab.onClick.RemoveAllListeners();
+            upgradeTab.OnClickAsObservable().Subscribe(_ => SelectTab(3)).AddTo(this);
+            string[] labels = { "売却", "購入", "交換・調合", "強化" };
+            for (int i = 0; i < _tabs.Length; i++)
             {
                 var label = _tabs[i].GetComponentInChildren<TMPro.TMP_Text>();
-                label.font = Resources.Load<TMPro.TMP_FontAsset>("Economy/TradeFont");
+                label.font = font;
                 label.text = labels[i];
                 var rect = (RectTransform)_tabs[i].transform;
-                rect.anchorMin = new Vector2(i * 0.8f / 3f, rect.anchorMin.y);
-                rect.anchorMax = new Vector2((i + 1) * 0.8f / 3f, rect.anchorMax.y);
+                rect.anchorMin = new Vector2(i * 0.8f / _tabs.Length, rect.anchorMin.y);
+                rect.anchorMax = new Vector2((i + 1) * 0.8f / _tabs.Length, rect.anchorMax.y);
                 rect.offsetMin = new Vector2(8, rect.offsetMin.y);
                 rect.offsetMax = new Vector2(-8, rect.offsetMax.y);
             }

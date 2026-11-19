@@ -28,6 +28,7 @@ namespace LifetimeScopes
 
             // 時計
             builder.RegisterComponentInHierarchy<GameTimeView>();
+            builder.RegisterComponentInHierarchy<PlayerMovement>();
 
             if (_pauseMenuView == null) return;
             if (_playerInputReader == null)

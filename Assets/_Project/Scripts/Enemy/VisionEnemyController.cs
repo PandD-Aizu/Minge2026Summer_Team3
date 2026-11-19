@@ -16,6 +16,7 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
     private readonly VisionEnemyDetectSensor _detectSensor;
     private readonly VisionEnemyDeathSensor _deathSensor;
     private readonly IPlayerPosition _player;
+    private readonly InventoryData.ConsumableEffects _effects;
     private readonly GameProgress _progress;
     private readonly VisionEnemyNavigator _navigator;
     private IDisposable _timeSubscription;
@@ -42,16 +43,18 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
     /// <param name="deathSensor">接触を通知するSensor</param>
     /// <param name="player">追跡対象の位置</param>
     /// <param name="progress">現在の時間帯と変更通知</param>
+    /// <param name="effects">プレイヤーの気配消し状態</param>
     /// <example>FishingSceneLifetimeScopeのEntryPointとして生成する</example>
     public VisionEnemyController(VisionEnemyView view,
         VisionEnemyDetectSensor detectSensor, VisionEnemyDeathSensor deathSensor,
         IPlayerPosition player, GameProgress progress,
-        VisionEnemyNavigator  navigator)
+        VisionEnemyNavigator navigator, InventoryData.ConsumableEffects effects)
     {
         _view = view;
         _detectSensor = detectSensor;
         _deathSensor = deathSensor;
         _player = player;
+        _effects = effects;
         _progress = progress;
         _navigator = navigator;
     }
@@ -89,7 +92,8 @@ public sealed class VisionEnemyController : IInitializable, ITickable, IDisposab
 
         // ポーズ中は追跡時間と再発見までの猶予を進めない
         _rediscoveryRemaining = Mathf.Max(0f, _rediscoveryRemaining - Time.deltaTime);
-        if (_isNight && !_isCapturing && _rediscoveryRemaining <= 0f && _detectSensor.PlayerInside)
+        if (_effects.Cloaked) _hasDetectedPlayer = false;
+        else if (_isNight && !_isCapturing && _rediscoveryRemaining <= 0f && _detectSensor.PlayerInside)
             _hasDetectedPlayer = true;
 
         if (!_isNight || _isCapturing || !_hasDetectedPlayer || _player.PlayerPosition == null)
