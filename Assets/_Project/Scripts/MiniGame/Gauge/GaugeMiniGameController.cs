@@ -12,14 +12,16 @@ namespace MiniGame
     {
         private readonly GaugeMiniGameView _view;
         private readonly PlayerInputAction _input;
+        private readonly Upgrades.UpgradeService _upgrades;
         public MiniGameType GameType => MiniGameType.Gauge;
 
         /// <summary>画面と入力を受け取る</summary>
         /// <param name="view">ゲージ画面</param>
         /// <param name="input">共有入力</param>
+        /// <param name="upgrades">共有する釣り強化</param>
         /// <example>VContainerから生成する</example>
-        public GaugeMiniGameController(GaugeMiniGameView view, PlayerInputAction input)
-        { _view = view; _input = input; }
+        public GaugeMiniGameController(GaugeMiniGameView view, PlayerInputAction input, Upgrades.UpgradeService upgrades)
+        { _view = view; _input = input; _upgrades = upgrades; }
 
         /// <inheritdoc />
         public bool CanPlay(MiniGameSettings settings) => settings is GaugeMiniGameSettings;
@@ -29,7 +31,8 @@ namespace MiniGame
         {
             if (settings is not GaugeMiniGameSettings gauge) throw new ArgumentException(nameof(settings));
             cancellation.ThrowIfCancellationRequested();
-            var model = new GaugeMiniGameModel(gauge, new System.Random(UnityEngine.Random.Range(0, int.MaxValue)));
+            var model = new GaugeMiniGameModel(gauge, new System.Random(UnityEngine.Random.Range(0, int.MaxValue)),
+                _upgrades.FishingGainMultiplier);
             var gate = new MiniGameInputGate();
             try
             {

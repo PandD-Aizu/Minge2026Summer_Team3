@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SO_Material_4000_Taimatsu
   m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.Data.Material.MaterialDefinition
   itemId: 4000
-  itemName: Taimatsu
-  description: 
-  _materialImage: {fileID: 0}
+  itemName: "\u677E\u660E"
+  description: "\u624B\u306B\u6301\u3064\u306860\u79D2\u9593\u71C3\u3048\u308B\u3002\u70B9\u706F\u4E2D\u306B\u30D5\u30A3\u30FC\u30EB\u30C9\u3067J\u3092\u62BC\u3059\u3068\u8DB3\u5143\u306B\u8A2D\u7F6E\u3067\u304D\u3001\u8A2D\u7F6E\u3057\u305F\u677E\u660E\u306F\u30B9\u30C6\u30FC\u30B8\u3092\u96E2\u308C\u3066\u3082\u706F\u308A\u7D9A\u3051\u308B"
   _purchasePrice: 100
+  _materialImage: {fileID: 21300000, guid: ef6007b68ca77fc43a949406586a7d1a, type: 3}

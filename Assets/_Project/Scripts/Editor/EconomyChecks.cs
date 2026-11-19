@@ -13,6 +13,9 @@ using UnityEngine;
 /// <summary>取引と保存の境界条件を実データで検証する</summary>
 public static class EconomyChecks
 {
+    public static EconomyAssets Assets => AssetDatabase.LoadAssetAtPath<EconomyAssets>(
+        "Assets/_Project/AddressableAssets/Economy/EconomyAssets.asset");
+
     /// <summary>独立した一時セーブで検証し、実プレイヤーの保存には触れない</summary>
     /// <example>Unity -batchmode -executeMethod EconomyChecks.Run</example>
     [MenuItem("Tools/Validation/Economy")]
@@ -24,7 +27,7 @@ public static class EconomyChecks
         var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>("Assets/_Project/SO/Item/ItemCatalog.asset");
         var fish = (FishDefinition)catalog.FindById(1001);
         var item = catalog.FindById(2000);
-        var recipes = Resources.LoadAll<ExchangeRecipeDefinition>("Economy");
+        var recipes = Assets.Recipes;
         try
         {
             var inventory = new Inventory(save);
@@ -41,7 +44,7 @@ public static class EconomyChecks
             Check(wallet.Balance == 200 && inventory.GetCount(1001) == 1, "売却の増減");
             Check(!service.TrySell(fish, 0, out _) && !service.TrySell(fish, -1, out _), "不正数量");
             Check(!inventory.Remove(1001, -1), "負の消費");
-            Check(recipes.Length == 2, "交換レシピ");
+            Check(recipes.Length == 3, "既存交換2件とポーション調合");
             Check(service.TryExchange(recipes[0], 1, out _), "直接交換");
             Check(!service.TryExchange(recipes[0], 1, out _), "連続交換の不足");
             Check(wallet.Balance == 200 && inventory.GetCount(1001) == 0, "直接交換は残高を保持");
@@ -54,7 +57,7 @@ public static class EconomyChecks
             inventory.Add(2000, int.MaxValue - before);
             Check(!service.TryBuy(item, 1, out _) && wallet.Balance == int.MaxValue, "所持数上限で残高を保持");
             Check(!service.TryExchange(recipes[0], int.MaxValue, out _), "交換数量の乗算上限");
-            Check(Resources.Load<Sprite>("Economy/ShellCurrency") != null, "貝殻Sprite");
+            Check(Assets.Shell != null && Assets.Cooler != null && Assets.Font != null, "交換所の画像とフォント");
 
             // 旧形式と破損セーブを別々に検証する
             save.WriteSaveData(new GameData { useDefaultAudioSettings = true });
@@ -74,7 +77,7 @@ public static class EconomyChecks
     /// <example>初回の検証前に呼ぶ</example>
     private static void EnsureFont()
     {
-        const string path = "Assets/_Project/Resources/Economy/TradeFont.asset";
+        const string path = "Assets/_Project/AddressableAssets/Economy/TradeFont.asset";
         if (AssetDatabase.LoadAssetAtPath<TMPro.TMP_FontAsset>(path) != null) return;
         var source = AssetDatabase.LoadAssetAtPath<Font>("Assets/TextMesh Pro/Fonts/KleeOne-Regular.ttf");
         var font = TMPro.TMP_FontAsset.CreateFontAsset(source, 48, 5,

@@ -50,6 +50,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c8d6af792f0f4a5b962f2d099e66f616
+    m_Address: EconomyAssets
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2f6ec4ab9a986c44487ddbfc23810f6e
+    m_Address: FishingCatchSplash
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 0dcaff91a65c18541a02ed631f67f1b1, type: 2}
   m_SchemaSet:

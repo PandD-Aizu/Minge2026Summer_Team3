@@ -8,6 +8,7 @@ using ItemMenus;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Upgrades;
 
 namespace ExchangePoint
 {
@@ -18,18 +19,24 @@ namespace ExchangePoint
         {
             public ItemDefinition Item;
             public ExchangeRecipeDefinition Recipe;
+            public UpgradeDefinition Upgrade;
             public int Mode;
             public TMP_Text Label;
         }
         private readonly Dictionary<Transform, Offer> _offers = new();
         private readonly ExchangePointService _service;
+        private readonly UpgradeService _upgrades;
         private readonly TutorialController _tutorial;
         private readonly ItemMenuNavigation _navigation;
         private readonly TMP_Text _balance;
         private readonly TMP_FontAsset _font;
+        private readonly EconomyAssets _assets;
         private Offer _selected;
         private TMP_Text _detail;
         private Button _confirm;
+        private UnityEngine.UI.Button _decrease, _increase;
+        private TMP_Text _controls;
+        private int _displayedLevel;
         private TMP_Text _tradeTitle, _fishLabel, _receivedAmount, _givenAmount, _quantityLabel, _maximumLabel, _walletLabel;
         private TMP_Text _stationLabel;
         private Image _fishPicture, _receivedPicture;
@@ -45,15 +52,19 @@ namespace ExchangePoint
         /// <summary>既存一覧の枠を商品データから構築する</summary>
         /// <param name="root">ロード済み一覧</param><param name="navigation">既存カーソル</param>
         /// <param name="service">取引サービス</param><param name="tutorial">進行通知先</param><param name="open">詳細を開く操作</param>
+        /// <param name="upgrades">強化の購入と能力状態</param>
+        /// <param name="assets">共有する取引データと表示素材</param>
         /// <example>一覧ロード後に一度生成する</example>
         public TradePanelBinding(GameObject root, ItemMenuNavigation navigation, ExchangePointService service,
-            TutorialController tutorial, Action open)
+            TutorialController tutorial, Action open, UpgradeService upgrades, EconomyAssets assets)
         {
             _service = service;
+            _upgrades = upgrades;
             _tutorial = tutorial;
             _navigation = navigation;
-            _font = Resources.Load<TMP_FontAsset>("Economy/TradeFont");
-            navigation.ConfigureTradingTabs();
+            _assets = assets;
+            _font = assets.Font;
+            navigation.ConfigureTradingTabs(_font);
             ApplyWhiteTheme(root);
             var canvas = root.GetComponentInChildren<Canvas>(true).transform;
             _balance = Text(canvas, "Balance", new Vector2(0.85f, 0.92f), new Vector2(0.98f, 0.98f));
@@ -63,7 +74,7 @@ namespace ExchangePoint
             var iconRect = (RectTransform)icon.transform;
             iconRect.anchorMin = new Vector2(0.80f, 0.92f); iconRect.anchorMax = new Vector2(0.85f, 0.98f);
             iconRect.offsetMin = iconRect.offsetMax = Vector2.zero;
-            icon.GetComponent<Image>().sprite = Resources.Load<Sprite>("Economy/ShellCurrency");
+            icon.GetComponent<Image>().sprite = _assets.Shell;
             icon.GetComponent<Image>().preserveAspect = true;
             icon.GetComponent<Image>().raycastTarget = false;
 
@@ -79,14 +90,19 @@ namespace ExchangePoint
                 if (mode < 2)
                 {
                     foreach (var item in service.Catalog.Items)
-                        if (item != null && (mode == 0 ? item is FishDefinition : !(item is FishDefinition)))
+                        if (item != null && (mode == 0 ? item is FishDefinition : !(item is FishDefinition) && item.PurchasePrice > 0))
                             AddOffer(content, new Offer { Item = item, Mode = mode }, open);
                 }
-                else
+                else if (mode == 2)
                 {
-                    foreach (var recipe in Resources.LoadAll<ExchangeRecipeDefinition>("Economy"))
+                    foreach (var recipe in _assets.Recipes)
                         if (recipe.CostFish != null && recipe.RewardItem != null)
                             AddOffer(content, new Offer { Item = recipe.RewardItem, Recipe = recipe, Mode = 2 }, open);
+                }
+                else if (mode == 3)
+                {
+                    foreach (var upgrade in _upgrades.Definitions)
+                        AddOffer(content, new Offer { Upgrade = upgrade, Mode = 3 }, open);
                 }
             }
             Refresh();
@@ -111,7 +127,12 @@ namespace ExchangePoint
             var rect = (RectTransform)picture.transform;
             rect.anchorMin = new Vector2(0.15f, 0.45f); rect.anchorMax = new Vector2(0.85f, 0.98f);
             rect.offsetMin = rect.offsetMax = Vector2.zero;
-            picture.GetComponent<Image>().sprite = offer.Item.ItemImage;
+            picture.GetComponent<Image>().sprite = offer.Upgrade != null ? offer.Upgrade.Icon : offer.Item.ItemImage;
+            picture.GetComponent<Image>().enabled = picture.GetComponent<Image>().sprite != null;
+            if (offer.Upgrade != null && offer.Upgrade.Icon == null)
+            {
+                offer.Label.rectTransform.anchorMax = Vector2.one;
+            }
             picture.GetComponent<Image>().preserveAspect = true;
             picture.GetComponent<Image>().raycastTarget = false;
             _offers.Add(row.transform, offer);
@@ -135,6 +156,14 @@ namespace ExchangePoint
             foreach (var pair in _offers)
             {
                 var offer = pair.Value;
+                if (offer.Upgrade != null)
+                {
+                    int level = _upgrades.GetLevel(offer.Upgrade);
+                    var next = offer.Upgrade.GetNextStage(level);
+                    offer.Label.text = $"{offer.Upgrade.DisplayName}\nLv {level} / {offer.Upgrade.MaxLevel}\n"
+                        + (next == null ? "強化上限" : $"次の強化 {next.Price:N0}");
+                    continue;
+                }
                 int count = _service.Inventory.GetCount(offer.Item.ItemId);
                 offer.Label.text = offer.Item.ItemName + "\n所持 " + count;
 
@@ -174,7 +203,7 @@ namespace ExchangePoint
                 _tradeTitle = Text(content, "Title", new Vector2(0.28f, 0.89f), new Vector2(0.68f, 0.98f));
                 _tradeTitle.fontSize = 34;
                 var walletIcon = Picture(content, "WalletIcon", new Vector2(0.76f, 0.90f), new Vector2(0.82f, 0.97f));
-                walletIcon.sprite = Resources.Load<Sprite>("Economy/ShellCurrency");
+                walletIcon.sprite = _assets.Shell;
                 _walletTarget = walletIcon.rectTransform;
                 _walletLabel = Text(content, "Wallet", new Vector2(0.82f, 0.90f), new Vector2(0.98f, 0.97f));
                 _walletLabel.fontSize = 24;
@@ -185,7 +214,7 @@ namespace ExchangePoint
                 _fishLabel.enableAutoSizing = true; _fishLabel.fontSizeMin = 16; _fishLabel.fontSizeMax = 26;
                 var station = Picture(content, "CollectionPoint", new Vector2(0.72f, 0.43f), new Vector2(0.95f, 0.66f));
                 station.color = Color.white;
-                station.sprite = Resources.Load<Sprite>("Economy/CollectionCooler");
+                station.sprite = _assets.Cooler;
                 _stationOrigin = station.rectTransform;
                 _stationLabel = Text(station.transform, "Name", new Vector2(-0.1f, -0.35f), new Vector2(1.1f, -0.02f));
                 _stationLabel.text = "集荷場";
@@ -200,13 +229,14 @@ namespace ExchangePoint
                 _maximumLabel = Text(content, "Maximum", new Vector2(0.27f, 0.19f), new Vector2(0.65f, 0.26f));
                 _maximumLabel.fontSize = 22;
 
-                Button(content, "−", new Vector2(0.18f, 0.08f), new Vector2(0.29f, 0.17f), () => ChangeQuantity(-1));
+                _decrease = Button(content, "−", new Vector2(0.18f, 0.08f), new Vector2(0.29f, 0.17f), () => ChangeQuantity(-1));
                 _quantityLabel = Text(content, "Quantity", new Vector2(0.30f, 0.08f), new Vector2(0.47f, 0.17f));
-                Button(content, "＋", new Vector2(0.48f, 0.08f), new Vector2(0.59f, 0.17f), () => ChangeQuantity(1));
+                _increase = Button(content, "＋", new Vector2(0.48f, 0.08f), new Vector2(0.59f, 0.17f), () => ChangeQuantity(1));
                 _confirm = Button(content, "確定 [J]", new Vector2(0.69f, 0.08f), new Vector2(0.93f, 0.17f), Execute);
                 _detail = Text(content, "TradeResult", new Vector2(0.22f, 0.48f), new Vector2(0.78f, 0.61f));
                 _detail.fontSize = 22;
                 var hint = Text(content, "Controls", new Vector2(0.10f, 0.01f), new Vector2(0.90f, 0.06f));
+                _controls = hint;
                 hint.text = "A / D  数量変更     Esc  戻る"; hint.fontSize = 20;
 
                 // 最前面の表示専用レイヤーで飛ばし、ボタン入力は遮らない
@@ -235,6 +265,11 @@ namespace ExchangePoint
         private int Maximum()
         {
             if (_selected == null) return 0;
+            if (_selected.Upgrade != null)
+            {
+                var stage = _selected.Upgrade.GetNextStage(_upgrades.GetLevel(_selected.Upgrade));
+                return stage != null && _service.Inventory.Balance >= stage.Price ? 1 : 0;
+            }
             if (_selected.Mode == 0) return _service.Inventory.GetCount(_selected.Item.ItemId);
             if (_selected.Mode == 1) return _selected.Item.PurchasePrice > 0 ? _service.Inventory.Balance / _selected.Item.PurchasePrice : 0;
             return _selected.Recipe.CostAmount > 0 ? _service.Inventory.GetCount(_selected.Recipe.CostFish.ItemId) / _selected.Recipe.CostAmount : 0;
@@ -244,6 +279,7 @@ namespace ExchangePoint
         /// <param name="delta">増減方向</param><example>＋ボタンは1を渡す</example>
         private void ChangeQuantity(int delta)
         {
+            if (_selected?.Upgrade != null) return;
             _quantity = (int)Math.Max(1L, Math.Min(Math.Max(1, Maximum()), (long)_quantity + delta));
             _result = ""; UpdateDetail();
         }
@@ -253,6 +289,19 @@ namespace ExchangePoint
         private void UpdateDetail()
         {
             if (_detail == null || _selected == null) return;
+            bool upgrading = _selected.Upgrade != null;
+            _decrease.gameObject.SetActive(!upgrading);
+            _increase.gameObject.SetActive(!upgrading);
+            _quantityLabel.gameObject.SetActive(!upgrading);
+            _receiveArrow.gameObject.SetActive(!upgrading);
+            _giveArrow.gameObject.SetActive(!upgrading);
+            _stationOrigin.gameObject.SetActive(!upgrading);
+            _fishLabel.gameObject.SetActive(!upgrading);
+            _fishPicture.gameObject.SetActive(!upgrading);
+            _controls.text = upgrading ? "J  強化購入     Esc  戻る" : "A / D  数量変更     Esc  戻る";
+            _detail.rectTransform.anchorMin = upgrading ? new Vector2(0.06f, 0.40f) : new Vector2(0.22f, 0.48f);
+            _detail.rectTransform.anchorMax = upgrading ? new Vector2(0.94f, 0.70f) : new Vector2(0.78f, 0.61f);
+            if (upgrading) { UpdateUpgradeDetail(); return; }
             var item = _selected.Item;
             bool exchange = _selected.Mode == 2;
             bool buying = _selected.Mode == 1;
@@ -261,10 +310,11 @@ namespace ExchangePoint
             long received = exchange ? (long)_selected.Recipe.RewardAmount * _quantity
                 : (long)(buying ? item.PurchasePrice : ((FishDefinition)item).SellPrice) * _quantity;
 
-            _tradeTitle.text = exchange ? "直接交換" : buying ? "購入" : "売却";
+            _tradeTitle.text = exchange ? "交換・調合" : buying ? "購入" : "売却";
             _fishPicture.sprite = source.ItemImage;
             _fishLabel.text = $"{source.ItemName}\n所持 × {_service.Inventory.GetCount(source.ItemId)}";
-            _receivedPicture.sprite = exchange ? item.ItemImage : Resources.Load<Sprite>("Economy/ShellCurrency");
+            _receivedPicture.sprite = exchange ? item.ItemImage : _assets.Shell;
+            _receivedPicture.enabled = _receivedPicture.sprite != null;
             _receivedAmount.text = $"× {received:N0}";
             _givenAmount.text = $"× {given:N0}";
             _quantityLabel.text = _quantity.ToString("N0");
@@ -273,8 +323,29 @@ namespace ExchangePoint
             _receiveArrow.Configure(buying, true);
             _giveArrow.Configure(!buying, false);
             _stationLabel.text = "集荷場";
-            _detail.text = _result;
+            _detail.text = string.IsNullOrEmpty(_result) && exchange ? $"完成品：{item.ItemName}" : _result;
             _confirm.interactable = Maximum() >= _quantity;
+        }
+
+        /// <summary>強化の累積効果と次の価格、購入できない理由を表示する</summary>
+        /// <example>強化商品を選択したときと購入後に呼ぶ</example>
+        private void UpdateUpgradeDetail()
+        {
+            var upgrade = _selected.Upgrade;
+            _displayedLevel = _upgrades.GetLevel(upgrade);
+            var next = upgrade.GetNextStage(_displayedLevel);
+            float current = upgrade.GetTotalEffect(_displayedLevel);
+            _tradeTitle.text = "強化";
+            _receivedPicture.sprite = _assets.Shell;
+            _receivedPicture.enabled = true;
+            _receivedAmount.text = next == null ? "上限" : $"{next.Price:N0}";
+            _detail.text = $"{upgrade.DisplayName}\n{upgrade.Description}\n"
+                + (next == null ? $"累積効果 +{current:P0}" : $"累積効果 +{current:P0} → +{current + next.EffectAmount:P0}");
+            _givenAmount.text = $"Lv {_displayedLevel} / {upgrade.MaxLevel}";
+            _maximumLabel.text = next == null ? "最大まで強化済み" : Maximum() == 0 ? "所持金が不足している"
+                : !string.IsNullOrEmpty(_result) ? _result : "購入すると即反映";
+            _walletLabel.text = _service.Inventory.Balance.ToString("N0");
+            _confirm.interactable = Maximum() == 1;
         }
 
         /// <summary>現在の商品を一度確定し、成功時だけ進行を通知する</summary>
@@ -285,18 +356,19 @@ namespace ExchangePoint
             _lastFrame = Time.frameCount;
             int balanceBefore = _service.Inventory.Balance;
             string error;
-            bool success = _selected.Mode == 0 ? _service.TrySell((FishDefinition)_selected.Item, _quantity, out error)
+            bool success = _selected.Upgrade != null ? _upgrades.TryBuy(_selected.Upgrade, _displayedLevel, out error)
+                : _selected.Mode == 0 ? _service.TrySell((FishDefinition)_selected.Item, _quantity, out error)
                 : _selected.Mode == 1 ? _service.TryBuy(_selected.Item, _quantity, out error)
                 : _service.TryExchange(_selected.Recipe, _quantity, out error);
             _result = success ? "取引が完了した" : error;
-            if (success && _selected.Mode != 1) _tutorial.NotifyExchangeCompleted();
+            if (success && (_selected.Mode == 0 || _selected.Mode == 2)) _tutorial.NotifyExchangeCompleted();
             _quantity = Math.Min(_quantity, Math.Max(1, Maximum()));
             Refresh();
 
             // 保存済みの増加額だけを演出し、購入、直接交換、失敗では貝殻を増やさない
             int received = _service.Inventory.Balance - balanceBefore;
             if (success && received > 0)
-                _rewardEffect.Play(_stationOrigin, _walletTarget, Resources.Load<Sprite>("Economy/ShellCurrency"), received);
+                _rewardEffect.Play(_stationOrigin, _walletTarget, _assets.Shell, received);
         }
 
         /// <summary>背景とボタンを白、既存文字を黒へ揃える</summary>

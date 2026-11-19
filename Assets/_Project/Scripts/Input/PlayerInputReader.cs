@@ -7,6 +7,9 @@ public class PlayerInputReader : MonoBehaviour
 {
     private PlayerInputAction _inputActions;
     private bool _isSubscribed;
+    private InventoryData.StagePlacements _placements;
+    private InventoryData.IHeldPlaceable[] _placeableItems;
+    private CharacterController _player;
     private Input.MenuInputService _menuInput;
 
     private int _movementBlockCount;
@@ -71,7 +74,7 @@ public class PlayerInputReader : MonoBehaviour
 
         _inputActions.Player.Interact.OnPerformedAsObservable()
             .Where(_ => !IsGameplayInputBlocked)
-            .Subscribe(_ => _interactPressed.OnNext(Unit.Default)).AddTo(this);
+            .Subscribe(_ => DispatchInteract()).AddTo(this);
         _inputActions.Player.Inventory.OnPerformedAsObservable()
             .Where(_ => !IsGameplayInputBlocked)
             .Subscribe(_ => _inventoryPressed.OnNext(Unit.Default)).AddTo(this);
@@ -83,6 +86,38 @@ public class PlayerInputReader : MonoBehaviour
         {
             _inputActions.Player.Enable();
         }
+    }
+
+    /// <summary>入力を受け取るプレイヤーの設置対象を一度だけ収集する</summary>
+    /// <param name="placements">ステージ間で共有する設置記録</param>
+    /// <example>追加の道具は同じプレイヤーにIHeldPlaceableの実装を付ける</example>
+    [Inject]
+    private void BindPlacements(InventoryData.StagePlacements placements)
+    {
+        _placements = placements;
+        _player = GetComponent<CharacterController>();
+        _placeableItems = GetComponents<InventoryData.IHeldPlaceable>();
+    }
+
+    /// <summary>手持ちアイテムの設置を優先し、同じJで会話や釣りを開始するのを防ぐ</summary>
+    /// <example>インベントリを閉じた決定入力はフィールドへ引き継がない</example>
+    private void DispatchInteract()
+    {
+        if (_menuInput.WasReleasedThisFrame) return;
+        if (CanStartGameplayAction && _placeableItems != null)
+        {
+            foreach (var item in _placeableItems)
+            {
+                var prefab = item.PlacementPrefab;
+                if (prefab == null) continue;
+
+                // 足場が見つからなければ手に残し、同じ入力が釣りなどへ流れるのを防ぐ
+                if (_placements.TryPlaceAtFeet(_player, prefab)) item.OnPlaced();
+                return;
+            }
+        }
+
+        _interactPressed.OnNext(Unit.Default);
     }
 
     private void OnEnable()

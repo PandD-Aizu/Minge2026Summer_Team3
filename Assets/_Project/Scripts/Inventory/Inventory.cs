@@ -10,6 +10,8 @@ namespace InventoryData
     public class Inventory
     {
         private Dictionary<int, int> _items = new();
+        // 強化はアイテム所持数と分離し、残高と同じスナップショットで保存する
+        private Dictionary<int, int> _upgradeLevels = new();
         private readonly SaveService _save;
         private readonly bool _loadFailed;
         public IReadOnlyDictionary<int, int> Items => new ReadOnlyDictionary<int, int>(_items);
@@ -28,7 +30,22 @@ namespace InventoryData
             _save = save;
             var data = save.LoadSaveData();
             _loadFailed = data == null && save.Exists;
-            if (data?.hasEconomy != true) return;
+            var restoredLevels = new Dictionary<int, int>();
+            if (data?.upgradeLevels != null)
+            {
+                foreach (var upgrade in data.upgradeLevels)
+                {
+                    if (upgrade == null || upgrade.upgradeId <= 0 || upgrade.level <= 0
+                        || upgrade.level > Upgrades.UpgradeDefinition.MaximumLevel || restoredLevels.ContainsKey(upgrade.upgradeId))
+                    { _loadFailed = true; return; }
+                    restoredLevels.Add(upgrade.upgradeId, upgrade.level);
+                }
+            }
+            if (data?.hasEconomy != true)
+            {
+                if (restoredLevels.Count > 0) _loadFailed = true;
+                return;
+            }
 
             // 不正な保存値は取引で上書きせず、読み込み失敗として扱う
             if (data.balance < 0 || data.ownedItems == null) { _loadFailed = true; return; }
@@ -40,6 +57,7 @@ namespace InventoryData
                 restored.Add(item.itemId, item.count);
             }
             _items = restored;
+            _upgradeLevels = restoredLevels;
             Balance = data.balance;
         }
 
@@ -48,6 +66,24 @@ namespace InventoryData
         /// <returns>未所持なら0</returns>
         /// <example>GetCount(1001)</example>
         public int GetCount(int itemId) => _items.TryGetValue(itemId, out var count) ? count : 0;
+
+        /// <summary>アイテム所持数と分離した強化段階を返す</summary>
+        /// <param name="upgradeId">強化の保存ID</param><returns>未購入なら0</returns>
+        /// <example>GetUpgradeLevel(1)で移動速度の段階を調べる</example>
+        public int GetUpgradeLevel(int upgradeId) => _upgradeLevels.TryGetValue(upgradeId, out int level) ? level : 0;
+
+        /// <summary>次の強化段階と支払いを同時に確定する</summary>
+        /// <param name="upgradeId">強化ID</param><param name="expectedLevel">確認済みの現在段階</param>
+        /// <param name="price">次の段階の価格</param><param name="error">失敗理由</param>
+        /// <returns>保存成功時のみtrue</returns><example>UpgradeServiceから呼び出す</example>
+        internal bool TryPurchaseUpgrade(int upgradeId, int expectedLevel, int price, out string error)
+        {
+            error = "強化段階が変わったか、上限に達している";
+            if (upgradeId <= 0 || expectedLevel < 0 || expectedLevel >= Upgrades.UpgradeDefinition.MaximumLevel
+                || GetUpgradeLevel(upgradeId) != expectedLevel || price <= 0) return false;
+            var nextLevels = new Dictionary<int, int>(_upgradeLevels) { [upgradeId] = expectedLevel + 1 };
+            return TryCommit(_items, (long)Balance - price, nextLevels, out error);
+        }
 
         /// <summary>正の数量を所持しているか調べる</summary>
         /// <param name="itemId">アイテムID</param><param name="amount">必要数</param>
@@ -84,6 +120,17 @@ namespace InventoryData
             if (!Apply(next, firstId, firstDelta) || !Apply(next, secondId, secondDelta))
             { error = "所持数が不足しているか、数量が上限を超えている"; return false; }
             long balance = Balance + moneyDelta;
+            return TryCommit(next, balance, _upgradeLevels, out error);
+        }
+
+        /// <summary>所持品・残高・強化段階を保存し、成功後にだけ公開する</summary>
+        /// <param name="next">確定予定の所持数</param><param name="balance">確定予定の残高</param>
+        /// <param name="levels">確定予定の強化段階</param><param name="error">失敗理由</param>
+        /// <returns>保存できた場合true</returns><example>購入と調合の共通確定処理に使う</example>
+        private bool TryCommit(Dictionary<int, int> next, long balance, Dictionary<int, int> levels, out string error)
+        {
+            error = "保存データを読み込めない";
+            if (_loadFailed) return false;
             if (balance < 0 || balance > int.MaxValue)
             { error = "残高が不足しているか、金額が上限を超えている"; return false; }
 
@@ -97,9 +144,12 @@ namespace InventoryData
                 data.balance = (int)balance;
                 data.ownedItems = new List<OwnedItemData>();
                 foreach (var pair in next) data.ownedItems.Add(new OwnedItemData { itemId = pair.Key, count = pair.Value });
+                data.upgradeLevels = new List<UpgradeLevelData>();
+                foreach (var pair in levels) data.upgradeLevels.Add(new UpgradeLevelData { upgradeId = pair.Key, level = pair.Value });
                 if (!_save.WriteSaveData(data)) { error = "保存に失敗したため取引を中止した"; return false; }
             }
             _items = next;
+            _upgradeLevels = levels;
             Balance = (int)balance;
             error = null;
             return true;
