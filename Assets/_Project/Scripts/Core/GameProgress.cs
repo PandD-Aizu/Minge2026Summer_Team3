@@ -11,6 +11,7 @@ namespace _Project.Scripts.Core
 
         public TimeOfDay CurrentTimeOfDay => GetTimeOfDay((int)(_gameSeconds.Value % SecondsPerDay / SecondsPerHour));
         private readonly ReactiveProperty<float> _gameSeconds = new(7f * SecondsPerHour);
+        private readonly ReactiveProperty<int?> _mainGameStartDay = new(null);
         private readonly ReadOnlyReactiveProperty<int> _gameHours;
         private readonly ReadOnlyReactiveProperty<int> _currentDay;
         private readonly ReadOnlyReactiveProperty<int> _currentWeek;
@@ -25,7 +26,7 @@ namespace _Project.Scripts.Core
         private readonly Subject<int> _fishCaught = new();
         public Observable<int> OnFishCaught => _fishCaught;
 
-        /// <summary>1日目7時の時計と、累積秒から求める時刻・日付・週の購読を作成する</summary>
+        /// <summary>チュートリアルの0週目・0日目7時から始まる時計と、本編の日付・週の購読を作成する</summary>
         /// <example>GameLifetimeScopeでSingleton登録して生成する</example>
         public GameProgress()
         {
@@ -33,11 +34,25 @@ namespace _Project.Scripts.Core
                 .Select(seconds => (int)(seconds % SecondsPerDay / SecondsPerHour))
                 .ToReadOnlyReactiveProperty();
             _currentDay = _gameSeconds
-                .Select(seconds => (int)(seconds / (double)SecondsPerDay) + 1)
+                .CombineLatest(_mainGameStartDay, (seconds, startDay) =>
+                    startDay.HasValue ? (int)(seconds / (double)SecondsPerDay) - startDay.Value + 1 : 0)
                 .ToReadOnlyReactiveProperty();
-            _currentWeek = _gameSeconds
-                .Select(seconds => (int)(seconds / ((double)SecondsPerDay * 7)) + 1)
+            _currentWeek = _currentDay
+                .Select(day => day == 0 ? 0 : (day - 1) / 7 + 1)
                 .ToReadOnlyReactiveProperty();
+        }
+
+        /// <summary>次に到来する朝7時を本編1週目・1日目として開始する すでに開始済みなら何もしない</summary>
+        /// <exception cref="ObjectDisposedException">破棄後に呼び出した場合</exception>
+        /// <example>チュートリアル最後のラジオ会話が完了したときにBeginMainGameを呼ぶ</example>
+        public void BeginMainGame()
+        {
+            if (_isDisposed) throw new ObjectDisposedException(nameof(GameProgress));
+            if (_mainGameStartDay.Value.HasValue) return;
+
+            // 累積時間を保持して朝へ進め、その暦日を本編の日数計算の基準にする
+            AdvanceGameTimeHours(7);
+            _mainGameStartDay.Value = (int)(_gameSeconds.Value / (double)SecondsPerDay);
         }
 
         /// <summary>最後に釣り成功した魚を全釣り場で共有する 戻り値はなし</summary>
@@ -212,6 +227,7 @@ namespace _Project.Scripts.Core
             _fishCaught.Dispose();
             _currentWeek.Dispose();
             _currentDay.Dispose();
+            _mainGameStartDay.Dispose();
             _gameHours.Dispose();
             _gameSeconds.Dispose();
         }

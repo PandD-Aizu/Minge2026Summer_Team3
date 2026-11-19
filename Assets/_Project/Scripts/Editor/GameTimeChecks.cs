@@ -15,6 +15,7 @@ public static class GameTimeChecks
     [MenuItem("Tools/Clock/Validate Game Time")]
     public static string Run()
     {
+        ValidateMainGameStart();
         ValidateTargetTimes();
         ValidateBoundaries();
         ValidateInvalidSeconds();
@@ -22,7 +23,50 @@ public static class GameTimeChecks
         ValidateNotificationState();
         ValidateDurationAndNextDay();
         ValidateInvalidTargetsAndDisposal();
-        return "PASS: 同時間帯の時刻変更、同時刻、翌日指定、経過時間指定、日週境界、不正入力、時間帯切替、通知時の状態一致、破棄後更新の拒否";
+        return "PASS: チュートリアル0週目、本編開始朝、同時間帯の時刻変更、同時刻、翌日指定、経過時間指定、日週境界、不正入力、時間帯切替、通知時の状態一致、破棄後更新の拒否";
+    }
+
+    /// <summary>チュートリアル中の0週目と、本編開始の朝・日付・週の境界と二重開始を検証する</summary>
+    /// <example>Runから呼ぶ</example>
+    private static void ValidateMainGameStart()
+    {
+        using var progress = new GameProgress();
+        Check(progress.CurrentDay.CurrentValue == 0 && progress.CurrentWeek.CurrentValue == 0,
+            "チュートリアル開始時に日付や週が進んでいる");
+
+        // チュートリアルで複数日経過しても本編の日数へ含めない
+        progress.AdvanceGameTimeByHours(8f * 24f);
+        progress.StartDawn();
+        Check(progress.CurrentDay.CurrentValue == 0 && progress.CurrentWeek.CurrentValue == 0,
+            "チュートリアル中の日付越えで本編の日付や週が進んだ");
+        float dawnSeconds = progress.GameSeconds.CurrentValue;
+        int weekChanges = 0;
+        bool consistent = false;
+        using var subscription = progress.CurrentWeek.Skip(1).Subscribe(week =>
+        {
+            weekChanges++;
+            consistent = week == 1 && progress.CurrentDay.CurrentValue == 1
+                && progress.GameHours.CurrentValue == 7 && progress.CurrentTimeOfDay == TimeOfDay.Day;
+        });
+        progress.BeginMainGame();
+        Check(weekChanges == 1 && consistent && progress.GameSeconds.CurrentValue == dawnSeconds + 3f * 3600f,
+            "本編開始時に朝7時・1日目・1週目が一致しないか累積時間が巻き戻った");
+
+        // 開始処理の重複で時計や日付の基準を変更しない
+        progress.AdvanceGameTimeHours(12);
+        float beforeRepeatedStart = progress.GameSeconds.CurrentValue;
+        progress.BeginMainGame();
+        Check(weekChanges == 1 && progress.GameSeconds.CurrentValue == beforeRepeatedStart,
+            "本編の二重開始で時刻や週通知が変わった");
+        progress.AdvanceGameTimeHours(0);
+        Check(progress.CurrentDay.CurrentValue == 2 && progress.CurrentWeek.CurrentValue == 1,
+            "本編の日付が翌0時に更新されない");
+        progress.AdvanceGameTimeByHours(5f * 24f);
+        Check(progress.CurrentDay.CurrentValue == 7 && progress.CurrentWeek.CurrentValue == 1,
+            "本編7日目より前に週が進んだ");
+        progress.AdvanceGameTimeByHours(24f);
+        Check(progress.CurrentDay.CurrentValue == 8 && progress.CurrentWeek.CurrentValue == 2,
+            "チュートリアルの経過日数が本編の週計算へ混ざった");
     }
 
     /// <summary>同時間帯の別時刻と、同時刻と、過ぎた指定時刻を検証する</summary>
@@ -30,6 +74,7 @@ public static class GameTimeChecks
     private static void ValidateTargetTimes()
     {
         using var progress = new GameProgress();
+        progress.BeginMainGame();
         progress.AdvanceGameTimeHours(8);
         Check(progress.GameSeconds.CurrentValue == 8f * 3600f, "同じ昼の7時から8時へ進まない");
         progress.AdvanceGameTimeHours(12);
@@ -54,6 +99,7 @@ public static class GameTimeChecks
     private static void ValidateBoundaries()
     {
         using var progress = new GameProgress();
+        progress.BeginMainGame();
         progress.AdvanceGameTimeHours(23);
         progress.AdvanceGameTimeSeconds(3599f);
         Check(progress.CurrentDay.CurrentValue == 1 && progress.GameHours.CurrentValue == 23,
@@ -77,6 +123,7 @@ public static class GameTimeChecks
     private static void ValidateInvalidSeconds()
     {
         using var progress = new GameProgress();
+        progress.BeginMainGame();
         float before = progress.GameSeconds.CurrentValue;
         int notifications = 0;
         using var subscription = progress.TimeOfDayChanged.Subscribe(_ => notifications++);
@@ -104,6 +151,7 @@ public static class GameTimeChecks
     private static void ValidateTimeOfDaySwitches()
     {
         using var progress = new GameProgress();
+        progress.BeginMainGame();
         int notifications = 0;
         using var subscription = progress.TimeOfDayChanged.Subscribe(_ => notifications++);
         progress.StartEvening();
@@ -125,6 +173,7 @@ public static class GameTimeChecks
     private static void ValidateNotificationState()
     {
         using var progress = new GameProgress();
+        progress.BeginMainGame();
         progress.AdvanceGameTimeHours(23);
         bool notified = false;
         bool consistent = false;
@@ -143,6 +192,7 @@ public static class GameTimeChecks
     private static void ValidateDurationAndNextDay()
     {
         using var progress = new GameProgress();
+        progress.BeginMainGame();
         progress.AdvanceGameTimeByHours(1.5f);
         Check(progress.GameSeconds.CurrentValue == 8.5f * 3600f, "1時間30分の早送りになっていない");
         progress.AdvanceGameTimeHours(8);
@@ -164,6 +214,7 @@ public static class GameTimeChecks
     private static void ValidateInvalidTargetsAndDisposal()
     {
         using var progress = new GameProgress();
+        progress.BeginMainGame();
         foreach (Action invalidUpdate in new Action[]
         {
             () => progress.AdvanceGameTimeHours(-1),
@@ -186,6 +237,10 @@ public static class GameTimeChecks
         try { progress.AdvanceGameTimeSeconds(1f); }
         catch (ObjectDisposedException) { disposedUpdateRejected = true; }
         Check(disposedUpdateRejected, "破棄後も時計を更新できてしまう");
+        bool disposedStartRejected = false;
+        try { progress.BeginMainGame(); }
+        catch (ObjectDisposedException) { disposedStartRejected = true; }
+        Check(disposedStartRejected, "破棄後も本編を開始できてしまう");
     }
 
     /// <summary>Play中のCampStageから釣り場へ往復し、実際のRoot時計の同一性と日時の維持を検証する</summary>

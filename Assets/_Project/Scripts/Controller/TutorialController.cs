@@ -184,6 +184,10 @@ namespace Controller
             if (CurrentStep == next) return;
 
             CurrentStep = next;
+            // 完了通知を受け取る側が、本編の朝と1週目・1日目を参照できるよう先に更新する
+            if (next == TutorialStep.Completed)
+                _gameProgress.BeginMainGame();
+
             UpdateClockPause();
             _stepChanged.OnNext(next);
         }

@@ -410,11 +410,12 @@ Assets/AGENTS.mdの0-1で境界と正本を確認する
 | STATE-02 | 部分確定 | 翌日にも所持品と永久強化を保持する　一時効果と掟の有効期間はTBD-02・TBD-04で確定する |
 | SAVE-01 | 部分確定 | 新しい進行データを既存の音量・会話履歴と共存させる　保存時点と再開位置はTBD-05で確定する |
 | TIME-01 | 条件付き | 現行の時間方式を変更しない作業では9-5aの換算と初期値を保つ　時間仕様の変更は別途明示する |
-| TIME-02 | 確定 | 日付・週は累積ゲーム時間から計算し、24時間循環後の時刻から計算しない |
+| TIME-02 | 確定 | チュートリアル中は0日目・0週目とし、完了後の朝を本編1日目・1週目とする　本編の日付・週は累積ゲーム時間と本編開始日の差から計算する |
 | TIME-03 | 確定 | 時刻・日付・週・時間帯は累積秒を正本とし、確認用ボタンも時計の時刻を変更する　指定時刻が同じ時間帯でも進め、完全な同時刻なら変更せず、過ぎた時刻は翌日とする　翌日を明示した場合は必ず翌日の指定時刻を選ぶ　経過時間指定と到達時刻指定を別APIにする |
 | TIME-04 | 確定 | タイトル・会話・買い物中は時計の自動進行を止める　チュートリアルは釣り・移動を含む全段階で自動進行を停止し、出来事に応じて時刻を進める　完了時にチュートリアルの停止要求を解除し、他の停止要求もすべて解除されたら再開する |
-| TIME-05 | 部分確定 | 日付は0時に更新し、朝の開始処理とは分ける　朝の開始時刻7:00は提案段階で未確定　今回のClockController追加に朝の通知・掟更新は含めない |
+| TIME-05 | 部分確定 | 本編の日付は0時に更新する　チュートリアル完了後は本編開始処理で朝へ進める　朝7:00は既存の昼開始時刻に合わせた実装上の設定とする　毎朝の業務処理・掟更新は未接続 |
 
+2026-11-19 JSTのユーザー依頼に基づき、チュートリアル終了後の朝を本編1週目・1日目とするようTIME-02・TIME-05を更新した
 TIME-04・TIME-05の出所は2026-10-29 JSTの本チャットでの提案採用とClockController作成依頼である
 TIME-04のチュートリアル部分は、同日JSTの「自然進行を止め、出来事で時刻を進める」提案へのユーザーの採用回答で更新した
 時計停止は自動進行への制限とし、進行イベントによる明示的な時間更新を妨げない
@@ -953,6 +954,62 @@ Play Modeでのチュートリアル通し確認は未実施
 
 対象集合は上記5ファイル、SHA-256は 18de43d485ba6e9846e0bb3d0eff2876e05ef270544963d1f9e8e6f00d997481
 
+#### 9-2k. ノルマ進捗のSlider接続
+
+2026-11-18 JST、QuotaViewのImage参照を既存Sliderへの参照に変更し、normalizedValueで進捗を反映するよう変更した
+UnityのEdit ModeでPrefabの参照と0%、40%、100%、目標超過時の表示値を直接確認した
+Play Modeの通し確認は未実施
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| Assets/_Project/Prefab/Canvas/QuotaCanvas.prefab | 5eafd46f91afed36e6f6a9b1dd47ddcfb93bb8851151ab0af687201c19ec92af | 2026-11-18 JST | Slider接続と進捗更新を確認 | 改修済 |
+| Assets/_Project/Scripts/View/QuotaView.cs | 43ee0cf9bf1122c4a9d8469298a26424e4c4f4ff4b80f0ae7cf6630f10681e6c | 2026-11-18 JST | Slider接続と進捗更新を確認 | 改修済 |
+
+対象集合は上記2ファイル、SHA-256は d2d9b549f6aa22b921ebf47b0f7b5e4c0d3f64aff8cc1745a212f00544ea26a7
+
+#### 9-2l. 新QuotaPresenterのRoot登録とSO接続
+
+2026-11-19 JST、GameLifetimeScopeのEntryPointをQuota.QuotaPresenterへ変更し、QuotaData配列を登録した
+0番へTutorialQuota（魚1匹）を設定し、1〜4番は本編用の未設定欄とした
+QuotaViewの名前空間変更にPrefabと旧Presenterの型参照を追従させた
+新PresenterのIDisposable実装と購読解除を公開し、初回の週通知によるチュートリアル表示の上書きと未設定週の配列外アクセスを防いだ
+【検証】Unity生成csprojに記載された全ソース・参照・定義を使うRoslyn直接コンパイルが成功（終了コード0、警告209件）し、登録先とPrefab・SOのGUID参照を静的に照合した
+【限界】dotnet buildはエラー詳細なしで失敗したため直接コンパイルで代替した Unity MCPはEditor接続なしのため、Unityコンパイル・PlayによるDI解決・夜開始時表示・破棄時の確認は未実施
+本編用SOの目標と釣果による進捗更新は未実装
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| Assets/_Project/Prefab/Canvas/QuotaCanvas.prefab | 7e32a98a7196d39987a575b567e2c4913b0f44b1e06829ea2c8b57ca8ec77d44 | 2026-11-19 JST | 登録・設定・型参照と差分を照合 | 改修済 |
+| Assets/_Project/Prefab/GameLifetimeScope.prefab | c5c3c210537e4c43ead2715989f253d51182590afae4399574e37873e19dbcae | 2026-11-19 JST | 登録・設定・型参照と差分を照合 | 改修済 |
+| Assets/_Project/SO/Quota.meta | 9776b23e3215fe45819783bf8e7a33a17ffd208e455e822a50a1bb47ae813822 | 2026-11-19 JST | 登録・設定・型参照と差分を照合 | 改修済 |
+| Assets/_Project/SO/Quota/TutorialQuota.asset | 614fc308a3f20617c22e955b2c0d2ed777ffab1e681b5bf9f65b7bf62a1d3b87 | 2026-11-19 JST | 登録・設定・型参照と差分を照合 | 改修済 |
+| Assets/_Project/SO/Quota/TutorialQuota.asset.meta | f4eba7b17edb016b04306e4329dc1e00091d188af2d136f18ff154f04eab016c | 2026-11-19 JST | 登録・設定・型参照と差分を照合 | 改修済 |
+| Assets/_Project/Scripts/LifetimeScopes/GameLifetimeScope.cs | 594c64823c7e9573f42475afc47f57e32377346aed54f2672979ca95c55defa7 | 2026-11-19 JST | 登録・設定・型参照と差分を照合 | 改修済 |
+| Assets/_Project/Scripts/Quota/QuotaPresenter.cs | 093cb742b152ee7ce8cbe417e2956fb3baa3bdc9a174c01203ebb55c5d1f0288 | 2026-11-19 JST | 登録・設定・型参照と差分を照合 | 改修済 |
+| Assets/_Project/Scripts/View/QuotaPresenter.cs | 805ad81bc0cdbe4f719fbb75b0bce2fc1cbfdead29848f9e04f97772c0a5dc91 | 2026-11-19 JST | 登録・設定・型参照と差分を照合 | 改修済 |
+
+対象集合は上記8ファイル、SHA-256は 050ff8b3fa62be13c531ac840d7e4d5c8e7fc27e7ecad90df2d7ec6fd3802e89
+
+#### 9-2m. チュートリアル0週目と本編開始朝の接続
+
+2026-11-19 JST、チュートリアル中を0日目・0週目とし、最後のラジオ会話完了後の朝7時を本編1日目・1週目へ接続した
+GameProgress.BeginMainGameで累積秒を保持したまま朝へ進め、本編開始日の暦日を基準に0時で日付を更新する
+TutorialControllerはCompletedを設定した後、本編開始処理を呼び、停止の解除と完了通知へ進む
+朝7時は既存の昼開始時刻に合わせた実装上の判断 本編の7日目までが1週目で、8日目が2週目となる
+【検証】Unityコンパイル成功、GameTimeChecks.RunとClockControllerChecks.RunがEdit ModeおよびPlay Modeで合格
+0週目維持、チュートリアルの複数日経過を本編から除外、本編開始通知時の7時・1日目・1週目の整合、二重開始、0時の日付更新、7日目から8日目、破棄後の開始拒否、既存時計APIと停止所有権を確認した
+【限界】Play Modeでは独立した進行データで公開APIを直接検証した 初回frameCount=1であり、入力操作の通し確認や実フレームの自然進行の検証を示さない Consoleエラー0件を確認した
+ユーザーが次に修正するQuotaPresenterの_currentQuota関連処理と本編用SOの未設定は今回の編集対象に含めていない
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| Assets/_Project/Scripts/Controller/TutorialController.cs | 653002c2222e0cd99e630ab943df139ea06e04aae17e33ab7af0662142b6afdf | 2026-11-19 JST | 本編開始と時計境界・通知・回帰を確認 | 改修済 |
+| Assets/_Project/Scripts/Core/GameProgress.cs | 2c11e0ca2e459f09cd1af324451c8a4e6c881d0f17b1a131dc3a7ce291c65785 | 2026-11-19 JST | 本編開始と時計境界・通知・回帰を確認 | 改修済 |
+| Assets/_Project/Scripts/Editor/ClockControllerChecks.cs | 46b1d1e8952c0178bea72cce25269d6005aeb1b82cba659f3d98ab1ce58a8bf7 | 2026-11-19 JST | 本編開始と時計境界・通知・回帰を確認 | 改修済 |
+| Assets/_Project/Scripts/Editor/GameTimeChecks.cs | 595a930ee815704fbda49ce5078ca08293ead81f8a76a972e99c62bcf9d2e7b2 | 2026-11-19 JST | 本編開始と時計境界・通知・回帰を確認 | 改修済 |
+
+対象集合は上記4ファイル、SHA-256は 216a291712fac453950f515dbb593a04583fb2c7e2fc01a8e99a7fb75e34b8c5
+
 ### 9-3. 未解決所見・検証限界
 
 | ID | 分類 | 根拠・影響 | 確定手段 |
@@ -980,7 +1037,7 @@ Play Modeでのチュートリアル通し確認は未実施
 
 | 責務 | 現行の所有者・境界 |
 | --- | --- |
-| 経過秒・時刻・日付・週 | GameProgressが所有　初期7×3600秒、時刻は一日内の秒から算出、日付は累積日数+1、週は累積7日単位+1　GameSecondsは読取専用で公開する |
+| 経過秒・時刻・日付・週 | GameProgressが所有　初期7×3600秒、チュートリアル中は0日目・0週目　完了後の朝7時を本編1日目・1週目とし、開始日の暦日との差から日付と週を算出する　GameSecondsは読取専用で公開する |
 | 時間の加算 | RootのGameClock.TickがClockControllerの停止要求がない場合だけTime.deltaTime×60を加算　timeScaleの影響を受けるため、常に実時間へ追従する保証ではない |
 | 自動進行の停止 | RootのClockControllerがPauseごとの解除権を管理し、タイトル・会話・買い物・チュートリアルが自分の要求だけを所有する |
 | 時間帯 | GameProgressで19〜翌4時を夜、17〜19時を夕、7〜17時を昼、4〜7時を明け方として判定 |
@@ -1056,3 +1113,12 @@ MicrosoftのXMLコメント記法とUnity 6000.6の.NET対応の公式ページ�
 
 【ノルマ表示共通化後の文書QA】2026-11-17 JST、9-2jの対象集合と本文のSHA-256を記録した
 9-8より前のノルマ表示共通化後本文SHA-256: 33f17e0713a40557fb3591ec2dd3d8c76e3b45b7b5521425e5658d11fc019492
+
+【Slider接続後の文書QA】2026-11-18 JST、9-2kの対象ファイルと集合のSHA-256を取得した
+9-8より前のSlider接続後本文SHA-256: 62843f2342e0c6271c1dc1587a2bc519649935b4adfccfb527aa91a2a257ad8b
+
+【QuotaPresenter登録後の文書QA】2026-11-19 JST、対象集合のSHA-256と設定参照を照合した
+9-8より前のQuotaPresenter登録後本文SHA-256: b5b3bef43c43c6bd56b4418165053425e8dcedc95a75614a3e274cb51525d2f5
+
+【本編開始日変更後の文書QA】2026-11-19 JST、9-2mのファイルと集合のSHA-256、本文ハッシュを取得した
+9-8より前の本編開始日変更後本文SHA-256: 2eace8a0efb197fd03bb75a62f5d943897918ccbe958a4ea096ad50f21ab189c

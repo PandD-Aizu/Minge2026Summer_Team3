@@ -133,12 +133,12 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9ce276d12a49958468064c94fcbd3402, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::_Project.Scripts.View.QuotaView
+  m_EditorClassIdentifier: Assembly-CSharp::Quota.QuotaView
   _progressPanel: {fileID: 1406813689314076584}
   _goal: {fileID: 9022408945598793085}
   _deadline: {fileID: 7341851622812729257}
   _progress: {fileID: 7220892364271017593}
-  _fill: {fileID: 0}
+  _progressSlider: {fileID: 1642792915750367892}
 --- !u!1 &1313382182565655948
 GameObject:
   m_ObjectHideFlags: 0

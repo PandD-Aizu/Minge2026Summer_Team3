@@ -11,6 +11,7 @@ using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 using _Project.Scripts.View;
+using Quota;
 
 namespace LifetimeScopes
 {
@@ -20,6 +21,8 @@ namespace LifetimeScopes
         [SerializeField] private ItemCatalog _itemCatalog;
         [SerializeField] private GameOverView _gameOverPrefab;
         [SerializeField] private QuotaView _quotaPrefab;
+        [Tooltip("0番はチュートリアル、1番以降は本編の週番号に対応するノルマ")]
+        [SerializeField] private QuotaData[] _quotaData;
 
         /// <summary>音声・入力・インベントリなどアプリ全体で共有する依存関係を登録する</summary>
         /// <param name="builder">Rootコンテナの登録先</param>
@@ -44,7 +47,9 @@ namespace LifetimeScopes
             if (_quotaPrefab != null)
             {
                 builder.RegisterComponentInNewPrefab(_quotaPrefab, Lifetime.Singleton).UnderTransform(transform);
-                builder.RegisterEntryPoint<QuotaPresenter>();
+                builder.RegisterInstance(_quotaData);
+                builder.RegisterEntryPoint<Quota.QuotaPresenter>();
+                builder.Register<QuotaService>(Lifetime.Singleton);
             }
 
             // ゲーム内時計をすすめる

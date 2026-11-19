@@ -3,6 +3,7 @@ using _Project.Scripts.Core;
 using Controller;
 using R3;
 using VContainer.Unity;
+using Quota;
 
 namespace _Project.Scripts.View
 {

@@ -1,9 +1,8 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
-namespace _Project.Scripts.View
+namespace Quota
 {
     /// <summary>現在のノルマと進捗を画面に表示する</summary>
     public sealed class QuotaView : MonoBehaviour
@@ -12,7 +11,7 @@ namespace _Project.Scripts.View
         [SerializeField] private TMP_Text _goal;
         [SerializeField] private TMP_Text _deadline;
         [SerializeField] private TMP_Text _progress;
-        [SerializeField] private Image _fill;
+        [SerializeField] private UnityEngine.UI.Slider _progressSlider;
 
         private Canvas _canvas;
 
@@ -27,8 +26,6 @@ namespace _Project.Scripts.View
         }
 
         /// <summary>タイトルや設定画面でゲーム中のノルマ表示を隠す</summary>
-        /// <param name="previous">切り替え前のシーン</param>
-        /// <param name="current">切り替え後のシーン</param>
         /// <example>SceneManagerが拠点からタイトルへ切り替わったときに呼ぶ</example>
         private void UpdateSceneVisibility(Scene previous, Scene current)
         {
@@ -40,9 +37,6 @@ namespace _Project.Scripts.View
         private void OnDestroy() => SceneManager.activeSceneChanged -= UpdateSceneVisibility;
 
         /// <summary>新しい目標と期限を現在のノルマとして表示する</summary>
-        /// <param name="goal">ノルマの内容</param>
-        /// <param name="deadline">プレイヤーに表示する期限</param>
-        /// <example>Present("魚を1匹釣る", "今夜 0:00")</example>
         public void Present(string goal, string deadline)
         {
             _goal.text = goal;
@@ -57,7 +51,7 @@ namespace _Project.Scripts.View
         public void SetProgress(int current, int target)
         {
             _progress.text = current >= target ? $"{current} / {target}　達成" : $"{current} / {target}";
-            _fill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01((float)current / target), 1f);
+            _progressSlider.normalizedValue = Mathf.Clamp01((float)current / target);
         }
 
         /// <summary>現在のノルマ表示を閉じる</summary>

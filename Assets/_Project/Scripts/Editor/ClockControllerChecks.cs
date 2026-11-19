@@ -50,6 +50,7 @@ public static class ClockControllerChecks
 
         // 停止するのは自動進行だけで、イベントによる日付越えは許可する
         using var progress = new GameProgress();
+        progress.BeginMainGame();
         using (clock.Pause())
         {
             progress.AdvanceGameTimeSeconds(24f * 3600f);
@@ -100,7 +101,8 @@ public static class ClockControllerChecks
         Check(clock.IsPaused && progress.GameSeconds.CurrentValue == nightSeconds, "夜釣り後の帰還中に時刻が変わった");
         tutorial.NotifyReturnedToCollection();
         float dawnSeconds = progress.GameSeconds.CurrentValue;
-        Check(clock.IsPaused && dawnSeconds == 28f * 3600f && progress.CurrentDay.CurrentValue == 2
+        Check(clock.IsPaused && dawnSeconds == 28f * 3600f && progress.CurrentDay.CurrentValue == 0
+            && progress.CurrentWeek.CurrentValue == 0
             && progress.GameHours.CurrentValue == 4 && progress.CurrentTimeOfDay == TimeOfDay.Dawn,
             "夜釣り帰還後の時計・日付・時間帯が翌4時で一致していない");
         Check(!tutorial.NotifyReturnedToCollection() && progress.GameSeconds.CurrentValue == dawnSeconds,
@@ -113,7 +115,10 @@ public static class ClockControllerChecks
             Check(tutorial.IsCompleted && clock.IsPaused, "完了時に外部の停止要求を解除した");
         }
         Check(tutorial.IsCompleted && !clock.IsPaused, "完了後もチュートリアルの停止が残る");
-        Check(!tutorial.NotifyRadioInteracted() && progress.GameSeconds.CurrentValue == dawnSeconds,
+        Check(progress.GameSeconds.CurrentValue == 31f * 3600f && progress.GameHours.CurrentValue == 7
+            && progress.CurrentDay.CurrentValue == 1 && progress.CurrentWeek.CurrentValue == 1,
+            "チュートリアル終了後の朝が本編1週目・1日目になっていない");
+        Check(!tutorial.NotifyRadioInteracted() && progress.GameSeconds.CurrentValue == 31f * 3600f,
             "完了の重複通知で時刻が変わった");
 
         // Root終了時に残る案内用の停止を解放し、他の所有者の停止は保つ
