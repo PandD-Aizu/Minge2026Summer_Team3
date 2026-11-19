@@ -36,14 +36,18 @@ namespace ExchangePoint
         private bool _isPopupLoading;
         private TradePanelBinding _trading;
         private ExchangePointService _tradeService;
+        private Upgrades.UpgradeService _upgrades;
+        private _Project.Scripts.Data.EconomyAssets _assets;
         private Controller.TutorialController _tutorial;
 
         /// <summary>取引処理と成功通知先を接続する</summary>
         /// <param name="service">共有取引サービス</param><param name="tutorial">進行通知先</param>
+        /// <param name="upgrades">共有する強化購入サービス</param>
+        /// <param name="assets">ロード済みの取引データと表示素材</param>
         /// <example>VContainerが初期化前に呼ぶ</example>
         [VContainer.Inject]
-        public void Construct(ExchangePointService service, Controller.TutorialController tutorial)
-        { _tradeService = service; _tutorial = tutorial; }
+        public void Construct(ExchangePointService service, Controller.TutorialController tutorial, Upgrades.UpgradeService upgrades, _Project.Scripts.Data.EconomyAssets assets)
+        { _tradeService = service; _tutorial = tutorial; _upgrades = upgrades; _assets = assets; }
 
         public bool IsVisible => _visibility.Value;
         /// <summary>詳細パネルの表示中、または表示を要求してロード中ならtrue</summary>
@@ -64,7 +68,7 @@ namespace ExchangePoint
                 _canvasGroup = _collectionPointUIInstance.GetComponent<CanvasGroup>();
                 _itemCursor = _collectionPointUIInstance.GetComponent<ItemMenuNavigation>();
                 _trading = new TradePanelBinding(_collectionPointUIInstance, _itemCursor, _tradeService, _tutorial,
-                    () => SetPopupVisible(true));
+                    () => SetPopupVisible(true), _upgrades, _assets);
                 HideImmediately();
                 _collectionPointUIInstance.SetActive(true);
             }
