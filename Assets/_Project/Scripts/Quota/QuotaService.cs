@@ -9,6 +9,7 @@ namespace Quota
         private readonly Subject<int> _onProgressChanged = new ();
         public Observable<int> OnProgressChanged => _onProgressChanged;
         private int _progress;
+        public int Progress => _progress;
 
 
         // ノルマの進捗に足していいか確認する

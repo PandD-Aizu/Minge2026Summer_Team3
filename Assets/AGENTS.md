@@ -1284,6 +1284,33 @@ GameLifetimeScopeの自動マージはノルマ登録とAddressables経済デー
 | Assets/_Project/Prefab/GameLifetimeScope.prefab | 0af0c7ce46f37a9d8fee6cbd973249a43f33a4bd9901be7706530e553c81cd09 | 2026-11-19 JST | 移行先・GUID・ノルマ登録の静的照合 | 分析済 |
 | Assets/_Project/Scripts/LifetimeScopes/GameLifetimeScope.cs | d7e7949ec71f7d10d9abd4e99cf244be83ca6db3d993193e397ab76ff76582b8 | 2026-11-19 JST | 移行先・GUID・ノルマ登録の静的照合 | 分析済 |
 
+#### 9-2u. 朝のノルマ期限とGameOverのログ判定
+
+2026-11-19 JST、ユーザー依頼により期限朝の達成／未達の判定をDebug.Logまで実装した
+朝は既存時計の昼開始に合わせて7時とし、練習ノルマは発行日の翌朝、本編ノルマは発行日の7日後の朝を期限にする
+QuotaPresenterは累積秒を購読し、期限到達時のQuotaService.Progressが目標未満ならGameOver、それ以外は継続可能と一度だけログへ出す
+発行前と判定後の釣果は加算せず、朝を飛び越える時間更新でも期限到達として判定する
+0時のCurrentWeek通知で次週のノルマへ置き換える購読を外し、判定前の進捗消失を防いだ
+既存の練習達成から本編開始への表示切替は維持し、練習未達の結果を本編表示で消さない
+期限判定後の次週ノルマ発行、画面遷移、時計停止、GameOver演出、セーブ、プレイヤー用時間スキップは今回の対象外
+本編用SOは既存Prefabで未設定のままとし、未設定時は期限判定を行わない
+
+【検証：合格】対象プロジェクトのUnity 6000.6.0f1で再コンパイル後、Edit ModeからQuotaDeadlineChecks.Run、GameTimeChecks.Run、ClockControllerChecks.Runを実行した
+未発行、翌朝7時の1秒前と到達時、目標数ちょうど・超過・未達、8日目0時の進捗保持と朝までの釣果、期限を飛び越える更新、重複判定防止、期限後の釣果、購読解除を確認した
+実際のQuotaCanvasの一時複製と保存しない検証用SOを使用し、終了時に購読と一時オブジェクトを破棄した
+Consoleエラー0件とgit diff --checkの成功を確認した
+【限界：未確認】Play Modeでの自然な時間経過と入力操作の通し確認は未実施 自動検証は独立した進行データに対する公開APIの呼び出しであり、実プレイの進行は変更していない
+MCPのrefresh_unityは応答待ちがタイムアウトしたため、接続先のApplication.dataPathを照合し、Editor上のAssetDatabase.Refresh後に新しい検証型の実行でコンパイルを確認した
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| Assets/_Project/Scripts/Quota/QuotaPresenter.cs | 5c79295f43b35a2a56825f6fc1cd078500453cc978bfb956bc6ccf4ed251ad61 | 2026-11-19 JST | 朝の期限・ログ判定・進捗保持・購読解除 | 改修済 |
+| Assets/_Project/Scripts/Quota/QuotaService.cs | 438a002162a39d99e698a7c45ca5a0956db088a4544ecdd2a579aed712c97beb | 2026-11-19 JST | 判定用の読み取り専用進捗 | 改修済 |
+| Assets/_Project/Scripts/Editor/QuotaDeadlineChecks.cs | f7698a43adeee64f1733334072928020a221477d9e3236ac6fdcb836a28a875c | 2026-11-19 JST | 朝と週の境界・失敗・重複・解除の自動検証 | 改修済 |
+| Assets/_Project/Scripts/Editor/QuotaDeadlineChecks.cs.meta | cef2c69b7cc46c86d64b6d7b169a200da2ab5203c84ca71630b9ac2434800173 | 2026-11-19 JST | Unity生成GUIDの保持 | 改修済 |
+| Assets/_Project/Scripts/Core/GameProgress.cs | 2c11e0ca2e459f09cd1af324451c8a4e6c881d0f17b1a131dc3a7ce291c65785 | 2026-11-19 JST | 時計の通知順と本編開始を照合、既存自動検証に合格 | 分析済 |
+| Assets/_Project/Scripts/Controller/TutorialController.cs | 653002c2222e0cd99e630ab943df139ea06e04aae17e33ab7af0662142b6afdf | 2026-11-19 JST | 完了時の朝への更新とノルマ判定順を照合 | 分析済 |
+
 ### 9-3. 未解決所見・検証限界
 
 | ID | 分類 | 根拠・影響 | 確定手段 |
@@ -1416,3 +1443,6 @@ MicrosoftのXMLコメント記法とUnity 6000.6の.NET対応の公式ページ�
 
 【ノルマブランチのmain競合解消後の文書QA】2026-11-19 JST、両側の作業記録を保持し、競合番号の対応を9-2tに記録した
 9-8より前の競合解消後本文SHA-256: `7889af04d3805bea2b59601c7ade6f3345b93b432ce06054971a489852b34193`
+
+【朝の期限判定後の文書QA】2026-11-19 JST、9-2uの6ファイルのSHA-256を生バイトと照合し、対象集合のSHA-256は cb29403e3f82a6cae077c073831c359abf1600af3c98fce2a24996688d0e8107
+9-8より前の朝の期限判定後本文SHA-256: d7459067fdde111deab59b2ce5d2abc57befd943bec19a73a2bc9efaf90fb194
