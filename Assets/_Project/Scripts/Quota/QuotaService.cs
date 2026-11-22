@@ -19,12 +19,14 @@ namespace Quota
         }
 
 
+        // 進捗をスライダーに反映する
         private void AddProgress(int amount)
         {
             _progress += amount;
             _onProgressChanged.OnNext(_progress);
         }
 
+        // スライダーの進捗を０にする
         public void ResetProgress()
         {
             _progress = 0;
