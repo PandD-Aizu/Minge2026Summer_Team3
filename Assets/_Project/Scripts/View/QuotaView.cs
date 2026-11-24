@@ -1,6 +1,11 @@
+using System;
+using System.Threading;
+using LitMotion;
+using LitMotion.Extensions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Cysharp.Threading.Tasks;
 
 namespace Quota
 {
@@ -12,8 +17,8 @@ namespace Quota
         [SerializeField] private TMP_Text _deadline;
         [SerializeField] private TMP_Text _progress;
         [SerializeField] private UnityEngine.UI.Slider _progressSlider;
-
         private Canvas _canvas;
+        private RectTransform _panelRectTransform;
 
         /// <summary>初期表示を閉じ、シーンごとの表示を監視する</summary>
         /// <example>UnityがCanvasを生成したときに呼ぶ</example>
@@ -23,6 +28,9 @@ namespace Quota
             Hide();
             UpdateSceneVisibility(default, SceneManager.GetActiveScene());
             SceneManager.activeSceneChanged += UpdateSceneVisibility;
+            _panelRectTransform = _progressPanel.GetComponent<RectTransform>();
+
+            UIAnimation();
         }
 
         /// <summary>タイトルや設定画面でゲーム中のノルマ表示を隠す</summary>
@@ -41,7 +49,8 @@ namespace Quota
         {
             _goal.text = goal;
             _deadline.text = $"期限　{deadline}";
-            _progressPanel.SetActive(true);
+
+            UIAnimation().Forget();
         }
 
         /// <summary>進捗の数字とバーを更新する</summary>
@@ -57,5 +66,37 @@ namespace Quota
         /// <summary>現在のノルマ表示を閉じる</summary>
         /// <example>チュートリアル完了時に呼ぶ</example>
         public void Hide() => _progressPanel.SetActive(false);
+
+        private async UniTaskVoid UIAnimation()
+        {
+            var start = new Vector3(0, 140, 0);
+            var end = new Vector3(400, 450, 0);
+
+            var startScale = new Vector3(2, 2, 1);
+            var endScale = new Vector3(1, 1, 1);
+
+            _progressPanel.SetActive(true);
+
+
+            LMotion.Create(startScale, endScale, 0.5f)
+                .WithEase(Ease.InOutBounce)
+                .BindToLocalScale(_panelRectTransform);
+
+            await UniTask.Delay(5000, cancellationToken:destroyCancellationToken);
+
+            LSequence.Create()
+                .Append(LMotion.Create(start, end, 1)
+                    .WithEase(Ease.InQuad)
+                    .Bind(position => _panelRectTransform.anchoredPosition = position))
+                .Join(LMotion.Create(startScale, endScale, 1)
+                    .WithEase(Ease.InQuad)
+                    .BindToLocalScale(_panelRectTransform))
+                .Run();
+
+            // X:410 Y:80
+            // X:0 Y:-400 Scale:2
+        }
+
+
     }
 }

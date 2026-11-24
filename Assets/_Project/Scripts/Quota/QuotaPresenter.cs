@@ -141,7 +141,7 @@ namespace Quota
 
         private void IssueQuota(int week, int day, string explanation)
         {
-            if(week < 0 || week >= _quotaData.Length|| _quotaData[week] == null) return;
+            if(week < 0F || week >= _quotaData.Length|| _quotaData[week] == null) return;
             _currentQuota.Value = _quotaData[week];
             SetMorningDeadline(day); // 何日後が期日か
             _quotaService.ResetProgress();

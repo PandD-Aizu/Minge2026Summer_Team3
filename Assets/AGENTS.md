@@ -1311,6 +1311,33 @@ MCPのrefresh_unityは応答待ちがタイムアウトしたため、接続先�
 | Assets/_Project/Scripts/Core/GameProgress.cs | 2c11e0ca2e459f09cd1af324451c8a4e6c881d0f17b1a131dc3a7ce291c65785 | 2026-11-19 JST | 時計の通知順と本編開始を照合、既存自動検証に合格 | 分析済 |
 | Assets/_Project/Scripts/Controller/TutorialController.cs | 653002c2222e0cd99e630ab943df139ea06e04aae17e33ab7af0662142b6afdf | 2026-11-19 JST | 完了時の朝への更新とノルマ判定順を照合 | 分析済 |
 
+#### 9-2v. Title・CampStage・FishingStageのPrefab化
+
+2026-11-23 JST、ユーザー依頼によりUnity Editor経由でTitle・CampStage・FishingStageを確認し、再利用できる自己完結したまとまりをPrefab化した
+Title Canvasは背景、タイトル、サブタイトル、開始・設定・終了ボタンとTitleUIViewを含むためCanvas単位でPrefab化した
+CampStageのClockCanvasはGameTimeViewと針・日・週表示がCanvas内で完結するためPrefab化した
+CampStageのCoastal Audioを共有Prefab化し、FishingStageでは同Prefabを使用しつつ海鳴りとカモメの距離設定をシーンごとのOverrideとして保持した
+FishingStageでは海鳴りを26/70、カモメを16/80、CoastalAudioの基準Prefabでは海鳴りを22/55、カモメを12/65に設定した
+FishingSpots、Stopper、jumpFish、各Canvasは既存Prefabがあるため重複作成していない
+TutorialGuideCanvasはRadioのInteractableColliderをシーン外参照として持つためPrefab化を避け、Weather SystemもPlayer・地形・Directional Lightへのシーン参照があるため対象外とした
+対象シーンを保存後、EditorのアクティブシーンをQuotaへ戻し、Quotaの未保存変更は保存せず保持した
+
+【確認】Prefabの作成・参照とFishingStageの音響距離OverrideをUnity Editor上で確認し、Title・CampStage・FishingStageの保存後に未保存状態がないことを確認した
+Unity ConsoleのErrorは確認されなかった　既存DOTweenのPluginImporterメタデータ警告と接続重複ログは今回の変更対象外
+自動テストとPlay Mode確認は未実施
+
+| 相対パス | SHA-256 | 分析日時 | 判断根拠・結果 | 状態 |
+| --- | --- | --- | --- | --- |
+| Assets/_Project/Prefab/Canvas/TitleCanvas.prefab | 8735798bfd542701fe1544c2cf15edc895d3f7ac9f9908fadfcaf713c523f631 | 2026-11-23 JST | Title画面のCanvas・ボタン・ViewをまとめたPrefab | 追加 |
+| Assets/_Project/Prefab/Canvas/TitleCanvas.prefab.meta | 86e4b80cff1769a16a693c842117e8b91ab3c568e5921123b0d7a3d000457648 | 2026-11-23 JST | Unity生成GUID | 追加 |
+| Assets/_Project/Prefab/Canvas/ClockCanvas.prefab | 85074f3a31e9a0f85ce88808e721f6f496ab447c8f3ab308418f1afe93684f72 | 2026-11-23 JST | 時計表示とGameTimeViewをまとめたPrefab | 追加 |
+| Assets/_Project/Prefab/Canvas/ClockCanvas.prefab.meta | 043f897a1c98266e85ce283a41a3c2d624f536bff1680faa1fa52d72a742b21d | 2026-11-23 JST | Unity生成GUID | 追加 |
+| Assets/_Project/Prefab/CoastalAudio.prefab | 04a913e20e1a88a1c945633ede5cde4de2f322d704a6537f2fab667e71b9bbe1 | 2026-11-23 JST | FMODの海鳴り・カモメを持ち2シーンで共有 | 追加 |
+| Assets/_Project/Prefab/CoastalAudio.prefab.meta | 3d23d4f0a834bf5923a678f0dbc57bfa9548175879926c6e5a898755d24240df | 2026-11-23 JST | Unity生成GUID | 追加 |
+| Assets/_Project/Scenes/Title.unity | df377688d1e6450a56244a6262c6ecfde49ec3c9dffc92dfb4a8477f11024b4f | 2026-11-23 JST | TitleCanvasのPrefabインスタンスを保存 | 更新 |
+| Assets/_Project/Scenes/CampStage.unity | 1157bf4e196c9ffec0a138e4bdffcb012a2c6766425a6947970cf9f2cc8bebd6 | 2026-11-23 JST | ClockCanvasとCoastalAudioのPrefabインスタンスを保存 | 更新 |
+| Assets/_Project/Scenes/FishingStage.unity | 7f0f7a5d4898abbd43dfa042072daad345abd1b7101982a8438bf56260e8bbfb | 2026-11-23 JST | CoastalAudioを共有Prefabへ置換し距離設定Overrideを保存 | 更新 |
+
 ### 9-3. 未解決所見・検証限界
 
 | ID | 分類 | 根拠・影響 | 確定手段 |
